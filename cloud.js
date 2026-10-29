@@ -5,6 +5,26 @@ const el=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const notify=s=>{el("cloudStatus").textContent=s;};
 const bridge=()=>window.DocSystemBridge;
+const encode = (value, nested = false) => {
+ if (Array.isArray(value)) {
+   const result = value.map(v => encode(v, true));
+   return nested ? { nestedArrayData: result } : result;
+ }
+ if (value && typeof value === "object") {
+   return Object.fromEntries(Object.entries(value).map(([k,v]) => [k,encode(v)]));
+ }
+ return value;
+};
+const decode = value => {
+ if (Array.isArray(value)) return value.map(decode);
+ if (value && typeof value === "object") {
+   if (Object.keys(value).length === 1 && Array.isArray(value.nestedArrayData))
+     return value.nestedArrayData.map(decode);
+   return Object.fromEntries(Object.entries(value).map(([k,v]) => [k,decode(v)]));
+ }
+ return value;
+};
+
 function canManage(){return role==="superadmin"||role==="manager"}
 function canAdmin(){return role==="superadmin"}
 export async function startCloud(authUser,profile){
@@ -12,8 +32,8 @@ export async function startCloud(authUser,profile){
   el("cloudMenuUsers").hidden=!canManage();
   document.querySelectorAll(".cloud-admin-only").forEach(x=>x.hidden=!canManage());
   const snap=await getDoc(doc(db,"appSettings","main"));
-  if(snap.exists() && snap.data().settings)bridge().setSettings(snap.data().settings);
-  else if(canManage())await setDoc(doc(db,"appSettings","main"),{settings:bridge().getSettings(),updatedAt:serverTimestamp(),updatedBy:user.uid});
+  if(snap.exists() && snap.data().settings)bridge().setSettings(decode(snap.data().settings));
+  else if(canManage())await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedAt:serverTimestamp(),updatedBy:user.uid});
   loading=false;notify("Online · "+profile.role);
   await loadDocs();
   if(canManage())await loadUsers();
@@ -23,7 +43,7 @@ export function settingsChanged(){
   if(!user||!canManage()||loading)return;
   clearTimeout(writeTimer);
   writeTimer=setTimeout(async()=>{
-    try {await setDoc(doc(db,"appSettings","main"),{settings:bridge().getSettings(),updatedBy:user.uid,updatedAt:serverTimestamp()});notify("Settings saved online");}
+    try {await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedBy:user.uid,updatedAt:serverTimestamp()});notify("Settings saved online");}
     catch(e){notify("Settings save failed: "+e.message);}
   },900);
 }
@@ -36,7 +56,7 @@ export async function saveDocument(){
   const savedDoc= currentId ? doc(db,"documents",currentId):doc(collection(db,"documents"));
   try{
     const prior=currentId?await getDoc(savedDoc):null;
-    await setDoc(savedDoc,{...payload,number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid}:{})},{merge:true});
+    await setDoc(savedDoc,{...encode(payload),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid}:{})},{merge:true});
     currentId=savedDoc.id;notify("Document saved online: "+num);await loadDocs();
   }catch(e){notify("Save failed: "+e.message);alert("Could not save document: "+e.message)}
 }
@@ -54,7 +74,7 @@ export async function openDocument(id,duplicate=false){
   try{
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
-    bridge().setDocument(s.data());currentId=duplicate?null:id;
+    bridge().setDocument(decode(s.data()));currentId=duplicate?null:id;
     if(duplicate)notify("Duplicate ready: change document number and save");
     else notify("Document opened: "+(s.data().number||""));
     document.querySelector('[data-tab="create"]').click();
