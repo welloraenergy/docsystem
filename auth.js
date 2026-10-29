@@ -1,0 +1,80 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",
+  authDomain: "docsystem-c29ec.firebaseapp.com",
+  projectId: "docsystem-c29ec",
+  storageBucket: "docsystem-c29ec.firebasestorage.app",
+  messagingSenderId: "25451628479",
+  appId: "1:25451628479:web:ec00096fc84d744c48c30a",
+  measurementId: "G-0ZZ1KHP7MH"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const screen = document.getElementById("authGate");
+const message = document.getElementById("authMessage");
+const form = document.getElementById("authForm");
+const submit = document.getElementById("authSubmit");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const account = document.getElementById("authAccount");
+const logout = document.getElementById("authLogout");
+let currentUid = null;
+function lock(text = "") {
+  document.documentElement.classList.remove("auth-ready");
+  screen.hidden = false;
+  account.hidden = true;
+  if(text) message.textContent = text;
+}
+function unlock(user, profile) {
+  screen.hidden = true;
+  message.textContent = "";
+  account.hidden = false;
+  account.textContent = (profile.email || user.email) + " · " + profile.role;
+  document.documentElement.classList.add("auth-ready");
+}
+lock("Checking sign-in...");
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  submit.disabled = true;
+  message.textContent = "Signing in...";
+  try {
+    await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
+    loginPassword.value = "";
+  } catch (error) {
+    message.textContent = "Sign-in failed. Check your email and password.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+logout.addEventListener("click", async () => {
+  lock("Signing out...");
+  await signOut(auth);
+});
+onAuthStateChanged(auth, async user => {
+  const uid = user?.uid || null;
+  currentUid = uid;
+  if (!user) {
+    lock("Sign in with your approved account.");
+    return;
+  }
+  lock("Checking account access...");
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (currentUid !== uid) return;
+    const profile = snap.exists() ? snap.data() : null;
+    const validRole = typeof profile?.role === "string" && profile.role.trim().length > 0;
+    if (!profile || profile.status !== "active" || !validRole ||
+        (profile.email || "").toLowerCase() !== (user.email || "").toLowerCase()) {
+      await signOut(auth);
+      lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
+      return;
+    }
+    unlock(user, profile);
+  } catch (error) {
+    lock("Unable to verify your account. Check Firestore permissions and connectivity.");
+  }
+});
