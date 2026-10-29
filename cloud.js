@@ -1,5 +1,5 @@
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-const db=getFirestore();
+let db=null;
 let user=null, role=null, currentId=null, writeTimer=null, loading=false;
 const el=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -8,7 +8,7 @@ const bridge=()=>window.DocSystemBridge;
 function canManage(){return role==="superadmin"||role==="manager"}
 function canAdmin(){return role==="superadmin"}
 export async function startCloud(authUser,profile){
-  user=authUser;role=profile.role;currentId=null;loading=true;
+  db=getFirestore();user=authUser;role=profile.role;currentId=null;loading=true;
   el("cloudMenuUsers").hidden=!canManage();
   document.querySelectorAll(".cloud-admin-only").forEach(x=>x.hidden=!canManage());
   const snap=await getDoc(doc(db,"appSettings","main"));
