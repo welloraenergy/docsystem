@@ -46,7 +46,8 @@ form.addEventListener("submit", async event => {
     await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
     loginPassword.value = "";
   } catch (error) {
-    message.textContent = "Sign-in failed. Check your email and password.";
+    console.error("DocSystem sign-in failed:", error);
+    message.textContent = "Sign-in failed: " + (error.code || error.message);
   } finally {
     submit.disabled = false;
   }
@@ -76,12 +77,16 @@ onAuthStateChanged(auth, async user => {
       lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
       return;
     }
-    await cloud.startCloud(user, profile);
-    if (currentUid !== uid) return;
     window.DocSystemCloud=cloud;
     document.querySelectorAll('[data-tab="company"],[data-tab="template"],[data-tab="backup"]').forEach(x=>x.hidden=!["superadmin","manager"].includes(profile.role));
     unlock(user, profile);
+    cloud.startCloud(user, profile).catch(error => {
+      console.error("DocSystem cloud initialization failed:", error);
+      const status=document.getElementById("cloudStatus");
+      if(status) status.textContent="Cloud loading failed: "+(error.code || error.message);
+    });
   } catch (error) {
-    lock("Unable to verify your account. Check Firestore permissions and connectivity.");
+    console.error("DocSystem user profile check failed:", error);
+    lock("Account verification failed: " + (error.code || error.message));
   }
 });
