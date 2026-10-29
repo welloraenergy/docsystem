@@ -10,12 +10,13 @@ service cloud.firestore {
     }
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isSuperadmin());
-      allow create, update, delete: if isSuperadmin()
+      allow create, update: if isSuperadmin()
         && request.resource.data.keys().hasOnly(['email', 'role', 'status'])
         && request.resource.data.keys().hasAll(['email', 'role', 'status'])
         && request.resource.data.email is string
         && request.resource.data.role in ['superadmin', 'manager', 'staff']
         && request.resource.data.status in ['active', 'inactive'];
+      allow delete: if isSuperadmin() && request.auth.uid != uid;
     }
     // Document storage rules will be introduced together with Firestore-backed documents.
   }
