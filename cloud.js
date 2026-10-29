@@ -1,3 +1,5 @@
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 let db=null;
 let user=null, role=null, currentId=null, writeTimer=null, loading=false;
@@ -30,6 +32,7 @@ function canAdmin(){return role==="superadmin"}
 export async function startCloud(authUser,profile){
   db=getFirestore();user=authUser;role=profile.role;currentId=null;loading=true;
   el("cloudMenuUsers").hidden=!canManage();
+  el("newSuperadminOption").hidden=!canAdmin();
   document.querySelectorAll(".cloud-admin-only").forEach(x=>x.hidden=!canManage());
   const snap=await getDoc(doc(db,"appSettings","main"));
   if(snap.exists() && snap.data().settings)bridge().setSettings(decode(snap.data().settings));
@@ -83,8 +86,8 @@ export async function openDocument(id,duplicate=false){
 export async function loadUsers(){
   if(!user||!canManage())return;
   try{
-    const snaps=await getDocs(query(collection(db,"users"),limit(200)));
-    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+["superadmin","manager","staff"].map(r=>'<option '+(r===x.role?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
+    const snaps=await getDocs(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","staff"]),limit(200)));
+    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","staff"]:["manager","staff"]).map(r=>'<option '+(r===x.role?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
   }catch(e){el("userList").textContent="Could not load users: "+e.message}
 }
 export async function saveUser(uid){
@@ -100,12 +103,32 @@ export async function saveUser(uid){
 }
 export async function addUser(){
   if(!canManage())return;
-  const uid=el("newUserUid").value.trim(),email=el("newUserEmail").value.trim().toLowerCase(),chosenRole=el("newUserRole").value;
-  if(!uid||!email||!email.includes("@"))return alert("Enter a valid Authentication UID and email.");
-  if(!canAdmin()&&chosenRole==="superadmin")return alert("Only superadmin can assign that role.");
-  try{await setDoc(doc(db,"users",uid),{email,role:chosenRole,status:"active"});notify("Profile added. Firebase Authentication account must already exist.");await loadUsers();}
-  catch(e){alert("Could not add user: "+e.message)}
+  const email=el("newUserEmail").value.trim().toLowerCase();
+  const password=el("newUserPassword").value;
+  const chosenRole=el("newUserRole").value;
+  if(!email.includes("@") || password.length<6)return alert("Enter an email and a password of at least 6 characters.");
+  if(!canAdmin() && chosenRole==="superadmin")return alert("Superadmin assignment is restricted.");
+  const button=el("cloudUserAdd");button.disabled=true;
+  let secondary=null;
+  try{
+    const {getApp}=await import("https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js");
+    const config=getApp().options;
+    secondary=initializeApp(config,"docsystem-user-provisioning");
+    const newAuth=getAuth(secondary);
+    const credentials=await createUserWithEmailAndPassword(newAuth,email,password);
+    try{
+      await setDoc(doc(db,"users",credentials.user.uid),{email,role:chosenRole,status:"active"});
+    }catch(error){
+      notify("Authentication user created, but profile creation failed. Contact administrator.");
+      throw error;
+    }
+    await signOut(newAuth);
+    el("newUserEmail").value="";el("newUserPassword").value="";
+    notify("New user added: "+email);await loadUsers();
+  }catch(error){alert("User creation failed: "+(error.code||error.message))}
+  finally{button.disabled=false;if(secondary){try{await deleteApp(secondary)}catch(e){console.warn(e)}}}
 }
+
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-open-doc]");if(a)openDocument(a.dataset.openDoc);
   const b=e.target.closest("[data-copy-doc]");if(b)openDocument(b.dataset.copyDoc,true);
