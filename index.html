@@ -13,6 +13,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 .cloud-entry{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;padding:12px 0;flex-wrap:wrap}.cloud-entry .actions{align-items:center}.cloud-entry select{width:auto;min-width:100px}.cloud-entry button{white-space:nowrap}
 #sig1,#sig2,#sig3,#sigName1,#sigName2,#sigName3,#companyInfo,#companyFooter{font-family:'Courier New',monospace;white-space:pre-wrap;tab-size:4;line-height:1.5} .siggrid .sig{min-width:0} .footer span{white-space:pre-wrap!important;overflow-wrap:anywhere;tab-size:4}
 .fullDivider{width:100%;flex:0 0 auto;border-top:1px solid #777;margin:4mm 0 5mm} .ack{border-top:none!important} 
+.pagination-measure{position:absolute;left:-100000px;top:0;width:210mm;visibility:hidden;pointer-events:none}.pagination-measure .paper{display:flex!important;width:210mm!important;height:297mm!important;min-height:297mm!important;aspect-ratio:auto!important;padding:12mm 14mm 19mm!important;margin:0!important;font-size:11px!important;box-shadow:none!important}.pagination-measure .cHead{grid-template-columns:26mm 1fr 26mm!important;min-height:30mm!important}.pagination-measure .footer{left:14mm!important;right:14mm!important;bottom:6mm!important} .paper .docTable tbody tr{break-inside:avoid;page-break-inside:avoid}
 </style>
 </head>
 <body>
@@ -160,7 +161,62 @@ if(t.family==='journal'){
 let b=baseTotal(),running=b,rows=[];(t.adjustments||[]).forEach(a=>{let v=Number(a.value||0),amt=a.mode==='fixed'?v:running*(v/100);if(a.operation==='subtract'){running-=amt}else{running+=amt}let label=esc(a.label||'Adjustment')+(a.mode==='percent'?' ('+v+'%)':'');rows.push('<tr><td>'+label+'</td><td>'+(a.operation==='subtract'?'-':'+')+money(amt)+'</td></tr>')});if(!t.subtotal&&rows.length===0)return'';let s='<table class="totals">';if(t.subtotal)s+='<tr><td>Subtotal</td><td>'+money(b)+'</td></tr>';s+=rows.join('');return s+'<tr class="grand"><td>Total</td><td>'+money(running)+'</td></tr></table>'}
 function sigs(){let t=tpl();if(!(t.sigEnabled||[]).some(Boolean))return'';let intro=t.family==='movement'?'Please receive the following goods in good order and conditions.<br>Goods sold are not returnable.':'';return '<div class="ack">'+intro+'<div class="siggrid">'+t.sigs.map((s,i)=>t.sigEnabled[i]?'<div class="sig"><div class="sigtitle">'+esc(s)+'</div><div class="sigline">'+esc((t.sigNames||[])[i]||'Signature / Name')+'</div></div>':'<div class="sig sigempty" aria-hidden="true"></div>').join('')+'</div></div>'}
 function footer(p,n){let c=profile().company,ff=c.fields.filter(x=>x.place==='footer'&&x.value);let f=ff.map(x=>(x.layout==='full'?'\n':'')+x.label+': '+x.value.replace(/\n/g,' / ')).join(' · ').replace(/^\n/,'').replace(/ · \n/g,'\n');return '<div class="footer"><span style="white-space:pre-line">'+esc([f,c.footer].filter(Boolean).join('\n'))+'</span><span>Page '+p+' of '+n+'</span></div>'}
-function renderPreview(){let per=(tpl().sigEnabled||[]).some(Boolean)?12:16,ch=[];for(let i=0;i<doc.items.length;i+=per)ch.push(doc.items.slice(i,i+per));if(!ch.length)ch=[[]];preview.innerHTML=ch.map((rows,i)=>{let last=i===ch.length-1;let fs='--font-header:'+profile().fonts.header+';--font-title:'+profile().fonts.title+';--font-body:'+profile().fonts.body+';--font-items:'+profile().fonts.items+';--font-footer:'+profile().fonts.footer;return '<section class="paper" style="'+esc(fs)+'">'+header(i+1)+(i===0?info():'')+table(rows)+(last&&doc.notes?'<div class="notes">'+esc(doc.notes)+'</div>':'')+(last?totals():'')+(last?sigs():'')+footer(i+1,ch.length)+'</section>'}).join('');pageCount.textContent=ch.length+' page'+(ch.length===1?'':'s')}
+let paginationBusy=false;
+function renderPreview(){
+  if(paginationBusy)return;
+  paginationBusy=true;
+  try{
+    const fonts='--font-header:'+profile().fonts.header+';--font-title:'+profile().fonts.title+';--font-body:'+profile().fonts.body+';--font-items:'+profile().fonts.items+';--font-footer:'+profile().fonts.footer;
+    const segments=[];
+    // Keep document order intact: items first, then notes, totals and signatures.
+    for(const item of doc.items)segments.push({kind:'item',value:item});
+    if(doc.notes)segments.push({kind:'notes'});
+    segments.push({kind:'totals'});
+    if((tpl().sigEnabled||[]).some(Boolean))segments.push({kind:'signatures'});
+    if(!segments.length)segments.push({kind:'totals'});
+    let pages=[{items:[],ending:[]}];
+    const makePage=(pageIndex,final=false)=>{
+      const p=pages[pageIndex];
+      return '<section class="paper" style="'+esc(fonts)+'">'+header(pageIndex+1)+(pageIndex===0?info():'')+table(p.items)+(p.ending.includes('notes')?'<div class="notes">'+esc(doc.notes)+'</div>':'')+(p.ending.includes('totals')?totals():'')+(p.ending.includes('signatures')?sigs():'')+footer(pageIndex+1,pages.length)+'</section>';
+    };
+    // Measure using full-size A4 layout, never the responsive mobile preview.
+    const measureRoot=document.createElement('div');
+    measureRoot.className='pagination-measure';
+    document.body.appendChild(measureRoot);
+    const fits=pageIndex=>{
+      measureRoot.innerHTML=makePage(pageIndex);
+      const paper=measureRoot.firstElementChild;
+      const footerEl=paper.querySelector('.footer');
+      const content=Array.from(paper.children).filter(x=>x!==footerEl);
+      const maxBottom=paper.getBoundingClientRect().top+paper.clientHeight-19*96/25.4;
+      return content.every(x=>x.getBoundingClientRect().bottom<=maxBottom+1);
+    };
+    try{
+      for(const segment of segments){
+        let last=pages[pages.length-1];
+        if(segment.kind==='item')last.items.push(segment.value);
+        else last.ending.push(segment.kind);
+        if(!fits(pages.length-1)){
+          if(segment.kind==='item')last.items.pop();
+          else last.ending.pop();
+          if(!last.items.length&&!last.ending.length && pages.length===1){
+            // An oversized single row cannot fit this page; move to continuation.
+            pages.push({items:[],ending:[]});
+          }else{
+            pages.push({items:[],ending:[]});
+          }
+          last=pages[pages.length-1];
+          if(segment.kind==='item')last.items.push(segment.value);
+          else last.ending.push(segment.kind);
+        }
+      }
+    }finally{measureRoot.remove()}
+    // Remove empty trailing pages.
+    pages=pages.filter((p,i)=>i===0||p.items.length||p.ending.length);
+    preview.innerHTML=pages.map((_,i)=>makePage(i)).join('');
+    pageCount.textContent=pages.length+' page'+(pages.length===1?'':'s');
+  }finally{paginationBusy=false}
+}
 function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
 document.addEventListener('click',e=>{let tab=e.target.closest('.tab');if(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab.dataset.tab))}
 if(e.target.id==='addItem'){doc.items.push(blankRow());renderCreate();renderPreview()}if(e.target.id==='addTotalLine'){tpl().adjustments.push({label:'Adjustment',operation:'add',mode:'fixed',value:0});saveSettings();renderTemplate();renderPreview()}if(e.target.dataset.totalpreset){let p=e.target.dataset.totalpreset,a=p==='tax'?{label:'Tax',operation:'add',mode:'percent',value:0}:p==='charge'?{label:'Logistics / Charge',operation:'add',mode:'fixed',value:0}:{label:'Discount',operation:'subtract',mode:'percent',value:0};tpl().adjustments.push(a);saveSettings();renderTemplate();renderPreview()}if(e.target.dataset.adjdel!==undefined){tpl().adjustments.splice(+e.target.dataset.adjdel,1);saveSettings();renderTemplate();renderPreview()}if(e.target.id==='addDetailField'){let id=nextExtraKey(tpl());tpl().fields.push([id,'New Field','text','half']);doc.fieldValues[id]='';saveSettings();renderTemplate();renderCreate();renderPreview()}if(e.target.dataset.dfdel!==undefined){let i=+e.target.dataset.dfdel,id=tpl().fields[i][0];tpl().fields.splice(i,1);delete doc.fieldValues[id];saveSettings();renderTemplate();renderCreate();renderPreview()}if(e.target.dataset.dfup!==undefined){let i=+e.target.dataset.dfup;if(i>0){let a=tpl().fields;[a[i-1],a[i]]=[a[i],a[i-1]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.dfdown!==undefined){let i=+e.target.dataset.dfdown,a=tpl().fields;if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.moveup!==undefined){let i=+e.target.dataset.moveup;if(i>0){let a=tpl().columns;[a[i-1],a[i]]=[a[i],a[i-1]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.movedown!==undefined){let i=+e.target.dataset.movedown,a=tpl().columns;if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];saveSettings();renderTemplate();renderCreate();renderPreview()}}
