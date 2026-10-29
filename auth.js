@@ -1,3 +1,4 @@
+import * as cloud from "./cloud.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
@@ -58,6 +59,8 @@ onAuthStateChanged(auth, async user => {
   const uid = user?.uid || null;
   currentUid = uid;
   if (!user) {
+    cloud.clearCloud();
+    window.DocSystemCloud=null;
     lock("Sign in with your approved account.");
     return;
   }
@@ -66,13 +69,17 @@ onAuthStateChanged(auth, async user => {
     const snap = await getDoc(doc(db, "users", uid));
     if (currentUid !== uid) return;
     const profile = snap.exists() ? snap.data() : null;
-    const validRole = typeof profile?.role === "string" && profile.role.trim().length > 0;
+    const validRole = ["superadmin", "manager", "staff"].includes(profile?.role);
     if (!profile || profile.status !== "active" || !validRole ||
         (profile.email || "").toLowerCase() !== (user.email || "").toLowerCase()) {
       await signOut(auth);
       lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
       return;
     }
+    await cloud.startCloud(user, profile);
+    if (currentUid !== uid) return;
+    window.DocSystemCloud=cloud;
+    document.querySelectorAll('[data-tab="company"],[data-tab="template"],[data-tab="backup"]').forEach(x=>x.hidden=!["superadmin","manager"].includes(profile.role));
     unlock(user, profile);
   } catch (error) {
     lock("Unable to verify your account. Check Firestore permissions and connectivity.");
