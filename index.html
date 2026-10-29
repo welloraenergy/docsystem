@@ -90,7 +90,7 @@ function switchProfile(id,preferredType){
   if(!settings.profiles.some(p=>p.id===id))return;
   settings.activeProfileId=id;
   let types=Object.keys(profile().templates),type=profile().templates[preferredType]?preferredType:types[0];
-  newDoc(type);refresh()
+  newDoc(type);window.DocSystemCloud?.changedDocument();refresh()
 }
 function makeProfile(copyCurrent){
   let name=prompt('Business profile name',copyCurrent?profileLabel(profile())+' Copy':'New Business');
