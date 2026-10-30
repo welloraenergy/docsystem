@@ -7,6 +7,7 @@
 <style id="printPaperRule">@page{size:A4 portrait;margin:0}.layout-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}.layout-panel{min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f8fafc;border:1px solid #ddd;border-radius:8px}.layout-block{background:white;border:1px solid #ddd;border-radius:6px;padding:8px;min-width:0}.layout-block textarea{margin:6px 0}.flex-layout{display:grid;width:100%;align-items:start;gap:4mm}.flex-layout.cHead{min-height:0;grid-template-columns:unset}.flex-layout>div{overflow-wrap:anywhere}.layout-preserve{white-space:pre-wrap;overflow-wrap:anywhere}.footer-layout{font-size:9px}
 .panel-editor{min-height:135px;font-family:'Courier New',monospace;white-space:pre-wrap;resize:vertical;tab-size:4} .layout-panel{min-width:0} .layout-preserve{white-space:pre-wrap;overflow-wrap:anywhere}
 .shortcode-line{display:block;min-height:1em;white-space:pre-wrap;overflow-wrap:anywhere}.shortcode-line .logo{vertical-align:middle}
+.panel-inline-tools{display:flex;gap:5px;flex-wrap:wrap;margin:3px 0}.panel-inline-tools button{min-width:34px}
 </style>
 <style>
 html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(.auth-ready) body > main {display:none!important}
@@ -236,12 +237,24 @@ function panelStyleControls(area,i,p){
 function renderLayoutControls(){
  for(const area of ['header','footer']){
   const l=layoutConfig(area),root=document.getElementById(area+'LayoutControls');
-  root.innerHTML='<label>Layout<select data-layout-count="'+area+'">'+[1,2,3].map(n=>'<option value="'+n+'" '+(l.columns===n?'selected':'')+'>'+n+' column'+(n>1?'s':'')+'</option>').join('')+'</select></label><p class="muted">Type directly inside each panel. Available placeholders: {logo}, {companyName}, {companyInfo}, {documentType}, {footerText}, {pageNumber}. Spaces and line breaks are preserved.</p><div class="layout-settings">'+l.panels.slice(0,l.columns).map((p,i)=>'<div class="layout-panel"><strong>Panel '+(i+1)+'</strong><label>Alignment<select data-layout-align="'+area+':'+i+'">'+['left','center','right'].map(v=>'<option '+(p.align===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+panelStyleControls(area,i,p)+'<textarea rows="6" class="panel-editor" data-panel-text="'+area+':'+i+'" spellcheck="false">'+esc(panelText(p))+'</textarea></div>').join('')+'</div>';
+  root.innerHTML='<label>Layout<select data-layout-count="'+area+'">'+[1,2,3].map(n=>'<option value="'+n+'" '+(l.columns===n?'selected':'')+'>'+n+' column'+(n>1?'s':'')+'</option>').join('')+'</select></label><p class="muted">Type directly inside each panel. Available placeholders: {logo}, {companyName}, {companyInfo}, {documentType}, {footerText}, {pageNumber}. Spaces and line breaks are preserved.</p><div class="layout-settings">'+l.panels.slice(0,l.columns).map((p,i)=>'<div class="layout-panel"><strong>Panel '+(i+1)+'</strong><label>Alignment<select data-layout-align="'+area+':'+i+'">'+['left','center','right'].map(v=>'<option '+(p.align===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+panelStyleControls(area,i,p)+'<div class="panel-inline-tools"><button type="button" class="small" data-inline-format="'+area+':'+i+':bold">B</button><button type="button" class="small" data-inline-format="'+area+':'+i+':italic">I</button><button type="button" class="small" data-inline-format="'+area+':'+i+':underline">U</button><button type="button" class="small" data-inline-format="'+area+':'+i+':size">Size</button><button type="button" class="small" data-inline-format="'+area+':'+i+':font">Font</button></div><textarea rows="6" class="panel-editor" data-panel-text="'+area+':'+i+'" spellcheck="false">'+esc(panelText(p))+'</textarea></div>').join('')+'</div>';
  }
 }
 function panelCss(p){
  const st=panelStyle(p),font=PANEL_FONTS.includes(st.font)?st.font:PANEL_FONTS[0],size=Math.max(6,Math.min(36,Number(st.size)||10));
  return 'font-family:'+font+';font-size:'+size+'pt;font-weight:'+(st.weight==='bold'?'bold':'normal')+';font-style:'+(st.italic==='italic'?'italic':'normal')+';';
+}
+function formatPanelText(value){
+ let html=value;
+ const wrappers=[['b','strong'],['i','em'],['u','u']];
+ // Work only on escaped, already shortcode-resolved text, retaining safe markup.
+ for(const [tag,element] of wrappers){
+  const r=new RegExp('\\\\['+tag+'\\\\]([\\\\s\\\\S]*?)\\\\[/'+tag+'\\\\]','gi');
+  html=html.replace(r,'<'+element+'>$1</'+element+'>');
+ }
+ html=html.replace(/\\[size=(\\d{1,2})\\]([\\s\\S]*?)\\[\\/size\\]/gi,(_,n,t)=>'<span style="font-size:'+Math.max(6,Math.min(36,Number(n)))+'pt">'+t+'</span>');
+ html=html.replace(/\\[font=(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)\\]([\\s\\S]*?)\\[\\/font\\]/gi,(_,n,t)=>'<span style="font-family:'+n+'">'+t+'</span>');
+ return html;
 }
 function layoutHtml(area,page,count){
  const l=layoutConfig(area),co=profile().company;
@@ -259,14 +272,14 @@ function layoutHtml(area,page,count){
     return esc(part);
    }).join('');
   }
-  return String(text||'').replace(/\r\n?/g,'\n').split('\n').map(line=>'<div class="shortcode-line">'+(line?resolve(line,0):'&#160;')+'</div>').join('');
+  return String(text||'').replace(/\r\n?/g,'\n').split('\n').map(line=>'<div class="shortcode-line">'+(line?formatPanelText(resolve(line,0)):'&#160;')+'</div>').join('');
  }
  return '<div class="flex-layout '+(area==='header'?'cHead':'footer-layout')+'" style="grid-template-columns:repeat('+l.columns+',minmax(0,1fr))">'+l.panels.slice(0,l.columns).map(p=>'<div class="layout-preserve" style="text-align:'+p.align+';min-width:0;'+panelCss(p)+'">'+renderText(panelText(p))+'</div>').join('')+'</div>';
 }
 function renderCompany(){let company=profile().company;renderCurrencies();renderLayoutControls();companyName.value=company.name;companyFooter.value=company.footer||'';companyInfo.value=companyInfoText(company)}
 const FONT_OPTIONS=['Arial, sans-serif','Times New Roman, serif','Georgia, serif','Verdana, sans-serif','Tahoma, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace'];function fontOptions(v){return FONT_OPTIONS.map(x=>'<option value="'+esc(x)+'" '+(x===v?'selected':'')+'>'+esc(x.split(',')[0])+'</option>').join('')}function renderTemplate(){let t=tpl();dividerPosition.value=t.dividerPosition||'none';paperSize.value=t.paperSize||'A4';pageMargins.value=t.pageMargins||'standard';tplTitle.value=t.title;detailFieldsSetup.innerHTML=t.fields.map((f,i)=>'<div class="detailcfg"><label>Label<input data-dflabel="'+i+'" value="'+esc(f[1])+'"></label><label>Locked Key<input readonly aria-readonly="true" tabindex="-1" value="'+esc(f[0])+'"></label><label>Input<select data-dftype="'+i+'"><option value="text" '+(f[2]!=='multiline'?'selected':'')+'>Single line</option><option value="multiline" '+(f[2]==='multiline'?'selected':'')+'>Multi-line</option></select></label><button type="button" class="small" data-dfup="'+i+'">↑</button><button type="button" class="small" data-dfdown="'+i+'">↓</button><button type="button" class="danger small" data-dfdel="'+i+'">×</button></div>').join('');fontHeader.innerHTML=fontOptions(profile().fonts.header);fontTitle.innerHTML=fontOptions(profile().fonts.title);fontBody.innerHTML=fontOptions(profile().fonts.body);fontItems.innerHTML=fontOptions(profile().fonts.items);fontFooter.innerHTML=fontOptions(profile().fonts.footer);columnOrder.innerHTML=t.columns.map((col,i)=>'<div class="dragcol" draggable="true" data-colindex="'+i+'"><span class="draghandle">☰</span><div><strong>'+esc(col[1])+'</strong><div class="key">'+esc(col[0])+'</div></div><button type="button" class="small" data-moveup="'+i+'">↑</button><button type="button" class="small" data-movedown="'+i+'">↓</button></div>').join('');subtotalOn.checked=!!t.subtotal;totalAdjustments.innerHTML=(t.adjustments||[]).map((a,i)=>'<div class="totalcfg"><label>Label<input data-adjlabel="'+i+'" value="'+esc(a.label||'')+'"></label><label>Operation<select data-adjop="'+i+'"><option value="add" '+(a.operation!=='subtract'?'selected':'')+'>Add</option><option value="subtract" '+(a.operation==='subtract'?'selected':'')+'>Deduct</option></select></label><label>Type<select data-adjmode="'+i+'"><option value="percent" '+(a.mode!=='fixed'?'selected':'')+'>Percent %</option><option value="fixed" '+(a.mode==='fixed'?'selected':'')+'>Fixed amount</option></select></label><label>Value<input data-adjvalue="'+i+'" type="number" step="0.01" value="'+esc(a.value??0)+'"></label><button class="danger small" data-adjdel="'+i+'">×</button></div>').join('');sig1On.checked=!!t.sigEnabled[0];sig2On.checked=!!t.sigEnabled[1];sig3On.checked=!!t.sigEnabled[2];sig1.value=t.sigs[0]||'';sig2.value=t.sigs[1]||'';sig3.value=t.sigs[2]||'';sigName1.value=t.sigNames[0]||'';sigName2.value=t.sigNames[1]||'';sigName3.value=t.sigNames[2]||''}
 function divider(){return '<div class="fullDivider" aria-hidden="true"></div>'}
-function header(page){let pos=tpl().dividerPosition||'none';return layoutHtml('header',page,1)+(pos==='header'?divider():'')+(layoutConfig('header').panels.slice(0,layoutConfig('header').columns).some(p=>panelText(p).includes('{documentType}'))?'':'<div class="doctitle">'+esc(doc.title)+'</div>')+(pos==='title'?divider():'')+(page>1?'<div class="muted" style="text-align:right">Continuation</div>':'')}
+function header(page){let pos=tpl().dividerPosition||'none';return layoutHtml('header',page,1)+(pos==='header'?divider():'')+(layoutConfig('header').panels.slice(0,layoutConfig('header').columns).some(p=>/\\{(?:documentType|doctype)\\}/i.test(panelText(p)))?'':'<div class="doctitle">'+esc(doc.title)+'</div>')+(pos==='title'?divider():'')+(page>1?'<div class="muted" style="text-align:right">Continuation</div>':'')}
 function info(){let rows=tpl().fields.filter(f=>String(doc.fieldValues[f[0]]??'').trim()!=='').map(f=>'<tr><td class="lab">'+esc(f[1])+'</td><td class="colon">:</td><td class="value">'+esc(doc.fieldValues[f[0]]||'')+'</td></tr>').join('');return rows?'<table class="info">'+rows+'</table>':''}
 function table(rows){let t=tpl();return '<table class="docTable"><colgroup>'+t.columns.map(c=>'<col style="width:'+c[3]+'%">').join('')+'</colgroup><thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+t.columns.map(c=>'<td class="'+(c[2]!=='text'?'num':'')+'">'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
 function totals(){let t=tpl();let cur=documentCurrency().code;let amount=n=>cur+' '+money(n);
@@ -342,6 +355,22 @@ function renderPreview(){
 }
 function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
 document.addEventListener('click',e=>{
+ const inline=e.target.closest('[data-inline-format]');
+ if(inline){
+  const [area,i,kind]=inline.dataset.inlineFormat.split(':'),editor=document.querySelector('[data-panel-text="'+area+':'+i+'"]');
+  if(!editor)return;
+  const begin=editor.selectionStart,end=editor.selectionEnd,selected=editor.value.slice(begin,end);
+  let open='',close='';
+  if(kind==='bold'){open='[b]';close='[/b]'}
+  if(kind==='italic'){open='[i]';close='[/i]'}
+  if(kind==='underline'){open='[u]';close='[/u]'}
+  if(kind==='size'){const n=prompt('Font size in points (6–36):','14');if(n===null)return;open='[size='+Math.max(6,Math.min(36,Number(n)||14))+']';close='[/size]'}
+  if(kind==='font'){const n=prompt('Font: Arial, Georgia, Verdana, Tahoma, Courier New, Times New Roman','Georgia');if(n===null)return;if(!['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'].includes(n))return alert('Unsupported font.');open='[font='+n+']';close='[/font]'}
+  editor.value=editor.value.slice(0,begin)+open+selected+close+editor.value.slice(end);
+  editor.focus();editor.setSelectionRange(begin+open.length,begin+open.length+selected.length);
+  layoutConfig(area).panels[+i].text=editor.value;saveSettings();renderPreview();return;
+ }
+
  const add=e.target.closest('[data-layout-add]'),remove=e.target.closest('[data-layout-remove]'),move=e.target.closest('[data-layout-move]');
  if(add||remove||move){
   const [area,pi,bi,offset]=(add?.dataset.layoutAdd||remove?.dataset.layoutRemove||move?.dataset.layoutMove).split(':');
