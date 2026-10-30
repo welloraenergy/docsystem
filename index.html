@@ -44,7 +44,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div class="card"><h2>Currencies</h2><p class="muted">Set allowed currencies for this business. The default is selected for new documents; saved documents retain their selected currency.</p><div id="currencySettings"></div><div class="row"><label>Currency code (e.g. USD)<input id="newCurrencyCode" maxlength="3" placeholder="USD"></label><label>Display symbol (e.g. US$)<input id="newCurrencySymbol" placeholder="US$"></label></div><p><button type="button" id="addCurrency" class="small">+ Add Currency</button></p></div>
 <div class="card"><h2>Company Header</h2><div class="row"><label>Company Name<input id="companyName"></label><label>Logo<input id="logoFile" type="file" accept="image/*"></label></div><div style="margin-top:8px"><button id="removeLogo" class="small">Remove Logo</button></div></div>
 <div class="card"><h2>Header Layout</h2><p class="muted">Choose full width, two columns or three columns. Add, move and remove content in each panel.</p><div id="headerLayoutControls"></div></div><div class="card"><h2>Footer Layout</h2><div id="footerLayoutControls"></div></div>
-<div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
+<div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><div class="panel-inline-tools"><button type="button" class="small" data-company-format="bold">B</button><button type="button" class="small" data-company-format="italic">I</button><button type="button" class="small" data-company-format="underline">U</button><button type="button" class="small" data-company-format="size">Size</button><button type="button" class="small" data-company-format="font">Font</button></div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
 <section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Built-in: {logo}, {companyName}, {companyname}, {companyInfo}, {doctype}, {docno}, {docdate}, {page}. Other preset fields are editable.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
@@ -265,7 +265,7 @@ function layoutHtml(area,page,count){
     if(!match)return esc(part);
     const key=match[1];
     if(key==='logo')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
-    if(Object.prototype.hasOwnProperty.call(values,key))return esc(values[key]);
+    if(Object.prototype.hasOwnProperty.call(values,key))return key==='companyInfo'||key==='footerText'?formatPanelText(esc(values[key])):esc(values[key]);
     if(Object.prototype.hasOwnProperty.call(globals(),key))return resolve(globals()[key],depth+1);
     return esc(part);
    }).join('');
@@ -353,7 +353,22 @@ function renderPreview(){
 }
 function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
 function setWorkspaceView(view){const mode=view==='preview'?'preview':'working',main=document.getElementById('docMain');main.classList.toggle('preview-mode',mode==='preview');main.classList.toggle('working-mode',mode==='working');document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});if(mode==='preview')renderPreview();}
-document.addEventListener('click',e=>{const workspaceTab=e.target.closest('[data-workspace-view]');if(workspaceTab){setWorkspaceView(workspaceTab.dataset.workspaceView);return;}
+document.addEventListener('click',e=>{
+ const companyFormat=e.target.closest('[data-company-format]');
+ if(companyFormat){
+  const editor=document.getElementById('companyInfo'),kind=companyFormat.dataset.companyFormat;
+  const begin=editor.selectionStart,end=editor.selectionEnd,selected=editor.value.slice(begin,end);
+  let open='',close='';
+  if(kind==='bold'){open='[b]';close='[/b]'}
+  if(kind==='italic'){open='[i]';close='[/i]'}
+  if(kind==='underline'){open='[u]';close='[/u]'}
+  if(kind==='size'){const n=prompt('Font size (6–36 pt)','12');if(n===null)return;open='[size='+Math.max(6,Math.min(36,Number(n)||12))+']';close='[/size]'}
+  if(kind==='font'){const n=prompt('Font: Arial, Georgia, Verdana, Tahoma, Courier New, Times New Roman','Arial');if(n===null)return;if(!['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'].includes(n))return alert('Unsupported font');open='[font='+n+']';close='[/font]'}
+  editor.value=editor.value.slice(0,begin)+open+selected+close+editor.value.slice(end);
+  editor.focus();editor.setSelectionRange(begin+open.length,begin+open.length+selected.length);
+  profile().company.headerText=editor.value;saveSettings();renderPreview();return;
+ }
+ const workspaceTab=e.target.closest('[data-workspace-view]');if(workspaceTab){setWorkspaceView(workspaceTab.dataset.workspaceView);return;}
  const inline=e.target.closest('[data-inline-format]');
  if(inline){
   const [area,i,kind]=inline.dataset.inlineFormat.split(':'),editor=document.querySelector('[data-panel-text="'+area+':'+i+'"]');
