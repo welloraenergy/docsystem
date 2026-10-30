@@ -37,6 +37,33 @@ body.preview .preview-only{display:block}
  .paper:last-child{break-after:auto;page-break-after:auto}
  .bar,header,.form-only,.notice{display:none!important}
 }
+</style><style id="excelPrintIdentity">
+/* Excel worksheet visual language: black bands, white labels, grey cell groups. */
+.paper .excel-title{color:#d1a000;text-align:right;font-size:13pt;font-weight:700;letter-spacing:.5px;margin:0 0 5mm}
+.paper .excel-company{min-height:28mm;margin-bottom:2mm}
+.paper .excel-company-name{color:#003c70;font-size:11pt!important}
+.paper .excel-company-details{font-size:7.2pt!important}
+.paper .excel-ref .ref-line{grid-template-columns:27mm 1fr;gap:1mm;font-size:7.2pt}
+.paper .excel-ref .ref-line span:last-child{background:#d0d0d0;min-height:4.3mm;padding:1mm}
+.paper .excel-client-title,.paper .excel-terms-header,.paper .excel-table thead th{background:#080808!important;color:white!important;border:0!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .excel-client-title{padding:1.1mm 0;margin:2mm 0 0;font-size:8pt}
+.paper .excel-client{gap:2mm;margin:0 0 5mm}
+.paper .excel-client>div{background:#d0d0d0;min-height:15mm;padding:1.7mm 2mm}
+.paper .excel-client .item{grid-template-columns:25mm 1fr;gap:1mm;min-height:3.8mm;font-size:7.2pt}
+.paper .excel-client .item b{font-size:7.2pt}
+.paper .excel-table{font-size:7pt;margin:2mm 0 1.5mm}
+.paper .excel-table th{background:#080808!important;color:#fff!important;font-size:6.6pt;padding:1.15mm .8mm}
+.paper .excel-table td{background:#d0d0d0!important;border-color:#aaa!important;height:6mm;padding:1mm .8mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .excel-table tbody tr:nth-child(even) td{background:#dadada!important}
+.paper .excel-terms-header{font-size:8pt;margin:2.5mm 0 1.5mm;padding:1mm 0}
+.paper .excel-terms{font-size:6.6pt;line-height:1.16}
+.paper .excel-term{margin-bottom:1mm;gap:1mm;grid-template-columns:6mm}
+.paper .excel-sig{gap:0;margin-top:5mm;border-top:3mm solid #080808;grid-template-columns:repeat(3,1fr)}
+.paper .excel-sig>div{background:#d0d0d0;min-height:19mm;border-right:1.5mm solid #080808;border-top:0;padding:2mm;font-size:7pt}
+.paper .excel-sig>div:last-child{border-right:0}
+.paper .excel-rfq{font-size:7pt;margin:2mm 0}
+.paper{padding:9mm 10mm 10mm;line-height:1.14}
+@media print{.paper{padding:9mm 10mm 10mm!important}.paper .excel-client-title,.paper .excel-terms-header,.paper .excel-table thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
