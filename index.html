@@ -24,6 +24,25 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 .paper .footer{left:var(--page-m,15mm);right:var(--page-m,15mm);bottom:5mm}
 @media print{html,body{width:auto!important;overflow:visible!important}main,.preview,#preview{display:block!important;width:100%!important;max-width:none!important;overflow:visible!important}.paper{display:flex!important;box-sizing:border-box!important;width:var(--page-w,210mm)!important;height:calc(var(--page-h,297mm) - 1mm)!important;min-height:0!important;max-height:calc(var(--page-h,297mm) - 1mm)!important;padding:var(--page-m,15mm)!important;margin:0!important;box-shadow:none!important;aspect-ratio:auto!important;overflow:hidden!important;break-after:page!important;page-break-after:always!important}.paper:last-child{break-after:auto!important;page-break-after:auto!important}}
 </style>
+<style id="workspaceFullWidthFix">
+/* Override the original two-column editor/preview layout after all legacy styles. */
+@media screen {
+  #docMain { display:block !important; grid-template-columns:none !important; width:100%; max-width:1600px; margin:16px auto; padding:0 16px 32px; }
+  #docMain > .workspace {display:block !important; width:100% !important; max-width:none !important; min-width:0 !important;}
+  #docMain > .preview {display:none !important;}
+  #docMain.working-mode #create .workspace-form {display:block !important; width:100% !important;}
+  #docMain.preview-mode #create .workspace-form {display:none !important;}
+  #docMain.preview-mode > .preview {display:block !important; position:static !important; visibility:visible !important; width:100% !important; max-width:none !important; min-width:0 !important; overflow:auto !important; margin-top:12px;}
+  #docMain .workspace-view-tabs {display:flex; gap:8px; margin-bottom:14px;}
+  #docMain #create .card {width:100%; max-width:none;}
+  #docMain #create .tblwrap {max-width:100%;overflow-x:auto;}
+  @media (max-width:680px) {#docMain{padding:0 8px 24px;margin:8px auto;} #docMain .workspace-view{flex:1;} }
+}
+@media print {
+  #docMain > .preview {display:block !important;position:static !important;visibility:visible !important;width:100% !important;}
+  #docMain .workspace, #docMain .workspace-view-tabs {display:none !important;}
+}
+</style>
 </head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
