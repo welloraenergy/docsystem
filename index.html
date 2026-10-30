@@ -246,14 +246,11 @@ function panelCss(p){
 }
 function formatPanelText(value){
  let html=value;
- const wrappers=[['b','strong'],['i','em'],['u','u']];
- // Work only on escaped, already shortcode-resolved text, retaining safe markup.
- for(const [tag,element] of wrappers){
-  const r=new RegExp('\\\\['+tag+'\\\\]([\\\\s\\\\S]*?)\\\\[/'+tag+'\\\\]','gi');
-  html=html.replace(r,'<'+element+'>$1</'+element+'>');
- }
- html=html.replace(/\\[size=(\\d{1,2})\\]([\\s\\S]*?)\\[\\/size\\]/gi,(_,n,t)=>'<span style="font-size:'+Math.max(6,Math.min(36,Number(n)))+'pt">'+t+'</span>');
- html=html.replace(/\\[font=(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)\\]([\\s\\S]*?)\\[\\/font\\]/gi,(_,n,t)=>'<span style="font-family:'+n+'">'+t+'</span>');
+ html=html.replace(/\[b\]([\s\S]*?)\[\/b\]/gi,'<strong>$1</strong>');
+ html=html.replace(/\[i\]([\s\S]*?)\[\/i\]/gi,'<em>$1</em>');
+ html=html.replace(/\[u\]([\s\S]*?)\[\/u\]/gi,'<u>$1</u>');
+ html=html.replace(/\[size=(\d{1,2})\]([\s\S]*?)\[\/size\]/gi,(_,n,t)=>'<span style="font-size:'+Math.max(6,Math.min(36,Number(n)))+'pt">'+t+'</span>');
+ html=html.replace(/\[font=(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)\]([\s\S]*?)\[\/font\]/gi,(_,n,t)=>'<span style="font-family:'+n+'">'+t+'</span>');
  return html;
 }
 function layoutHtml(area,page,count){
