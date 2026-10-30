@@ -227,11 +227,21 @@ function panelText(p){
  if(typeof p.text==='string')return p.text;
  return (p.blocks||[]).map(b=>({logo:'{logo}',name:'{companyName}',info:'{companyInfo}',footerText:'{footerText}',page:'{pageNumber}'}[b.type]||b.text||'')).join('\n');
 }
+const PANEL_FONTS=['Arial, sans-serif','Times New Roman, serif','Georgia, serif','Verdana, sans-serif','Tahoma, sans-serif','Courier New, monospace'];
+function panelStyle(p){if(!p.style)p.style={};return p.style}
+function panelStyleControls(area,i,p){
+ const st=panelStyle(p),prefix=area+':'+i;
+ return '<div class="row panel-style-controls"><label>Font<select data-panel-style="'+prefix+':font">'+PANEL_FONTS.map(font=>'<option value="'+esc(font)+'" '+((st.font||PANEL_FONTS[0])===font?'selected':'')+'>'+esc(font.split(',')[0])+'</option>').join('')+'</select></label><label>Size (pt)<input type="number" min="6" max="36" step="1" data-panel-style="'+prefix+':size" value="'+(st.size||10)+'"></label><label>Weight<select data-panel-style="'+prefix+':weight"><option value="normal" '+(st.weight!=='bold'?'selected':'')+'>Regular</option><option value="bold" '+(st.weight==='bold'?'selected':'')+'>Bold</option></select></label><label>Style<select data-panel-style="'+prefix+':italic"><option value="normal" '+(st.italic!=='italic'?'selected':'')+'>Normal</option><option value="italic" '+(st.italic==='italic'?'selected':'')+'>Italic</option></select></label></div>';
+}
 function renderLayoutControls(){
  for(const area of ['header','footer']){
   const l=layoutConfig(area),root=document.getElementById(area+'LayoutControls');
-  root.innerHTML='<label>Layout<select data-layout-count="'+area+'">'+[1,2,3].map(n=>'<option value="'+n+'" '+(l.columns===n?'selected':'')+'>'+n+' column'+(n>1?'s':'')+'</option>').join('')+'</select></label><p class="muted">Type directly inside each panel. Available placeholders: {logo}, {companyName}, {companyInfo}, {documentType}, {footerText}, {pageNumber}. Spaces and line breaks are preserved.</p><div class="layout-settings">'+l.panels.slice(0,l.columns).map((p,i)=>'<div class="layout-panel"><strong>Panel '+(i+1)+'</strong><label>Alignment<select data-layout-align="'+area+':'+i+'">'+['left','center','right'].map(v=>'<option '+(p.align===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label><textarea rows="6" class="panel-editor" data-panel-text="'+area+':'+i+'" spellcheck="false">'+esc(panelText(p))+'</textarea></div>').join('')+'</div>';
+  root.innerHTML='<label>Layout<select data-layout-count="'+area+'">'+[1,2,3].map(n=>'<option value="'+n+'" '+(l.columns===n?'selected':'')+'>'+n+' column'+(n>1?'s':'')+'</option>').join('')+'</select></label><p class="muted">Type directly inside each panel. Available placeholders: {logo}, {companyName}, {companyInfo}, {documentType}, {footerText}, {pageNumber}. Spaces and line breaks are preserved.</p><div class="layout-settings">'+l.panels.slice(0,l.columns).map((p,i)=>'<div class="layout-panel"><strong>Panel '+(i+1)+'</strong><label>Alignment<select data-layout-align="'+area+':'+i+'">'+['left','center','right'].map(v=>'<option '+(p.align===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+panelStyleControls(area,i,p)+'<textarea rows="6" class="panel-editor" data-panel-text="'+area+':'+i+'" spellcheck="false">'+esc(panelText(p))+'</textarea></div>').join('')+'</div>';
  }
+}
+function panelCss(p){
+ const st=panelStyle(p),font=PANEL_FONTS.includes(st.font)?st.font:PANEL_FONTS[0],size=Math.max(6,Math.min(36,Number(st.size)||10));
+ return 'font-family:'+font+';font-size:'+size+'pt;font-weight:'+(st.weight==='bold'?'bold':'normal')+';font-style:'+(st.italic==='italic'?'italic':'normal')+';';
 }
 function layoutHtml(area,page,count){
  const l=layoutConfig(area),co=profile().company;
@@ -251,7 +261,7 @@ function layoutHtml(area,page,count){
   }
   return String(text||'').replace(/\r\n?/g,'\n').split('\n').map(line=>'<div class="shortcode-line">'+(line?resolve(line,0):'&#160;')+'</div>').join('');
  }
- return '<div class="flex-layout '+(area==='header'?'cHead':'footer-layout')+'" style="grid-template-columns:repeat('+l.columns+',minmax(0,1fr))">'+l.panels.slice(0,l.columns).map(p=>'<div class="layout-preserve" style="text-align:'+p.align+';min-width:0">'+renderText(panelText(p))+'</div>').join('')+'</div>';
+ return '<div class="flex-layout '+(area==='header'?'cHead':'footer-layout')+'" style="grid-template-columns:repeat('+l.columns+',minmax(0,1fr))">'+l.panels.slice(0,l.columns).map(p=>'<div class="layout-preserve" style="text-align:'+p.align+';min-width:0;'+panelCss(p)+'">'+renderText(panelText(p))+'</div>').join('')+'</div>';
 }
 function renderCompany(){let company=profile().company;renderCurrencies();renderLayoutControls();companyName.value=company.name;companyFooter.value=company.footer||'';companyInfo.value=companyInfoText(company)}
 const FONT_OPTIONS=['Arial, sans-serif','Times New Roman, serif','Georgia, serif','Verdana, sans-serif','Tahoma, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace'];function fontOptions(v){return FONT_OPTIONS.map(x=>'<option value="'+esc(x)+'" '+(x===v?'selected':'')+'>'+esc(x.split(',')[0])+'</option>').join('')}function renderTemplate(){let t=tpl();dividerPosition.value=t.dividerPosition||'none';paperSize.value=t.paperSize||'A4';pageMargins.value=t.pageMargins||'standard';tplTitle.value=t.title;detailFieldsSetup.innerHTML=t.fields.map((f,i)=>'<div class="detailcfg"><label>Label<input data-dflabel="'+i+'" value="'+esc(f[1])+'"></label><label>Locked Key<input readonly aria-readonly="true" tabindex="-1" value="'+esc(f[0])+'"></label><label>Input<select data-dftype="'+i+'"><option value="text" '+(f[2]!=='multiline'?'selected':'')+'>Single line</option><option value="multiline" '+(f[2]==='multiline'?'selected':'')+'>Multi-line</option></select></label><button type="button" class="small" data-dfup="'+i+'">↑</button><button type="button" class="small" data-dfdown="'+i+'">↓</button><button type="button" class="danger small" data-dfdel="'+i+'">×</button></div>').join('');fontHeader.innerHTML=fontOptions(profile().fonts.header);fontTitle.innerHTML=fontOptions(profile().fonts.title);fontBody.innerHTML=fontOptions(profile().fonts.body);fontItems.innerHTML=fontOptions(profile().fonts.items);fontFooter.innerHTML=fontOptions(profile().fonts.footer);columnOrder.innerHTML=t.columns.map((col,i)=>'<div class="dragcol" draggable="true" data-colindex="'+i+'"><span class="draghandle">☰</span><div><strong>'+esc(col[1])+'</strong><div class="key">'+esc(col[0])+'</div></div><button type="button" class="small" data-moveup="'+i+'">↑</button><button type="button" class="small" data-movedown="'+i+'">↓</button></div>').join('');subtotalOn.checked=!!t.subtotal;totalAdjustments.innerHTML=(t.adjustments||[]).map((a,i)=>'<div class="totalcfg"><label>Label<input data-adjlabel="'+i+'" value="'+esc(a.label||'')+'"></label><label>Operation<select data-adjop="'+i+'"><option value="add" '+(a.operation!=='subtract'?'selected':'')+'>Add</option><option value="subtract" '+(a.operation==='subtract'?'selected':'')+'>Deduct</option></select></label><label>Type<select data-adjmode="'+i+'"><option value="percent" '+(a.mode!=='fixed'?'selected':'')+'>Percent %</option><option value="fixed" '+(a.mode==='fixed'?'selected':'')+'>Fixed amount</option></select></label><label>Value<input data-adjvalue="'+i+'" type="number" step="0.01" value="'+esc(a.value??0)+'"></label><button class="danger small" data-adjdel="'+i+'">×</button></div>').join('');sig1On.checked=!!t.sigEnabled[0];sig2On.checked=!!t.sigEnabled[1];sig3On.checked=!!t.sigEnabled[2];sig1.value=t.sigs[0]||'';sig2.value=t.sigs[1]||'';sig3.value=t.sigs[2]||'';sigName1.value=t.sigNames[0]||'';sigName2.value=t.sigNames[1]||'';sigName3.value=t.sigNames[2]||''}
@@ -396,6 +406,11 @@ document.addEventListener('change',e=>{
   const l=layoutConfig(e.target.dataset.layoutCount);l.columns=Number(e.target.value);
   while(l.panels.length<l.columns)l.panels.push({align:'left',blocks:[]});
   saveSettings();renderLayoutControls();renderPreview();return;
+ }
+ if(e.target.dataset.panelStyle){
+  const [area,i,key]=e.target.dataset.panelStyle.split(':'),st=panelStyle(layoutConfig(area).panels[+i]);
+  st[key]=key==='size'?Math.max(6,Math.min(36,Number(e.target.value)||10)):e.target.value;
+  saveSettings();renderPreview();return;
  }
  if(e.target.dataset.layoutAlign){
   const [a,i]=e.target.dataset.layoutAlign.split(':');layoutConfig(a).panels[+i].align=e.target.value;
