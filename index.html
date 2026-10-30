@@ -25,7 +25,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
 <header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button><button id="newBtn">New</button><label class="filebtn">Open<input id="openFile" type="file" accept=".json,application/json"></label><button id="saveBtn">Save Online</button><button id="pdfBtn" class="primary">Export PDF</button></div></header>
-<nav class="tabs"><button class="tab active" data-tab="create">Create</button><button class="tab" data-tab="documents">Documents</button><button id="cloudMenuUsers" class="tab" data-tab="users" hidden>Users</button><button class="tab" data-tab="company">Business Profiles</button><button class="tab" data-tab="template">Doc Template Settings</button><button class="tab" data-tab="backup">Backup / Restore</button></nav>
+<nav class="tabs"><button class="tab active" data-tab="create">Create</button><button class="tab" data-tab="documents">Documents</button><button id="cloudMenuUsers" class="tab" data-tab="users" hidden>Users</button><button class="tab" data-tab="company">Business Profiles</button><button class="tab" data-tab="global">Global Settings</button><button class="tab" data-tab="template">Doc Template Settings</button><button class="tab" data-tab="backup">Backup / Restore</button></nav>
 <main>
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
@@ -44,6 +44,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
+<section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Reserved: logo, companyName, companyInfo, documentType, footerText, pageNumber.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
 <section id="template" class="panel">
 <div class="card"><h2>Current Document Settings</h2><div class="muted" style="margin-bottom:8px">Business Profile → Document → Template Settings. Each business keeps its own version of every document template.</div><div class="row3"><label>Business Profile<select id="tplBusinessProfile"></select></label><label>Type<select id="tplType"></select></label><label>Title<input id="tplTitle"></label></div></div>
 <div class="card"><div class="between"><h2>Document Details Fields</h2><button id="addDetailField" class="small">+ Add Field</button></div><div class="muted" style="margin-bottom:8px">Document detail fields are shown one per line and aligned left. Core keys are predefined. Address is multi-line. Any added field uses extra_001, extra_002, etc. Keys are locked so saved JSON documents stay consistent.</div><div id="detailFieldsSetup" class="stack"></div></div>
@@ -165,7 +166,7 @@ function newDoc(type){
 newDoc('Delivery Order');
 function computed(row,c){if(c[2]!=='formula')return row[c[0]]||'';if(c[0]==='amount')return Number(row.qty||0)*Number(row.unit_price||0);return 0}
 function rowIsMeaningful(row){return tpl().columns.some(c=>c[2]!=='formula'&&c[0]!=='item'&&String(row[c[0]]??'').trim()!=='')}function formulaDisplay(row,c){return rowIsMeaningful(row)?money(computed(row,c)):''}function updateFormulaInputs(rowIndex){let t=tpl(),row=doc.items[rowIndex];t.columns.forEach(col=>{if(col[2]!=='formula')return;let el=document.querySelector('[data-ri="'+rowIndex+'"][data-key="'+CSS.escape(col[0])+'"]');if(el)el.value=formulaDisplay(row,col)})}function baseTotal(){let c=tpl().columns.find(c=>c[2]==='formula')||tpl().columns.find(c=>c[0]==='amount');return c?doc.items.reduce((s,r)=>s+Number(c[2]==='formula'?computed(r,c):r[c[0]]||0),0):0}
-function refresh(){renderSelectors();renderCreate();renderCompany();renderTemplate();renderPreview();saveSettings()}
+function refresh(){renderSelectors();renderCreate();renderCompany();renderGlobalPlaceholders();renderTemplate();renderPreview();saveSettings()}
 function renderSelectors(){
   let popts=settings.profiles.map(p=>'<option value="'+esc(p.id)+'" '+(p.id===settings.activeProfileId?'selected':'')+'>'+esc(profileLabel(p))+'</option>').join('');
   businessProfile.innerHTML=popts;companyProfile.innerHTML=popts;tplBusinessProfile.innerHTML=popts;
@@ -178,6 +179,12 @@ function updateProfileLabels(){
 }
 function renderCreate(){let t=tpl();renderDocCurrency();docTitle.value=doc.title;docFields.innerHTML=t.fields.map(f=>{let control=f[2]==='multiline'?'<textarea rows="3" data-field="'+f[0]+'">'+esc(doc.fieldValues[f[0]]||'')+'</textarea>':'<input data-field="'+f[0]+'" value="'+esc(doc.fieldValues[f[0]]||'')+'">';return '<label>'+esc(f[1])+control+'</label>'}).join('');let h='<thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';doc.items.forEach((r,i)=>h+='<tr>'+t.columns.map(c=>'<td><input data-ri="'+i+'" data-key="'+c[0]+'" '+(c[2]==='formula'?'readonly':'')+' value="'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'"></td>').join('')+'<td><button class="trash" data-del="'+i+'">×</button></td></tr>');items.innerHTML=h+'</tbody>';notes.value=doc.notes||''}
 function companyInfoText(c){if(typeof c.headerText==='string')return c.headerText;return (c.fields||[]).filter(f=>f.place!=='footer'&&f.value).map(f=>(f.label?f.label+': ':'')+f.value).join('\n')}
+const RESERVED_PLACEHOLDERS=new Set(['logo','companyName','companyInfo','documentType','footerText','pageNumber']);
+function globals(){if(!settings.globalPlaceholders||typeof settings.globalPlaceholders!=='object')settings.globalPlaceholders={};return settings.globalPlaceholders}
+function renderGlobalPlaceholders(){
+ const root=document.getElementById('globalPlaceholders');if(!root)return;
+ root.innerHTML=Object.entries(globals()).map(([key,value])=>'<div class="card"><div class="between"><strong>{'+esc(key)+'}</strong><button type="button" class="small danger" data-placeholder-remove="'+esc(key)+'">Remove</button></div><textarea rows="3" data-placeholder-key="'+esc(key)+'">'+esc(value)+'</textarea></div>').join('')||'<p class="muted">No custom placeholders yet.</p>';
+}
 function layoutConfig(area){
  const co=profile().company;
  if(!co.layouts)co.layouts={};
@@ -216,13 +223,19 @@ function layoutHtml(area,page,count){
  const l=layoutConfig(area),co=profile().company;
  const values={companyName:co.name||'',companyInfo:companyInfoText(co),documentType:doc.title||doc.type||'',footerText:co.footer||'',pageNumber:'Page '+page+' of '+count};
  function renderText(text){
-  const chunks=String(text||'').split(/(\\{(?:logo|companyName|companyInfo|documentType|footerText|pageNumber)\\})/g);
-  return chunks.map(s=>{
-   const key=s.slice(1,-1);
-   if(s==='{logo}')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
-   if(Object.prototype.hasOwnProperty.call(values,key))return esc(values[key]);
-   return esc(s);
-  }).join('');
+  function resolve(source,depth){
+   if(depth>4)return esc(source);
+   return String(source||'').split(/(\\{[a-zA-Z][a-zA-Z0-9_]*\\})/g).map(part=>{
+    const match=/^\\{([a-zA-Z][a-zA-Z0-9_]*)\\}$/.exec(part);
+    if(!match)return esc(part);
+    const key=match[1];
+    if(key==='logo')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
+    if(Object.prototype.hasOwnProperty.call(values,key))return esc(values[key]);
+    if(Object.prototype.hasOwnProperty.call(globals(),key))return resolve(globals()[key],depth+1);
+    return esc(part);
+   }).join('');
+  }
+  return resolve(text,0);
  }
  return '<div class="flex-layout '+(area==='header'?'cHead':'footer-layout')+'" style="grid-template-columns:repeat('+l.columns+',minmax(0,1fr))">'+l.panels.slice(0,l.columns).map(p=>'<div class="layout-preserve" style="text-align:'+p.align+';min-width:0">'+renderText(panelText(p))+'</div>').join('')+'</div>';
 }
@@ -315,6 +328,16 @@ document.addEventListener('click',e=>{
   saveSettings();renderLayoutControls();renderPreview();return;
  }
  let tab=e.target.closest('.tab');if(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab.dataset.tab))}
+if(e.target.id==='addPlaceholder'){
+ const key=newPlaceholderKey.value.trim(),value=newPlaceholderValue.value;
+ if(!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(key)||RESERVED_PLACEHOLDERS.has(key))return alert('Choose a valid, non-reserved placeholder name.');
+ if(Object.prototype.hasOwnProperty.call(globals(),key))return alert('Placeholder already exists.');
+ globals()[key]=value;newPlaceholderKey.value='';newPlaceholderValue.value='';saveSettings();renderGlobalPlaceholders();renderPreview();return;
+}
+if(e.target.dataset.placeholderRemove){
+ if(!confirm('Remove placeholder? Its references will remain as text in documents.'))return;
+ delete globals()[e.target.dataset.placeholderRemove];saveSettings();renderGlobalPlaceholders();renderPreview();return;
+}
 if(e.target.id==='addCurrency'){
  const co=profile().company;normalizeCurrencies(co);
  const code=newCurrencyCode.value.trim().toUpperCase(),symbol=newCurrencySymbol.value.trim()||code;
@@ -346,7 +369,7 @@ if(e.target.id==='removeLogo'){profile().company.logo='';refresh()}
 if(e.target.id==='exportSettings')download('docfac-settings.json',{kind:'DocFacSettings',settings});
 if(e.target.id==='resetBtn'&&confirm('Reset DocFac settings?')){settings=migrateSettings(clone(defaults));normalizeProfiles();saveSettings();newDoc('Delivery Order');refresh()}
 });
-document.addEventListener('input',e=>{if(e.target.dataset.panelText){const [area,i]=e.target.dataset.panelText.split(':');layoutConfig(area).panels[+i].text=e.target.value;saveSettings();renderPreview();return;}
+document.addEventListener('input',e=>{if(e.target.dataset.placeholderKey){globals()[e.target.dataset.placeholderKey]=e.target.value;saveSettings();renderPreview();return;}if(e.target.dataset.panelText){const [area,i]=e.target.dataset.panelText.split(':');layoutConfig(area).panels[+i].text=e.target.value;saveSettings();renderPreview();return;}
  if(e.target.dataset.layoutText){
   const [area,pi,bi]=e.target.dataset.layoutText.split(':');
   layoutConfig(area).panels[+pi].blocks[+bi].text=e.target.value;
