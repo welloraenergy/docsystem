@@ -188,8 +188,11 @@ const PRESET_PLACEHOLDERS={
 };
 function globals(){
  if(!settings.globalPlaceholders||typeof settings.globalPlaceholders!=='object')settings.globalPlaceholders={};
- for(const [key,value] of Object.entries(PRESET_PLACEHOLDERS))
-  if(!Object.prototype.hasOwnProperty.call(settings.globalPlaceholders,key))settings.globalPlaceholders[key]=value;
+ if(!settings.presetPlaceholdersInitialized){
+  for(const [key,value] of Object.entries(PRESET_PLACEHOLDERS))
+   if(!Object.prototype.hasOwnProperty.call(settings.globalPlaceholders,key))settings.globalPlaceholders[key]=value;
+  settings.presetPlaceholdersInitialized=true;
+ }
  return settings.globalPlaceholders;
 }
 function renderGlobalPlaceholders(){
