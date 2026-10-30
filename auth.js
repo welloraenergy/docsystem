@@ -78,7 +78,7 @@ onAuthStateChanged(auth, async user => {
       return;
     }
     window.DocSystemCloud=cloud;
-    document.querySelectorAll('[data-tab="company"],[data-tab="template"],[data-tab="backup"]').forEach(x=>x.hidden=!["superadmin","manager"].includes(profile.role));
+    document.querySelectorAll('[data-tab="company"],[data-tab="global"],[data-tab="template"],[data-tab="backup"]').forEach(x=>x.hidden=!["superadmin","manager"].includes(profile.role));
     unlock(user, profile);
     cloud.startCloud(user, profile).catch(error => {
       console.error("DocSystem cloud initialization failed:", error);
