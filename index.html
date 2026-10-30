@@ -225,8 +225,8 @@ function layoutHtml(area,page,count){
  function renderText(text){
   function resolve(source,depth){
    if(depth>4)return esc(source);
-   return String(source||'').split(/(\\{[a-zA-Z][a-zA-Z0-9_]*\\})/g).map(part=>{
-    const match=/^\\{([a-zA-Z][a-zA-Z0-9_]*)\\}$/.exec(part);
+   return String(source||'').split(/(\{[a-zA-Z][a-zA-Z0-9_]*\})/g).map(part=>{
+    const match=/^\{([a-zA-Z][a-zA-Z0-9_]*)\}$/.exec(part);
     if(!match)return esc(part);
     const key=match[1];
     if(key==='logo')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
