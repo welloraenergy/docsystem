@@ -130,6 +130,20 @@ body.preview .preview-only{display:block}
 .paper .excel-ref .ref-line span:first-child{border-right:1px solid #9da7b2;padding-right:1.5mm}
 .paper .excel-ref .ref-line span:last-child{padding-left:1.8mm}
 @media print{.paper .excel-client .item b,.paper .excel-ref .ref-line span:first-child{border-right:1px solid #9da7b2!important}}
+</style><style id="fullClientColumnSeparators">
+/* Two uninterrupted vertical rules, with address reserved its own generous space. */
+.paper .excel-client{display:grid!important;grid-template-columns:58% 42%!important;align-items:stretch}
+.paper .excel-client>div{display:flex!important;flex-direction:column!important;padding:0!important;min-width:0;min-height:39mm!important;position:relative}
+.paper .excel-client>div:first-child{--label-col:24mm}
+.paper .excel-client>div:last-child{--label-col:19mm}
+.paper .excel-client>div::before{content:"";position:absolute;top:0;bottom:0;left:var(--label-col);border-left:1px solid #999;pointer-events:none;z-index:1}
+.paper .excel-client .item,.paper .excel-client>div:last-child .item{display:grid!important;grid-template-columns:var(--label-col) minmax(0,1fr)!important;gap:0!important;min-height:4.3mm!important;line-height:1.35;align-items:start}
+.paper .excel-client .item b{border:0!important;margin:0!important;padding:1mm 1.5mm .3mm .5mm!important;min-height:0!important;display:block!important;text-align:right;white-space:nowrap}
+.paper .excel-client .item span{padding:1mm 1.7mm .3mm!important;white-space:pre-wrap!important;overflow-wrap:break-word}
+.paper .excel-client .address-row{flex:1!important;min-height:19mm!important}
+.paper .excel-client .address-row .client-address-value{min-height:18mm!important;white-space:pre-wrap!important}
+.paper .excel-client>div:last-child .item{min-height:6.5mm!important}
+@media print{.paper .excel-client>div::before{border-left:1px solid #999!important}}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
@@ -149,7 +163,7 @@ function draw(){$('preset').value=state.preset;$('fields').innerHTML=fields.map(
 function resultTable(arr,table){if(!arr.length)return '';const rental=table==='rental';return '<h3>'+(rental?'Rental Equipment':'Consumables')+'</h3><table><thead><tr><th>No.</th><th>Description</th><th>Unit</th><th>Qty</th><th>'+(rental?'Daily Rental Rate':'Unit Price')+' ('+esc(state.currency)+')</th><th>'+(rental?'LIH/DBR':'Amount')+'</th></tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.description)+'</td><td>'+esc(r.unit)+'</td><td>'+esc(r.qty)+'</td><td>'+esc(r.rate)+'</td><td>'+(rental?esc(r.lih):fmt(Number(r.qty)*Number(r.rate)))+'</td></tr>').join('')+'</tbody></table>'}
 function formatExcelDate(v){if(!v)return '';const d=new Date(v+'T12:00:00');if(Number.isNaN(d.getTime()))return v;return new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^(\w+), (\d+) (\w+) (\d+)$/, '$1, $2 $3, $4')}
 function render(){
- const row=(label,value)=>'<div class="item"><b>'+esc(label)+':</b><span>'+esc(value||'')+'</span></div>';
+ const row=(label,value)=>'<div class="item'+(label==='Address'?' address-row':'')+'"><b>'+esc(label)+':</b><span'+(label==='Address'?' class="client-address-value"':'')+'>'+esc(value||'')+'</span></div>';
  const qrows=(key,title,arr)=>{
   if(!arr.length)return '';
   const rental=key==='rental',columns=rental?['No','Description','Unit','Qty','Daily Rental Rate ('+state.currency+'/Day/Unit)','LIH/DBR ('+state.currency+'/Unit)']:['No','Description','Unit','Qty','Amount ('+state.currency+'/Unit)','Total Amount ('+state.currency+')'];
