@@ -198,6 +198,36 @@ body.preview .preview-only{display:block}
 .paper .excel-terms .excel-term .term-num{display:block!important;width:auto!important;min-width:0!important;text-align:center!important;white-space:nowrap}
 .paper .excel-terms .excel-term .term-text{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;text-align:justify!important;text-justify:inter-word!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;line-height:1.25!important}
 @media print{.paper .excel-terms,.paper .excel-terms .excel-term{width:100%!important}.paper .excel-terms .term-text{text-align:justify!important}}
+</style><style id="termsTableBorders">
+/* Excel-style enclosing box with one continuous rule between clause numbers and text. */
+.paper .excel-terms{
+ position:relative;
+ border:1px solid #555!important;
+ padding:1.5mm 1.8mm 1.5mm 0!important;
+ box-sizing:border-box!important;
+}
+.paper .excel-terms::before{
+ content:"";
+ position:absolute;
+ top:0;
+ bottom:0;
+ left:8mm;
+ border-left:1px solid #999;
+ pointer-events:none;
+}
+.paper .excel-terms .excel-term{
+ display:grid!important;
+ grid-template-columns:8mm minmax(0,1fr)!important;
+ gap:1.5mm!important;
+ margin:0 0 1.5mm!important;
+ width:100%!important;
+}
+.paper .excel-terms .excel-term .term-num{padding:0 1mm!important;text-align:center!important}
+.paper .excel-terms .excel-term .term-text{padding-right:0!important;text-align:justify!important}
+@media print{
+ .paper .excel-terms{border:1px solid #555!important}
+ .paper .excel-terms::before{border-left:1px solid #999!important}
+}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div id="rental3TermsControls" hidden><p class="muted">The 18 standard terms are preset from the Excel rental quotation. Only the designated facility address is an editable grey area. Rental and payment periods update the relevant clauses.</p><label>Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
