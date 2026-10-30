@@ -149,6 +149,14 @@ body.preview .preview-only{display:block}
 .paper .excel-ref .ref-line span:first-child{border-right:0!important;padding-right:1.5mm!important}
 .paper .excel-ref .ref-line span:last-child{border-left:0!important}
 @media print{.paper .excel-ref .ref-line span:first-child{border-right:0!important}}
+</style><style id="excelRightAlignedDocumentDetails">
+/* Keep quotation metadata compact and aligned against the right page margin. */
+.paper .excel-right{align-items:flex-end!important}
+.paper .excel-ref{width:58mm!important;max-width:100%!important;margin-left:auto!important;margin-right:0!important}
+.paper .excel-ref .ref-line{grid-template-columns:21mm minmax(0,1fr)!important;gap:1mm!important;width:100%!important}
+.paper .excel-ref .ref-line span:first-child{text-align:right!important}
+.paper .excel-title{align-self:flex-end!important;text-align:right!important}
+@media print{.paper .excel-ref{margin-left:auto!important;margin-right:0!important}}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
