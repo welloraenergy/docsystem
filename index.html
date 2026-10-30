@@ -4,7 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DocSystem</title>
 <link rel="icon" href="favicon-32x32.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
-<style id="printPaperRule">@page{size:A4 portrait;margin:0}</style>
+<style id="printPaperRule">@page{size:A4 portrait;margin:0}.layout-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}.layout-panel{min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f8fafc;border:1px solid #ddd;border-radius:8px}.layout-block{background:white;border:1px solid #ddd;border-radius:6px;padding:8px;min-width:0}.layout-block textarea{margin:6px 0}.flex-layout{display:grid;width:100%;align-items:start;gap:4mm}.flex-layout.cHead{min-height:0;grid-template-columns:unset}.flex-layout>div{overflow-wrap:anywhere}.layout-preserve{white-space:pre-wrap;overflow-wrap:anywhere}.footer-layout{font-size:9px}
+</style>
 <style>
 html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(.auth-ready) body > main {display:none!important}
 #authGate[hidden]{display:none!important}#authGate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#eef2f6;padding:18px}#authCard{background:white;border:1px solid #dfe5ec;border-radius:14px;padding:24px;width:min(100%,390px);box-shadow:0 12px 35px #0001}#authCard h2{margin:0 0 6px}#authCard form{display:grid;gap:12px;margin-top:16px}#authMessage{color:#475569;line-height:1.4;font-size:13px}#authAccount{font-size:12px;color:#cbd5e1;margin-right:6px}
@@ -38,7 +39,8 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div class="card"><div class="between"><h2>Business Profiles</h2><span class="muted">Each business keeps its own document settings.</span></div><div class="row"><label>Current Business<select id="companyProfile"></select></label><div class="actions" style="align-items:end"><button id="newProfile" class="small">+ New</button><button id="duplicateProfile" class="small">Duplicate</button><button id="deleteProfile" class="danger small">Delete</button></div></div></div>
 <div class="card"><h2>Currencies</h2><p class="muted">Set allowed currencies for this business. The default is selected for new documents; saved documents retain their selected currency.</p><div id="currencySettings"></div><div class="row"><label>Currency code (e.g. USD)<input id="newCurrencyCode" maxlength="3" placeholder="USD"></label><label>Display symbol (e.g. US$)<input id="newCurrencySymbol" placeholder="US$"></label></div><p><button type="button" id="addCurrency" class="small">+ Add Currency</button></p></div>
 <div class="card"><h2>Company Header</h2><div class="row"><label>Company Name<input id="companyName"></label><label>Logo<input id="logoFile" type="file" accept="image/*"></label></div><div style="margin-top:8px"><button id="removeLogo" class="small">Remove Logo</button></div></div>
-<div class="card"><h2>Letterhead Builder</h2><p class="muted">Place each element in a left, center, or right panel. Use order numbers to arrange elements vertically (including logo above or below company information).</p><div id="letterheadControls"></div></div><div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
+<div class="card"><h2>Header Layout</h2><p class="muted">Choose full width, two columns or three columns. Add, move and remove content in each panel.</p><div id="headerLayoutControls"></div></div><div class="card"><h2>Footer Layout</h2><div id="footerLayoutControls"></div></div>
+<div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
 <section id="template" class="panel">
@@ -175,30 +177,52 @@ function updateProfileLabels(){
 }
 function renderCreate(){let t=tpl();renderDocCurrency();docTitle.value=doc.title;docFields.innerHTML=t.fields.map(f=>{let control=f[2]==='multiline'?'<textarea rows="3" data-field="'+f[0]+'">'+esc(doc.fieldValues[f[0]]||'')+'</textarea>':'<input data-field="'+f[0]+'" value="'+esc(doc.fieldValues[f[0]]||'')+'">';return '<label>'+esc(f[1])+control+'</label>'}).join('');let h='<thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';doc.items.forEach((r,i)=>h+='<tr>'+t.columns.map(c=>'<td><input data-ri="'+i+'" data-key="'+c[0]+'" '+(c[2]==='formula'?'readonly':'')+' value="'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'"></td>').join('')+'<td><button class="trash" data-del="'+i+'">×</button></td></tr>');items.innerHTML=h+'</tbody>';notes.value=doc.notes||''}
 function companyInfoText(c){if(typeof c.headerText==='string')return c.headerText;return (c.fields||[]).filter(f=>f.place!=='footer'&&f.value).map(f=>(f.label?f.label+': ':'')+f.value).join('\n')}
-function letterheadSettings(){
- let co=profile().company;
- if(!co.letterhead)co.letterhead={logo:{panel:'left',order:1},name:{panel:'center',order:1},info:{panel:'center',order:2},align:{left:'left',center:'center',right:'right'}};
- return co.letterhead;
+function layoutConfig(area){
+ const co=profile().company;
+ if(!co.layouts)co.layouts={};
+ if(!co.layouts[area]){
+  const old=co.letterhead;
+  co.layouts[area]=area==='header'?{columns:3,panels:[
+   {align:'left',blocks:[{type:'logo'}]},
+   {align:'center',blocks:[{type:'name'},{type:'info'}]},
+   {align:'right',blocks:[]}
+  ]}:{columns:1,panels:[{align:'center',blocks:[{type:'footerText'},{type:'page'}]}]};
+  if(old&&area==='header'){
+   co.layouts.header.panels=[{align:'left',blocks:[]},{align:'center',blocks:[]},{align:'right',blocks:[]}];
+   for(const k of ['logo','name','info']){
+    const p=old[k]||{},i=['left','center','right'].indexOf(p.panel);
+    if(i>=0)co.layouts.header.panels[i].blocks.push({type:k,order:p.order||1});
+   }
+   co.layouts.header.panels.forEach((p,i)=>{p.align=old.align?.[['left','center','right'][i]]||p.align;p.blocks.sort((a,b)=>(a.order||1)-(b.order||1))});
+  }
+ }
+ const l=co.layouts[area];
+ if(![1,2,3].includes(Number(l.columns)))l.columns=3;
+ while(l.panels.length<l.columns)l.panels.push({align:'left',blocks:[]});
+ return l;
 }
-function renderLetterheadControls(){
- const h=letterheadSettings();
- letterheadControls.innerHTML=['logo','name','info'].map(k=>'<div class="row" style="margin-bottom:8px"><label>'+({logo:'Company Logo',name:'Company Name',info:'Company Information'}[k])+' position<select data-head-panel="'+k+'">'+['hidden','left','center','right'].map(v=>'<option value="'+v+'" '+((h[k]?.panel||'hidden')===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label><label>Vertical order<input type="number" min="1" max="10" data-head-order="'+k+'" value="'+(h[k]?.order||1)+'"></label></div>').join('')+'<div class="row3">'+['left','center','right'].map(k=>'<label>'+k+' alignment<select data-head-align="'+k+'">'+['left','center','right'].map(v=>'<option '+((h.align?.[k]||k)===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label>').join('')+'</div>';
+const BLOCK_TYPES=[['logo','Logo'],['name','Company Name'],['info','Company Information'],['footerText','Footer Text'],['page','Page Number'],['custom','Custom Text']];
+function renderLayoutControls(){
+ for(const area of ['header','footer']){
+  const l=layoutConfig(area),root=document.getElementById(area+'LayoutControls');
+  root.innerHTML='<label>Panel layout<select data-layout-count="'+area+'">'+[1,2,3].map(n=>'<option value="'+n+'" '+(l.columns===n?'selected':'')+'>'+n+' column'+(n>1?'s':'')+'</option>').join('')+'</select></label><div class="layout-settings">'+l.panels.slice(0,l.columns).map((p,i)=>'<div class="layout-panel"><strong>Panel '+(i+1)+'</strong><label>Alignment<select data-layout-align="'+area+':'+i+'">'+['left','center','right'].map(v=>'<option '+(p.align===v?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+p.blocks.map((b,j)=>'<div class="layout-block"><strong>'+BLOCK_TYPES.find(t=>t[0]===b.type)?.[1]+'</strong>'+(b.type==='custom'?'<textarea data-layout-text="'+area+':'+i+':'+j+'" rows="2">'+esc(b.text||'')+'</textarea>':'')+'<div class="actions"><button type="button" class="small" data-layout-move="'+area+':'+i+':'+j+':-1">↑</button><button type="button" class="small" data-layout-move="'+area+':'+i+':'+j+':1">↓</button><button type="button" class="small danger" data-layout-remove="'+area+':'+i+':'+j+'">×</button></div></div>').join('')+'<label>Add Content<select data-layout-type="'+area+':'+i+'">'+BLOCK_TYPES.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+'</select></label><button type="button" class="small" data-layout-add="'+area+':'+i+'">+ Add Block</button></div>').join('')+'</div>';
+ }
 }
-function renderCompany(){let company=profile().company;renderCurrencies();renderLetterheadControls();companyName.value=company.name;companyFooter.value=company.footer||'';companyInfo.value=companyInfoText(company)}
+function layoutHtml(area,page,count){
+ const l=layoutConfig(area),co=profile().company;
+ return '<div class="flex-layout '+(area==='header'?'cHead':'footer-layout')+'" style="grid-template-columns:repeat('+l.columns+',minmax(0,1fr))">'+l.panels.slice(0,l.columns).map(p=>'<div style="text-align:'+p.align+';min-width:0">'+p.blocks.map(b=>{
+  if(b.type==='logo')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
+  if(b.type==='name')return '<div class="cname">'+esc(co.name)+'</div>';
+  if(b.type==='info')return '<div class="cline layout-preserve">'+esc(companyInfoText(co))+'</div>';
+  if(b.type==='footerText')return '<div class="layout-preserve">'+esc(co.footer||'')+'</div>';
+  if(b.type==='page')return 'Page '+page+' of '+count;
+  return '<div class="layout-preserve">'+esc(b.text||'')+'</div>';
+ }).join('')+'</div>').join('')+'</div>';
+}
+function renderCompany(){let company=profile().company;renderCurrencies();renderLayoutControls();companyName.value=company.name;companyFooter.value=company.footer||'';companyInfo.value=companyInfoText(company)}
 const FONT_OPTIONS=['Arial, sans-serif','Times New Roman, serif','Georgia, serif','Verdana, sans-serif','Tahoma, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace'];function fontOptions(v){return FONT_OPTIONS.map(x=>'<option value="'+esc(x)+'" '+(x===v?'selected':'')+'>'+esc(x.split(',')[0])+'</option>').join('')}function renderTemplate(){let t=tpl();dividerPosition.value=t.dividerPosition||'none';paperSize.value=t.paperSize||'A4';pageMargins.value=t.pageMargins||'standard';tplTitle.value=t.title;detailFieldsSetup.innerHTML=t.fields.map((f,i)=>'<div class="detailcfg"><label>Label<input data-dflabel="'+i+'" value="'+esc(f[1])+'"></label><label>Locked Key<input readonly aria-readonly="true" tabindex="-1" value="'+esc(f[0])+'"></label><label>Input<select data-dftype="'+i+'"><option value="text" '+(f[2]!=='multiline'?'selected':'')+'>Single line</option><option value="multiline" '+(f[2]==='multiline'?'selected':'')+'>Multi-line</option></select></label><button type="button" class="small" data-dfup="'+i+'">↑</button><button type="button" class="small" data-dfdown="'+i+'">↓</button><button type="button" class="danger small" data-dfdel="'+i+'">×</button></div>').join('');fontHeader.innerHTML=fontOptions(profile().fonts.header);fontTitle.innerHTML=fontOptions(profile().fonts.title);fontBody.innerHTML=fontOptions(profile().fonts.body);fontItems.innerHTML=fontOptions(profile().fonts.items);fontFooter.innerHTML=fontOptions(profile().fonts.footer);columnOrder.innerHTML=t.columns.map((col,i)=>'<div class="dragcol" draggable="true" data-colindex="'+i+'"><span class="draghandle">☰</span><div><strong>'+esc(col[1])+'</strong><div class="key">'+esc(col[0])+'</div></div><button type="button" class="small" data-moveup="'+i+'">↑</button><button type="button" class="small" data-movedown="'+i+'">↓</button></div>').join('');subtotalOn.checked=!!t.subtotal;totalAdjustments.innerHTML=(t.adjustments||[]).map((a,i)=>'<div class="totalcfg"><label>Label<input data-adjlabel="'+i+'" value="'+esc(a.label||'')+'"></label><label>Operation<select data-adjop="'+i+'"><option value="add" '+(a.operation!=='subtract'?'selected':'')+'>Add</option><option value="subtract" '+(a.operation==='subtract'?'selected':'')+'>Deduct</option></select></label><label>Type<select data-adjmode="'+i+'"><option value="percent" '+(a.mode!=='fixed'?'selected':'')+'>Percent %</option><option value="fixed" '+(a.mode==='fixed'?'selected':'')+'>Fixed amount</option></select></label><label>Value<input data-adjvalue="'+i+'" type="number" step="0.01" value="'+esc(a.value??0)+'"></label><button class="danger small" data-adjdel="'+i+'">×</button></div>').join('');sig1On.checked=!!t.sigEnabled[0];sig2On.checked=!!t.sigEnabled[1];sig3On.checked=!!t.sigEnabled[2];sig1.value=t.sigs[0]||'';sig2.value=t.sigs[1]||'';sig3.value=t.sigs[2]||'';sigName1.value=t.sigNames[0]||'';sigName2.value=t.sigNames[1]||'';sigName3.value=t.sigNames[2]||''}
 function divider(){return '<div class="fullDivider" aria-hidden="true"></div>'}
-function header(page){
- const co=profile().company,h=letterheadSettings(),position=tpl().dividerPosition||'none';
- const sections=['left','center','right'].map(side=>{
-  let keys=['logo','name','info'].filter(k=>h[k]?.panel===side).sort((a,b)=>(h[a]?.order||1)-(h[b]?.order||1));
-  return '<div style="min-width:0;text-align:'+(['left','center','right'].includes(h.align?.[side])?h.align[side]:side)+'">'+keys.map(k=>{
-   if(k==='logo')return co.logo?'<img class="logo" src="'+co.logo+'">':'';
-   if(k==='name')return '<div class="cname">'+esc(co.name)+'</div>';
-   return '<div class="cline" style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(companyInfoText(co))+'</div>';
-  }).join('')+'</div>';
- }).join('');
- return '<div class="cHead">'+sections+'</div>'+(position==='header'?divider():'')+'<div class="doctitle">'+esc(doc.title)+'</div>'+(position==='title'?divider():'')+(page>1?'<div class="muted" style="text-align:right">Continuation</div>':'');
-}
+function header(page){let pos=tpl().dividerPosition||'none';return layoutHtml('header',page,1)+(pos==='header'?divider():'')+'<div class="doctitle">'+esc(doc.title)+'</div>'+(pos==='title'?divider():'')+(page>1?'<div class="muted" style="text-align:right">Continuation</div>':'')}
 function info(){let rows=tpl().fields.filter(f=>String(doc.fieldValues[f[0]]??'').trim()!=='').map(f=>'<tr><td class="lab">'+esc(f[1])+'</td><td class="colon">:</td><td class="value">'+esc(doc.fieldValues[f[0]]||'')+'</td></tr>').join('');return rows?'<table class="info">'+rows+'</table>':''}
 function table(rows){let t=tpl();return '<table class="docTable"><colgroup>'+t.columns.map(c=>'<col style="width:'+c[3]+'%">').join('')+'</colgroup><thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+t.columns.map(c=>'<td class="'+(c[2]!=='text'?'num':'')+'">'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
 function totals(){let t=tpl();let cur=documentCurrency().code;let amount=n=>cur+' '+money(n);
@@ -208,7 +232,7 @@ if(t.family==='journal'){
 }
 let b=baseTotal(),running=b,rows=[];(t.adjustments||[]).forEach(a=>{let v=Number(a.value||0),amt=a.mode==='fixed'?v:running*(v/100);if(a.operation==='subtract'){running-=amt}else{running+=amt}let label=esc(a.label||'Adjustment')+(a.mode==='percent'?' ('+v+'%)':'');rows.push('<tr><td>'+label+'</td><td>'+(a.operation==='subtract'?'-':'+')+amount(amt)+'</td></tr>')});if(!t.subtotal&&rows.length===0)return'';let s='<table class="totals">';if(t.subtotal)s+='<tr><td>Subtotal</td><td>'+amount(b)+'</td></tr>';s+=rows.join('');return s+'<tr class="grand"><td>Total</td><td>'+amount(running)+'</td></tr></table>'}
 function sigs(){let t=tpl();if(!(t.sigEnabled||[]).some(Boolean))return'';let intro=t.family==='movement'?'Please receive the following goods in good order and conditions.<br>Goods sold are not returnable.':'';return '<div class="ack">'+intro+'<div class="siggrid">'+t.sigs.map((s,i)=>t.sigEnabled[i]?'<div class="sig"><div class="sigtitle">'+esc(s)+'</div><div class="sigline">'+esc((t.sigNames||[])[i]||'Signature / Name')+'</div></div>':'<div class="sig sigempty" aria-hidden="true"></div>').join('')+'</div></div>'}
-function footer(p,n){let c=profile().company,ff=c.fields.filter(x=>x.place==='footer'&&x.value);let f=ff.map(x=>(x.layout==='full'?'\n':'')+x.label+': '+x.value.replace(/\n/g,' / ')).join(' · ').replace(/^\n/,'').replace(/ · \n/g,'\n');return '<div class="footer"><span style="white-space:pre-line">'+esc([f,c.footer].filter(Boolean).join('\n'))+'</span><span>Page '+p+' of '+n+'</span></div>'}
+function footer(p,n){return '<div class="footer">'+layoutHtml('footer',p,n)+'</div>'}
 let paginationBusy=false;
 function renderPreview(){
   if(paginationBusy)return;
