@@ -43,6 +43,13 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
   #docMain .workspace, #docMain .workspace-view-tabs {display:none !important;}
 }
 </style>
+<style id="shortcodeLineLayoutFix">
+/* Permanent stylesheet: printPaperRule is dynamically replaced during preview. */
+#preview .shortcode-line, .pagination-measure .shortcode-line {display:block!important;white-space:pre-wrap!important;overflow-wrap:break-word;min-height:1em;line-height:inherit}
+#preview .shortcode-line + .shortcode-line, .pagination-measure .shortcode-line + .shortcode-line {clear:both}
+#preview .layout-preserve, .pagination-measure .layout-preserve {white-space:pre-wrap!important}
+@media print {.shortcode-line{display:block!important;white-space:pre-wrap!important;min-height:1em}.layout-preserve{white-space:pre-wrap!important}}
+</style>
 </head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
