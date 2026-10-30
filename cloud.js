@@ -108,6 +108,11 @@ export async function openDocument(id,duplicate=false){
   try{
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
+    if(s.data().templateSource==="preset"){
+      const mode=duplicate?"&duplicate=1":"&docId="+encodeURIComponent(id);
+      window.location.href="preset-quotation.html?preset="+encodeURIComponent(s.data().templateId||"rental3")+mode;
+      return;
+    }
     bridge().setDocument(decode(s.data()));currentId=duplicate?null:id;
     if(duplicate)notify("Duplicate ready: change document number and save");
     else notify("Document opened: "+(s.data().number||""));
