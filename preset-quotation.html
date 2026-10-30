@@ -157,7 +157,41 @@ body.preview .preview-only{display:block}
 .paper .excel-ref .ref-line span:first-child{text-align:right!important}
 .paper .excel-title{align-self:flex-end!important;text-align:right!important}
 @media print{.paper .excel-ref{margin-left:auto!important;margin-right:0!important}}
-</style><style id="profileLogoStyling">.paper .excel-business-logo{display:block;max-width:35mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin-bottom:1mm}</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
+</style><style id="profileLogoStyling">.paper .excel-business-logo{display:block;max-width:35mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin-bottom:1mm}</style><style id="excelLabelValueBaselineAlignment">
+/* A shared text baseline for each label/value pair, including long multiline values. */
+.paper .excel-ref .ref-line{
+ display:grid!important;
+ align-items:baseline!important;
+ grid-template-columns:21mm minmax(0,1fr)!important;
+ min-height:4.3mm!important;
+ line-height:1.4!important;
+}
+.paper .excel-ref .ref-line span{
+ align-self:baseline!important;
+ line-height:1.4!important;
+ padding-top:0!important;
+ padding-bottom:0!important;
+}
+.paper .excel-client .item,
+.paper .excel-client>div:last-child .item{
+ align-items:baseline!important;
+ line-height:1.4!important;
+}
+.paper .excel-client .item b,
+.paper .excel-client .item span{
+ align-self:baseline!important;
+ line-height:1.4!important;
+ padding-top:.65mm!important;
+ padding-bottom:.35mm!important;
+}
+.paper .excel-client .address-row{align-items:start!important}
+.paper .excel-client .address-row b,
+.paper .excel-client .address-row span{align-self:start!important}
+@media print{
+ .paper .excel-ref .ref-line{align-items:baseline!important}
+ .paper .excel-client .item{align-items:baseline!important}
+}
+</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
