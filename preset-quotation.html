@@ -144,6 +144,11 @@ body.preview .preview-only{display:block}
 .paper .excel-client .address-row .client-address-value{min-height:18mm!important;white-space:pre-wrap!important}
 .paper .excel-client>div:last-child .item{min-height:6.5mm!important}
 @media print{.paper .excel-client>div::before{border-left:1px solid #999!important}}
+</style><style id="headerNoVerticalDivider">
+/* Excel reference header uses aligned labels and values without separator rules. */
+.paper .excel-ref .ref-line span:first-child{border-right:0!important;padding-right:1.5mm!important}
+.paper .excel-ref .ref-line span:last-child{border-left:0!important}
+@media print{.paper .excel-ref .ref-line span:first-child{border-right:0!important}}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
