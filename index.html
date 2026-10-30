@@ -45,7 +45,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div class="card"><h2>Company Information</h2><div class="muted" style="margin-bottom:8px">Type exactly what should appear under the company name. Multiple lines, blank lines and spaces are preserved in the document and PDF.</div><textarea id="companyInfo" rows="7" spellcheck="false" style="min-height:170px;white-space:pre-wrap" placeholder="Registration No.: 123456-A&#10;Address line 1&#10;Tel: 123          Fax: 456"></textarea></div>
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
-<section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Reserved: logo, companyName, companyInfo, documentType, footerText, pageNumber.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
+<section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Built-in: {logo}, {companyName}, {companyname}, {companyInfo}, {doctype}, {docno}, {docdate}, {page}. Other preset fields are editable.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
 <section id="template" class="panel">
 <div class="card"><h2>Current Document Settings</h2><div class="muted" style="margin-bottom:8px">Business Profile → Document → Template Settings. Each business keeps its own version of every document template.</div><div class="row3"><label>Business Profile<select id="tplBusinessProfile"></select></label><label>Type<select id="tplType"></select></label><label>Title<input id="tplTitle"></label></div></div>
 <div class="card"><div class="between"><h2>Document Details Fields</h2><button id="addDetailField" class="small">+ Add Field</button></div><div class="muted" style="margin-bottom:8px">Document detail fields are shown one per line and aligned left. Core keys are predefined. Address is multi-line. Any added field uses extra_001, extra_002, etc. Keys are locked so saved JSON documents stay consistent.</div><div id="detailFieldsSetup" class="stack"></div></div>
@@ -180,8 +180,18 @@ function updateProfileLabels(){
 }
 function renderCreate(){let t=tpl();renderDocCurrency();docTitle.value=doc.title;docFields.innerHTML=t.fields.map(f=>{let control=f[2]==='multiline'?'<textarea rows="3" data-field="'+f[0]+'">'+esc(doc.fieldValues[f[0]]||'')+'</textarea>':'<input data-field="'+f[0]+'" value="'+esc(doc.fieldValues[f[0]]||'')+'">';return '<label>'+esc(f[1])+control+'</label>'}).join('');let h='<thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';doc.items.forEach((r,i)=>h+='<tr>'+t.columns.map(c=>'<td><input data-ri="'+i+'" data-key="'+c[0]+'" '+(c[2]==='formula'?'readonly':'')+' value="'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'"></td>').join('')+'<td><button class="trash" data-del="'+i+'">×</button></td></tr>');items.innerHTML=h+'</tbody>';notes.value=doc.notes||''}
 function companyInfoText(c){if(typeof c.headerText==='string')return c.headerText;return (c.fields||[]).filter(f=>f.place!=='footer'&&f.value).map(f=>(f.label?f.label+': ':'')+f.value).join('\n')}
-const RESERVED_PLACEHOLDERS=new Set(['logo','companyName','companyInfo','documentType','footerText','pageNumber']);
-function globals(){if(!settings.globalPlaceholders||typeof settings.globalPlaceholders!=='object')settings.globalPlaceholders={};return settings.globalPlaceholders}
+const RESERVED_PLACEHOLDERS=new Set(['logo','companyName','companyname','companyInfo','documentType','doctype','footerText','pageNumber','page','docno','docdate']);
+const PRESET_PLACEHOLDERS={
+ regno:'',tagline:'',address:'',telephone:'',mobile:'',fax:'',email:'',website:'',
+ contactPerson:'',taxNo:'',sstNo:'',bankName:'',bankAccount:'',bankAccountName:'',
+ paymentInstructions:'',businessHours:'',referenceNote:''
+};
+function globals(){
+ if(!settings.globalPlaceholders||typeof settings.globalPlaceholders!=='object')settings.globalPlaceholders={};
+ for(const [key,value] of Object.entries(PRESET_PLACEHOLDERS))
+  if(!Object.prototype.hasOwnProperty.call(settings.globalPlaceholders,key))settings.globalPlaceholders[key]=value;
+ return settings.globalPlaceholders;
+}
 function renderGlobalPlaceholders(){
  const root=document.getElementById('globalPlaceholders');if(!root)return;
  root.innerHTML=Object.entries(globals()).map(([key,value])=>'<div class="card"><div class="between"><strong>{'+esc(key)+'}</strong><button type="button" class="small danger" data-placeholder-remove="'+esc(key)+'">Remove</button></div><textarea rows="3" data-placeholder-key="'+esc(key)+'">'+esc(value)+'</textarea></div>').join('')||'<p class="muted">No custom placeholders yet.</p>';
@@ -222,7 +232,7 @@ function renderLayoutControls(){
 }
 function layoutHtml(area,page,count){
  const l=layoutConfig(area),co=profile().company;
- const values={companyName:co.name||'',companyInfo:companyInfoText(co),documentType:doc.title||doc.type||'',footerText:co.footer||'',pageNumber:'Page '+page+' of '+count};
+ const values={companyName:co.name||'',companyname:co.name||'',companyInfo:companyInfoText(co),documentType:doc.title||doc.type||'',doctype:doc.title||doc.type||'',footerText:co.footer||'',pageNumber:'Page '+page+' of '+count,page:'Page '+page+' of '+count,docno:doc.fieldValues?.docno||'',docdate:doc.fieldValues?.date||''};
  function renderText(text){
   function resolve(source,depth){
    if(depth>4)return esc(source);
