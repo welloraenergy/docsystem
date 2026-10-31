@@ -26,6 +26,14 @@
       "editor": "preset-do.html",
       "templateCount": 1,
       "status": "editor-integrated-pending-live-A4-and-Firebase-verification"
+    },
+    {
+      "id": "returning-ticket",
+      "name": "Returning Ticket",
+      "manifest": "return/index.json",
+      "editor": "preset-return.html",
+      "templateCount": 1,
+      "status": "editor-integrated-pending-live-A4-and-Firebase-verification"
     }
   ],
   "isolation": {
@@ -44,5 +52,5 @@
     "branch": "restore/working-before-quotation-po-json-2026-10-31",
     "commit": "3b10bd8a866176b9775ba27e7e41214d10bbaf66"
   },
-  "note": "Quotation, Purchase Order and Delivery Ticket remain separate preset families. Delivery Ticket fields/signatures/photos follow its original Excel workbook; document design reuses existing business header, presets library, A4 controller and Firebase collection."
+  "note": "Quotation, PO, DO and Returning Ticket have separate Excel-faithful field definitions. DO and Returning share A4 layout and 700 KB image-storage behavior; Return has its own Comments field and destination default."
 }
