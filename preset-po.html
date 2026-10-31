@@ -152,7 +152,7 @@
  .paper .po-terms-section.excel-terms-section{border:1px solid #444!important}
  .paper .po-terms-section .po-terms::before{border-left:1px solid #999!important}
 }
-</style></head><body>
+</style><style id="poClause6PermanentFields20261101">.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.paper .po-contact-clause .po-clause6-lines{white-space:normal}.po-signature-groups label,.po-terms-fitting label{min-width:0}</style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
@@ -273,7 +273,7 @@ function draw(){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
  }
  drawRows();
- $('termsEditor').innerHTML=template.terms.map(t=>'<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong><textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">Optional: override this clause text. Leave empty to use the JSON template.</small></label>').join('');
+ $('termsEditor').innerHTML=template.terms.map(t=>'<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong>'+(t.number===6?'<small class="muted">a) Contact Name · b) Contact Number · c) Contact Email are always retained. Enter their values in Delivery / Collection & Contact Details above.</small>':'')+'<textarea data-term="'+t.number+'" rows="3" placeholder="'+(t.number===6?'Optional additional notes (does not replace a/b/c)':'Optional replacement clause text')+'">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">'+(t.number===6?'Optional additional notes appear below the three contact lines.':'Optional: override this clause text. Leave empty to use the JSON template.')+'</small></label>').join('');
  $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'"></label>').join('')+'</fieldset>').join('');
  render();
 }
@@ -327,13 +327,16 @@ function render(){
  const amountWords='<div class="po-words"><strong>Total Amount in Words: </strong>'+esc(f.currency||'MYR')+' '+esc(moneyWords(grand))+'</div>';
  const clauseMarkup=t=>{
   const override=state.termsOverrides?.[t.number];
-  const isContact=t.number===6&&!String(override||'').trim();
+  // Clause 6 is a structured Excel field group, not a replaceable paragraph.
+  // Free text is an optional note below the permanent a/b/c rows.
+  const isContact=t.number===6;
   const body=isContact?
    '<div class="po-clause6-lines">'+[
      ['a) Contact Name:',f.welloraContactName],
      ['b) Contact Number:',f.welloraContactPhone],
      ['c) Contact Email:',f.welloraContactEmail]
-   ].map(([label,value])=>'<div class="po-clause6-line"><span>'+esc(label)+'</span><span>'+esc(poPresetValue(value||''))+'</span></div>').join('')+'</div>':
+   ].map(([label,value])=>'<div class="po-clause6-line"><span>'+esc(label)+'</span><span>'+esc(poPresetValue(value||''))+'</span></div>').join('')+
+   (String(override||'').trim()?'<div class="po-clause6-note">'+esc(poPresetValue(override))+'</div>':'')+'</div>':
    '<span class="po-clause-body">'+esc(poPresetValue(expandedTerm(t)))+'</span>';
   return '<div class="po-term excel-term'+(isContact?' po-contact-clause':'')+'"><span class="po-term-num term-num">'+t.number+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(isContact?body:' '+body)+'</div></div>';
  };
