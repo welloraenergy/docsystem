@@ -146,17 +146,17 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
   <label>Logo width (mm)<input type="number" min="10" max="70" data-preset-header-logo-width value="35"></label>
 <div class="preset-heading-configuration">
 <strong>Document heading (right side)</strong>
-<p class="muted">Text and extra lines are entered in the Working Form. This shared formatting applies to all preset quotations.</p>
+<p class="muted">Use {documentTitle} for the heading entered in Workspace. Apply B, I, U, Size, Font or Color to selected text, just like Company Name.</p>
 <label>Font<select data-preset-header-style="title:font"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option></select></label>
 <label>Size (pt)<input type="number" min="8" max="36" data-preset-header-size="title" value="16"></label>
 <label>Color<input type="color" data-preset-header-color="title" value="#d6a900"></label>
 <label>Alignment<select data-preset-header-style="title:align"><option value="left">Left</option><option value="center">Center</option><option value="right" selected>Right</option></select></label>
-<div class="panel-inline-tools" aria-label="Document heading formatting"><span class="muted">Use B, I, U, Size, Font and Color in the Working Form for selected words.</span></div>
+<div class="panel-inline-tools" aria-label="Format document heading"><button type="button" class="small" data-preset-inline="titleText:bold">B</button><button type="button" class="small" data-preset-inline="titleText:italic">I</button><button type="button" class="small" data-preset-inline="titleText:underline">U</button><button type="button" class="small" data-preset-inline="titleText:size">Size</button><button type="button" class="small" data-preset-inline="titleText:font">Font</button><button type="button" class="small" data-preset-inline="titleText:color">Color</button></div><textarea rows="3" data-preset-header-field="titleText" spellcheck="false" placeholder="{documentTitle}"></textarea>
 <strong>Additional heading lines</strong>
 <label>Font<select data-preset-header-style="extra:font"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option></select></label>
 <label>Size (pt)<input type="number" min="6" max="24" data-preset-header-size="extra" value="9"></label>
 <label>Color<input type="color" data-preset-header-color="extra" value="#111111"></label>
-<label>Alignment<select data-preset-header-style="extra:align"><option value="left">Left</option><option value="center">Center</option><option value="right" selected>Right</option></select></label>
+<label>Alignment<select data-preset-header-style="extra:align"><option value="left">Left</option><option value="center">Center</option><option value="right" selected>Right</option></select></label><div class="panel-inline-tools" aria-label="Format additional heading lines"><button type="button" class="small" data-preset-inline="extraText:bold">B</button><button type="button" class="small" data-preset-inline="extraText:italic">I</button><button type="button" class="small" data-preset-inline="extraText:underline">U</button><button type="button" class="small" data-preset-inline="extraText:size">Size</button><button type="button" class="small" data-preset-inline="extraText:font">Font</button><button type="button" class="small" data-preset-inline="extraText:color">Color</button></div><textarea rows="3" data-preset-header-field="extraText" spellcheck="false" placeholder="{headingLines}"></textarea>
  </div>
  </div>
  <div>
@@ -320,14 +320,17 @@ function computed(row,c){if(c[2]!=='formula')return row[c[0]]||'';if(c[0]==='amo
 function rowIsMeaningful(row){return tpl().columns.some(c=>c[2]!=='formula'&&c[0]!=='item'&&String(row[c[0]]??'').trim()!=='')}function formulaDisplay(row,c){return rowIsMeaningful(row)?money(computed(row,c)):''}function updateFormulaInputs(rowIndex){let t=tpl(),row=doc.items[rowIndex];t.columns.forEach(col=>{if(col[2]!=='formula')return;let el=document.querySelector('[data-ri="'+rowIndex+'"][data-key="'+CSS.escape(col[0])+'"]');if(el)el.value=formulaDisplay(row,col)})}function baseTotal(){let c=tpl().columns.find(c=>c[2]==='formula')||tpl().columns.find(c=>c[0]==='amount');return c?doc.items.reduce((s,r)=>s+Number(c[2]==='formula'?computed(r,c):r[c[0]]||0),0):0}
 function presetHeaderConfig(){
  const current=profile();
- if(!current.presetHeader)current.presetHeader={logo:'',name:'',details:'',logoWidth:35,nameSize:13,detailsSize:8};
+ if(!current.presetHeader)current.presetHeader={logo:'',name:'',details:'',titleText:'{documentTitle}',extraText:'{headingLines}',logoWidth:35,nameSize:13,detailsSize:8};
  return current.presetHeader;
 }
 function renderPresetHeaderConfig(){
  const select=document.getElementById('presetHeaderProfileSelect');if(!select)return;
  select.innerHTML=settings.profiles.map(p=>'<option value="'+esc(p.id)+'" '+(p.id===settings.activeProfileId?'selected':'')+'>'+esc(profileLabel(p))+'</option>').join('');
  const config=presetHeaderConfig();
- document.querySelectorAll('[data-preset-header-field]').forEach(el=>el.value=config[el.dataset.presetHeaderField]||'');
+ document.querySelectorAll('[data-preset-header-field]').forEach(el=>{
+  const key=el.dataset.presetHeaderField,defaults={titleText:'{documentTitle}',extraText:'{headingLines}'};
+  el.value=config[key]===undefined?(defaults[key]||''):config[key];
+ });
  document.querySelectorAll('[data-preset-header-size]').forEach(el=>el.value=config[el.dataset.presetHeaderSize+'Size']||10);
  const logoWidth=document.querySelector('[data-preset-header-logo-width]');if(logoWidth)logoWidth.value=config.logoWidth||35;
  document.querySelectorAll('[data-preset-header-color]').forEach(el=>{const color=config[el.dataset.presetHeaderColor+'Color'];el.value=/^#[0-9a-f]{6}$/i.test(String(color||''))?color:(el.dataset.presetHeaderColor==='title'?'#d6a900':el.dataset.presetHeaderColor==='name'?'#081527':'#111111')});
