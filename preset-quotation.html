@@ -268,13 +268,33 @@ body.preview .preview-only{display:block}
 </style><style id="hideIrrelevantPresetFields">
 /* The form's label {display:flex} must not override the hidden attribute. */
 .form-only [hidden], .form-only label[hidden], .form-only #specialTkrLocations[hidden] {display:none!important}
-</style><style id="profilePresetIntegration">.preset-business-choice{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12px;white-space:nowrap}.preset-business-choice select{max-width:220px}.paper .excel-company-details{white-space:pre-wrap!important;overflow-wrap:anywhere}@media(max-width:680px){.preset-business-choice{width:100%}}</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
+</style><style id="profilePresetIntegration">.preset-business-choice{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12px;white-space:nowrap}.preset-business-choice select{max-width:220px}.paper .excel-company-details{white-space:pre-wrap!important;overflow-wrap:anywhere}@media(max-width:680px){.preset-business-choice{width:100%}}</style><style id="embeddedWorkspacePresentation">
+body.embedded-preset{background:#f1f5f9}
+body.embedded-preset>header{display:none!important}
+body.embedded-preset .bar{padding:10px 12px;position:sticky;top:0;z-index:10;border:1px solid #e0e7ef;border-radius:9px}
+body.embedded-preset .bar>a,body.embedded-preset .bar>#preset{display:none!important}
+body.embedded-preset .wrap{margin:10px auto 0;padding:0 1px;max-width:100%}
+body.embedded-preset .form-only{width:100%}
+body.embedded-preset .form-only .card{max-width:none}
+@media print{body.embedded-preset .bar{display:none!important}}
+</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div id="rental3TermsControls" hidden><p class="muted">Terms belong to the selected quotation template. Fixed clauses cannot be edited; only document-specific fields are shown below. Rental and payment periods update applicable wording.</p><label id="standardFacilityAddressField">Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="specialTkrLocations" hidden><label>Clause 4 — Equipment Pick-up Address<textarea id="pickupAddress" rows="3"></textarea></label><label>Clause 5 — Equipment Return Address<textarea id="returnAddress" rows="3"></textarea></label></div><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,collection,doc,getDoc,setDoc,serverTimestamp,query,where,getDocs,limit} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+if(new URLSearchParams(location.search).get('embedded')==='1'){
+ document.body.classList.add('embedded-preset');
+ const notifyParent=()=>{
+  if(window.parent===window)return;
+  const height=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
+  window.parent.postMessage({type:'docsystem-preset-height',height},location.origin);
+ };
+ window.addEventListener('load',notifyParent);
+ window.addEventListener('resize',notifyParent);
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(notifyParent).observe(document.body);
+}
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='staff',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false;
 onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role||'staff'}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in'});
 async function refreshBusinessProfiles(){
