@@ -34,7 +34,7 @@
     "loadout": "",
     "terms": "",
     "termsFontSize": 8,
-    "termsPageFit": "auto"
+    "termsPageFit": "flow"
   },
   "layout": {
     "paper": "A4",
@@ -58,7 +58,27 @@
       "maxPt": 9,
       "stepPt": 0.5
     },
-    "singleOuterScroll": true
+    "singleOuterScroll": true,
+    "pageFitting": {
+      "default": "flow",
+      "options": [
+        {
+          "value": "flow",
+          "label": "Continue across pages (complete lines)",
+          "strategy": "Keep chosen font size; begin on available page space and split terms at complete-word line boundaries"
+        },
+        {
+          "value": "auto",
+          "label": "Auto Fit (minimum 6.5pt)",
+          "strategy": "Shrink clauses where possible"
+        },
+        {
+          "value": "normal",
+          "label": "Normal size / add page",
+          "strategy": "Use selected size and move whole clauses when needed"
+        }
+      ]
+    }
   },
   "fields": [
     {
