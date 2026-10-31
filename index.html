@@ -76,10 +76,20 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 </style><style id="documentToolbarConsistency">
 /* Embedded preset has its own Save / Open / Print toolbar. Do not show custom actions. */
 body.preset-current header #newBtn,body.preset-current header #saveBtn,body.preset-current header #pdfBtn,body.preset-current header .filebtn{display:none!important}
+</style><style id="unifiedWorkspaceToolbarStyle">
+.unified-workspace-toolbar{background:#fff;border:1px solid #dfe5ec;border-radius:12px;padding:12px 14px;margin:0 0 14px;display:flex;align-items:end;gap:12px;flex-wrap:wrap;position:relative}
+.unified-workspace-toolbar .workspace-business-label{flex:0 1 235px;min-width:190px}
+.unified-toolbar-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1 1 610px}
+.unified-toolbar-actions button{width:auto;min-width:0}
+#workspaceStatus{font-size:12px;flex:0 1 auto}
+#docMain.preset-editor-mode #unifiedWorkspaceToolbar,#docMain.working-mode #unifiedWorkspaceToolbar,#docMain.preview-mode #unifiedWorkspaceToolbar{display:flex!important}
+body.preset-current header #newBtn,body.preset-current header #saveBtn,body.preset-current header #pdfBtn{display:none!important}
+@media(max-width:700px){.unified-workspace-toolbar{align-items:stretch}.unified-workspace-toolbar .workspace-business-label{flex:1 1 100%}.unified-toolbar-actions{flex:1 1 100%}.unified-toolbar-actions button{flex:1 1 auto}}
+@media print{#unifiedWorkspaceToolbar{display:none!important}}
 </style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
-<header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button><button id="newBtn">New</button><label class="filebtn">Open<input id="openFile" type="file" accept=".json,application/json"></label><button id="saveBtn">Save Online</button><button id="pdfBtn" class="primary">Export PDF</button></div></header>
+<header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button></div></header>
 <nav class="tabs" aria-label="Main navigation"><button class="tab active" data-tab="create">Workspace</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="library">Templates</button><button id="settingsNavTab" class="tab cloud-admin-only" data-tab="settings">Settings</button></nav>
 <div id="settingsSubnav" class="clean-subnav" hidden>
 <button type="button" data-subpage="company">Business Profiles</button>
@@ -92,8 +102,19 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="staff">Staff</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
-<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspacePresetChoice" hidden>Preset Quotation<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label></div></div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-view-tabs" role="group" aria-label="Workspace view"><button type="button" class="workspace-view active" data-workspace-view="working" aria-pressed="true">Working Form</button><button type="button" class="workspace-view" data-workspace-view="preview" aria-pressed="false">Preview</button></div><div class="workspace-form">
-<div class="card"><div class="row3"><label>Business Profile<select id="businessProfile"></select></label><label>Document Type<select id="docType"></select></label><label>Document Title<input id="docTitle"></label></div><div class="row" style="margin-top:10px"><label>Document Currency<select id="docCurrency"></select></label><div class="muted" style="align-self:end">Currencies available for the selected business profile</div></div></div>
+<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspacePresetChoice" hidden>Preset Quotation<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label></div></div>
+<div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
+<label class="workspace-business-label">Business Profile<select id="businessProfile" aria-label="Business Profile"></select></label>
+<div class="unified-toolbar-actions">
+<button type="button" class="workspace-view active" data-workspace-view="working" aria-pressed="true">Working Form</button>
+<button type="button" class="workspace-view" data-workspace-view="preview" aria-pressed="false">Preview</button>
+<button type="button" id="newBtn">New</button>
+<button type="button" id="workspaceOpenSaved">Open Saved</button>
+<button type="button" id="saveBtn">Save Online</button>
+<button type="button" id="pdfBtn" class="primary">Print / PDF</button>
+</div><span id="workspaceStatus" class="muted" role="status">Ready</span>
+</div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-form">
+<div class="card"><div class="row3"><label>Document Type<select id="docType"></select></label><label>Document Title<input id="docTitle"></label></div><div class="row" style="margin-top:10px"><label>Document Currency<select id="docCurrency"></select></label><div class="muted" style="align-self:end">Currencies available for the selected business profile</div></div></div>
 <div class="card"><h2>Document Details</h2><div id="docFields" class="stack"></div></div>
 <div class="card"><div class="between"><h2>Items</h2><button id="addItem" class="small">+ Add Row</button></div><div class="tblwrap"><table id="items" class="editTable"></table></div></div>
 <div class="card"><h2>Notes / Delivery Info</h2><textarea id="notes" rows="4"></textarea></div></div>
@@ -124,7 +145,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="card"><div class="between"><h2>Totals</h2><label class="check"><input id="subtotalOn" type="checkbox"> Show subtotal</label></div><div class="muted">Add as many additions or deductions as needed. Percentage adjustments are calculated in order from the running balance.</div><div class="presetbar"><button type="button" class="small" data-totalpreset="tax">+ Tax</button><button type="button" class="small" data-totalpreset="charge">+ Charge</button><button type="button" class="small" data-totalpreset="discount">+ Discount</button><button type="button" class="small" id="addTotalLine">+ Custom</button></div><div id="totalAdjustments" class="stack"></div></div>
 <div class="card"><h2>Signature / Acknowledgement</h2><div class="muted" style="margin-bottom:8px">Enable only the signature blocks needed for this document.</div><div class="row3"><div><label class="check"><input id="sig1On" type="checkbox"> Show Block 1</label><label>Block 1<textarea id="sig1" rows="3"></textarea></label><label style="margin-top:8px">Text below line (optional)<textarea id="sigName1" rows="2" placeholder="Leave blank for Signature / Name"></textarea></label></div><div><label class="check"><input id="sig2On" type="checkbox"> Show Block 2</label><label>Block 2<textarea id="sig2" rows="3"></textarea></label><label style="margin-top:8px">Text below line (optional)<textarea id="sigName2" rows="2" placeholder="Leave blank for Signature / Name"></textarea></label></div><div><label class="check"><input id="sig3On" type="checkbox"> Show Block 3</label><label>Block 3<textarea id="sig3" rows="3"></textarea></label><label style="margin-top:8px">Text below line (optional)<textarea id="sigName3" rows="2" placeholder="Leave blank for Signature / Name"></textarea></label></div></div></div>
 </section>
-<section id="backup" class="panel"><div class="notice">Business profiles and document templates are saved in Firestore for authorized users. JSON import/export is optional for migration and backups.</div><div class="card"><h2>Settings Backup</h2><div class="actions"><button id="exportSettings">Export Settings</button><label class="filebtn">Import Settings<input id="importSettings" type="file" accept=".json,application/json"></label><button id="resetBtn" class="danger">Reset App</button></div></div></section>
+<section id="backup" class="panel"><div class="notice">Business profiles and document templates are saved in Firestore for authorized users. JSON import/export is optional for migration and backups.</div><div class="card"><h2>Settings Backup</h2><div class="actions"><label class="filebtn">Open Custom Document JSON<input id="openFile" type="file" accept=".json,application/json"></label><button id="exportSettings">Export Settings</button><label class="filebtn">Import Settings<input id="importSettings" type="file" accept=".json,application/json"></label><button id="resetBtn" class="danger">Reset App</button></div></div></section>
 </section>
 <aside class="preview"><div class="previewTitle"><strong>Preview</strong><span id="pageCount" class="muted"></span></div><div id="preview"></div></aside>
 </main>
@@ -422,7 +443,32 @@ function renderPreview(){
   }finally{paginationBusy=false}
 }
 function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
-function setWorkspaceView(view){const mode=view==='preview'?'preview':'working',main=document.getElementById('docMain');main.classList.toggle('preview-mode',mode==='preview');main.classList.toggle('working-mode',mode==='working');document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});if(mode==='preview')renderPreview();}
+function setWorkspaceView(view){
+ const mode=view==='preview'?'preview':'working',main=document.getElementById('docMain');
+ document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+ if(document.getElementById('workspaceTemplateSource').value==='preset'){sendPresetCommand('view',{preview:mode==='preview'});return}
+ main.classList.toggle('preview-mode',mode==='preview');
+ main.classList.toggle('working-mode',mode==='working');
+ if(mode==='preview')renderPreview();
+}
+function sendPresetCommand(action,extra={}){
+ const frame=document.getElementById('presetWorkspaceFrame');
+ if(!frame?.contentWindow||!frame.getAttribute('src')){document.getElementById('workspaceStatus').textContent='Preset editor is not loaded';return}
+ frame.contentWindow.postMessage({type:'docsystem-preset-command',action,...extra},location.origin);
+}
+function activeWorkspacePreset(){return document.getElementById('workspaceTemplateSource').value==='preset'}
+function syncPresetBusiness(){if(activeWorkspacePreset())sendPresetCommand('business',{profileId:document.getElementById('businessProfile').value})}
+function workspaceAction(action){
+ if(activeWorkspacePreset()){
+  if(action==='new'){if(confirm('Start a new preset quotation? Unsaved changes will be lost.'))sendPresetCommand('new');return}
+  if(action==='save')return sendPresetCommand('save');
+  if(action==='print')return sendPresetCommand('print');
+ }else{
+  if(action==='new'){if(confirm('Start a new custom document?')){newDoc(doc.type);window.DocSystemCloud?.changedDocument();refresh()}return}
+  if(action==='save')return window.DocSystemCloud?.saveDocument();
+  if(action==='print'){renderPreview();window.print();return}
+ }
+}
 function showDocPage(page){
  const settings=['company','global','users','backup'],template=['library','template'];
  const root=page==='settings'?'company':page==='templates'?'library':page;
@@ -445,6 +491,8 @@ function setWorkspaceSource(source,reload=false,documentId=null){
  document.getElementById('presetWorkspace').hidden=!preset;
  main.classList.toggle('preset-editor-mode',preset);
  document.body.classList.toggle('preset-current',preset&&document.getElementById('create').classList.contains('active'));
+ document.getElementById('workspaceStatus').textContent=preset?'Loading preset quotation…':'Custom document ready';
+ document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView==='working';b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))});
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const url='preset-quotation.html?preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
@@ -457,11 +505,24 @@ function setWorkspaceSource(source,reload=false,documentId=null){
 }
 window.addEventListener('message',e=>{
  if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
+ if(e.data?.type==='docsystem-preset-ready'){
+  const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
+  const selection=document.getElementById('businessProfile');
+  if(profileList.length){selection.innerHTML=profileList.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');selection.value=e.data.selected||profileList[0].id}
+  document.getElementById('workspaceStatus').textContent=e.data.status||'Preset ready';
+  return;
+ }
+ if(e.data?.type==='docsystem-preset-status'){document.getElementById('workspaceStatus').textContent=e.data.status||'Preset ready';return}
+ if(e.data?.type==='docsystem-preset-view'){document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===(e.data.preview?'preview':'working');b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))});return}
  if(e.data?.type==='docsystem-preset-height'&&Number.isFinite(e.data.height)){
   document.getElementById('presetWorkspaceFrame').style.height=Math.max(560,Math.min(20000,Math.ceil(e.data.height)))+'px';
  }
 });
 document.addEventListener('click',e=>{
+ if(e.target.id==='workspaceOpenSaved'){showDocPage('documents');return}
+ if(e.target.id==='newBtn'){workspaceAction('new');return}
+ if(e.target.id==='saveBtn'){workspaceAction('save');return}
+ if(e.target.id==='pdfBtn'){workspaceAction('print');return}
  const item=e.target.closest('[data-open-preset]');
  if(item){document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const libraryChoice=e.target.closest('[data-library-kind]');
@@ -547,9 +608,7 @@ if(e.target.dataset.removeCurrency){
 }
 if(e.target.id==='addItem'){doc.items.push(blankRow());renderCreate();renderPreview()}if(e.target.id==='addTotalLine'){tpl().adjustments.push({label:'Adjustment',operation:'add',mode:'fixed',value:0});saveSettings();renderTemplate();renderPreview()}if(e.target.dataset.totalpreset){let p=e.target.dataset.totalpreset,a=p==='tax'?{label:'Tax',operation:'add',mode:'percent',value:0}:p==='charge'?{label:'Logistics / Charge',operation:'add',mode:'fixed',value:0}:{label:'Discount',operation:'subtract',mode:'percent',value:0};tpl().adjustments.push(a);saveSettings();renderTemplate();renderPreview()}if(e.target.dataset.adjdel!==undefined){tpl().adjustments.splice(+e.target.dataset.adjdel,1);saveSettings();renderTemplate();renderPreview()}if(e.target.id==='addDetailField'){let id=nextExtraKey(tpl());tpl().fields.push([id,'New Field','text','half']);doc.fieldValues[id]='';saveSettings();renderTemplate();renderCreate();renderPreview()}if(e.target.dataset.dfdel!==undefined){let i=+e.target.dataset.dfdel,id=tpl().fields[i][0];tpl().fields.splice(i,1);delete doc.fieldValues[id];saveSettings();renderTemplate();renderCreate();renderPreview()}if(e.target.dataset.dfup!==undefined){let i=+e.target.dataset.dfup;if(i>0){let a=tpl().fields;[a[i-1],a[i]]=[a[i],a[i-1]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.dfdown!==undefined){let i=+e.target.dataset.dfdown,a=tpl().fields;if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.moveup!==undefined){let i=+e.target.dataset.moveup;if(i>0){let a=tpl().columns;[a[i-1],a[i]]=[a[i],a[i-1]];saveSettings();renderTemplate();renderCreate();renderPreview()}}if(e.target.dataset.movedown!==undefined){let i=+e.target.dataset.movedown,a=tpl().columns;if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];saveSettings();renderTemplate();renderCreate();renderPreview()}}
 if(e.target.dataset.del!==undefined){doc.items.splice(+e.target.dataset.del,1);if(!doc.items.length)doc.items.push(blankRow());renderCreate();renderPreview()}
-if(e.target.id==='newBtn'&&confirm('Start a new document?')){newDoc(doc.type);window.DocSystemCloud?.changedDocument();refresh()}
-if(e.target.id==='saveBtn'){window.DocSystemCloud?.saveDocument()}
-if(e.target.id==='pdfBtn')window.print();
+
 if(e.target.id==='newProfile'){makeProfile(false)}
 if(e.target.id==='duplicateProfile'){makeProfile(true)}
 if(e.target.id==='deleteProfile'){if(settings.profiles.length===1){alert('At least one business profile is required.')}else if(confirm('Delete this business profile and its document settings?')){let i=settings.profiles.findIndex(p=>p.id===settings.activeProfileId);settings.profiles.splice(i,1);settings.activeProfileId=settings.profiles[Math.max(0,i-1)].id;newDoc(Object.keys(profile().templates)[0]);refresh()}}
@@ -586,7 +645,8 @@ document.addEventListener('change',e=>{if(e.target.id==='workspaceTemplateSource
   saveSettings();renderPreview();return;
  }
  if(e.target.id==='docCurrency'){doc.currency=e.target.value;doc.currencySymbol=profile().company.currencies.find(x=>x.code===doc.currency)?.symbol||doc.currency;renderPreview();return}
-if(['businessProfile','companyProfile','tplBusinessProfile'].includes(e.target.id)){switchProfile(e.target.value,doc.type);return}if(e.target.dataset.dftype!==undefined){tpl().fields[+e.target.dataset.dftype][2]=e.target.value;saveSettings();renderCreate();renderPreview()}if(['fontHeader','fontTitle','fontBody','fontItems','fontFooter'].includes(e.target.id)){profile().fonts.header=fontHeader.value;profile().fonts.title=fontTitle.value;profile().fonts.body=fontBody.value;profile().fonts.items=fontItems.value;profile().fonts.footer=fontFooter.value;saveSettings();renderPreview()}if(e.target.id==='docType'||e.target.id==='tplType'){newDoc(e.target.value);window.DocSystemCloud?.changedDocument();refresh()}if(e.target.id==='logoFile'&&e.target.files[0]){let r=new FileReader();r.onload=()=>{profile().company.logo=r.result;refresh()};r.readAsDataURL(e.target.files[0])}if(e.target.dataset.cfplace!==undefined){profile().company.fields[+e.target.dataset.cfplace].place=e.target.value;refresh()}if(e.target.dataset.cflayout!==undefined){profile().company.fields[+e.target.dataset.cflayout].layout=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjop!==undefined){tpl().adjustments[+e.target.dataset.adjop].operation=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjmode!==undefined){tpl().adjustments[+e.target.dataset.adjmode].mode=e.target.value;saveSettings();renderPreview()}if(['subtotalOn','sig1On','sig2On','sig3On'].includes(e.target.id)){let t=tpl();t.subtotal=subtotalOn.checked;t.sigEnabled=[sig1On.checked,sig2On.checked,sig3On.checked];t.sig=t.sigEnabled.some(Boolean);saveSettings();renderPreview()}if(e.target.id==='openFile'&&e.target.files[0]){let r=new FileReader();r.onload=()=>{try{let p=JSON.parse(r.result);if(!p.doc)throw 0;
+if(e.target.id==='businessProfile'&&activeWorkspacePreset()){syncPresetBusiness();return}
+ if(['businessProfile','companyProfile','tplBusinessProfile'].includes(e.target.id)){switchProfile(e.target.value,doc.type);return}if(e.target.dataset.dftype!==undefined){tpl().fields[+e.target.dataset.dftype][2]=e.target.value;saveSettings();renderCreate();renderPreview()}if(['fontHeader','fontTitle','fontBody','fontItems','fontFooter'].includes(e.target.id)){profile().fonts.header=fontHeader.value;profile().fonts.title=fontTitle.value;profile().fonts.body=fontBody.value;profile().fonts.items=fontItems.value;profile().fonts.footer=fontFooter.value;saveSettings();renderPreview()}if(e.target.id==='docType'||e.target.id==='tplType'){newDoc(e.target.value);window.DocSystemCloud?.changedDocument();refresh()}if(e.target.id==='logoFile'&&e.target.files[0]){let r=new FileReader();r.onload=()=>{profile().company.logo=r.result;refresh()};r.readAsDataURL(e.target.files[0])}if(e.target.dataset.cfplace!==undefined){profile().company.fields[+e.target.dataset.cfplace].place=e.target.value;refresh()}if(e.target.dataset.cflayout!==undefined){profile().company.fields[+e.target.dataset.cflayout].layout=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjop!==undefined){tpl().adjustments[+e.target.dataset.adjop].operation=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjmode!==undefined){tpl().adjustments[+e.target.dataset.adjmode].mode=e.target.value;saveSettings();renderPreview()}if(['subtotalOn','sig1On','sig2On','sig3On'].includes(e.target.id)){let t=tpl();t.subtotal=subtotalOn.checked;t.sigEnabled=[sig1On.checked,sig2On.checked,sig3On.checked];t.sig=t.sigEnabled.some(Boolean);saveSettings();renderPreview()}if(e.target.id==='openFile'&&e.target.files[0]){let r=new FileReader();r.onload=()=>{try{let p=JSON.parse(r.result);if(!p.doc)throw 0;
   let target=p.profileId&&settings.profiles.find(x=>x.id===p.profileId);
   if(!target&&p.company)target=settings.profiles.find(x=>profileLabel(x)===p.company.name);
   if(!target&&p.company){target={id:nextProfileId(),company:clone(p.company),fonts:clone(defaults.fonts),templates:clone(defaults.templates)};settings.profiles.push(target)}
