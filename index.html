@@ -212,7 +212,12 @@ function normalizeProfiles(){
   })
 }
 normalizeProfiles();
-function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n=1;n<1000;n++){let k='extra_'+String(n).padStart(3,'0');if(!used.has(k))return k}return 'extra_'+Date.now()}function saveSettings(){
+function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n=1;n<1000;n++){let k='extra_'+String(n).padStart(3,'0');if(!used.has(k))return k}return 'extra_'+Date.now()}window.addEventListener('docsystem-settings-sync',event=>{
+ const note=document.getElementById('customLayoutSaveStatus');
+ if(!note)return;
+ note.textContent=event.detail?.ok?'Saved online in Firebase':'Online save failed: '+(event.detail?.message||'Unknown error');
+});
+function saveSettings(){
  localStorage.setItem(KEY,JSON.stringify(settings));
  window.DocSystemCloud?.settingsChanged();
  const note=document.getElementById('customLayoutSaveStatus');
