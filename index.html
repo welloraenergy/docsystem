@@ -221,9 +221,14 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="cloud-entry"><div><b>Rental + Consumables (Qty 5+3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon53">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental + Consumables (Qty 10+5)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon105">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental — Special TKR</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="specialtkr">Use in Workspace</button></div>
-</div><div class="card cloud-admin-only" id="presetHeaderConfigCard">
+</div><h3>Wellora — Purchase Order Presets</h3><div class="stack"><div class="cloud-entry"><div><b>Purchase — Credit</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="purchase-credit">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Purchase — Cash</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="purchase-cash">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Purchase — Progress Claim</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="purchase-progress-claim">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Rental</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="rental">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Inspection / Repair</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="inspection-repair">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Logistics</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="logistics">Use in Workspace</button></div></div><div class="card cloud-admin-only" id="presetHeaderConfigCard">
 <h3>Shared Preset Header & Document Heading</h3>
-<p class="muted">Set once per Business Profile for all five preset quotations. Document heading text and optional extra lines are editable in the Working Form. Size, color and formatting are controlled here.</p>
+<p class="muted">Set once per Business Profile for all Quotation and Purchase Order presets. Logo, company name, business details, document heading, and formatting are shared across preset document families.</p>
 <label>Business Profile<select id="presetHeaderProfileSelect"></select></label>
 <div class="preset-header-config-grid">
  <div>
@@ -769,6 +774,8 @@ document.addEventListener('click',e=>{
  if(e.target.id==='newBtn'){workspaceAction('new');return}
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
  if(e.target.id==='pdfBtn'){workspaceAction('print');return}
+ const poItem=e.target.closest('[data-open-po-preset]');
+ if(poItem){document.getElementById('workspacePresetFamily').value='purchase-order';fillPresetTypes();document.getElementById('workspacePresetSelect').value=poItem.dataset.openPoPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const item=e.target.closest('[data-open-preset]');
  if(item){document.getElementById('workspacePresetFamily').value='quotation';fillPresetTypes();document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const libraryChoice=e.target.closest('[data-library-kind]');
