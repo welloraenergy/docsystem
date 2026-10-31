@@ -123,9 +123,14 @@ async function save(){
  if(!state.fields.poNumber?.trim())return alert('Enter PO Reference Number before saving.');
  if(!business().id)return alert('Select a Business Profile first.');
  try{
+  const snapshot=business();
+  if(!docId){
+   const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.poNumber.trim()),limit(100)));
+   const duplicate=hits.docs.find(d=>d.data().documentType==='Purchase Order'&&d.data().profileId===snapshot.id);
+   if(duplicate){alert('A Purchase Order with this reference already exists for the selected Business Profile. Open the existing PO instead.');return}
+  }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
-  const snapshot=business();
   const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:state,profileId:snapshot.id,companySnapshot:snapshot,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved PO '+state.fields.poNumber);ready();
  }catch(error){alert('PO save failed: '+error.message)}
@@ -139,7 +144,7 @@ function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.compa
 async function chooseBusiness(id){
  if(docId){ready();return}const picked=profiles.find(p=>p.id===id);if(!picked)return;profile=picked;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()
 }
-window.printDoc=()=>{document.body.classList.add('printing');render();window.print();setTimeout(()=>document.body.classList.remove('printing'),250)};
+window.printDoc=()=>{document.body.classList.add('printing');render();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;
  if(e.data.action==='new'){newPo();return}
