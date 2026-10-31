@@ -280,7 +280,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 @media print{body.embedded-preset .bar{display:none!important}}
 </style><style id="presetExplicitHeaderSlots">
 .paper .preset-header-slot{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.25}
-.paper .excel-company .preset-header-slot [style*="font-size"]{font-size:inherit!important}
+/* Inline [size=...] overrides the slot default; profile-origin size tags are removed in JS. */
 .paper .preset-header-slot .excel-business-logo{max-width:none;max-height:none;object-fit:contain}
 .paper .excel-company-name .preset-header-slot{font-weight:inherit}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
@@ -342,11 +342,14 @@ function renderPresetHeaderSlot(slot,company){
  const config=activePresetHeader(),source=String(config[slot]||'');
  if(!source.trim())return '';
  const n=Number(config[slot+'Size']),size=Number.isFinite(n)&&n>=6&&n<=36?n:(slot==='name'?13:slot==='details'?8:10);
+ const allowedFonts=['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'];
+ const font=allowedFonts.includes(config[slot+'Font'])?config[slot+'Font']:'Arial';
+ const align=['left','center','right'].includes(config[slot+'Align'])?config[slot+'Align']:'left';
  let content=renderCompanyInfo(source);
  content=content.replace(/\{companyName\}/gi,esc(company.name||'')).replace(/\{companyInfo\}/gi,renderCompanyInfo(String(company.info||'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
  // Slot font size is authoritative; embedded company-info size tags are not.
  content=content.replace(/\{logo\}/gi,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
- return '<div class="preset-header-slot" style="font-size:'+size+'pt">'+content+'</div>';
+ return '<div class="preset-header-slot" style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+'">'+content+'</div>';
 }
 function renderCompanyInfo(info){
  let value=esc(info||'');
