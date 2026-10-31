@@ -306,13 +306,14 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
  window.addEventListener('resize',notifyParent);
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(notifyParent).observe(document.body);
 }
-const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='staff',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,savedHeaderSnapshot=null;
+const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='staff',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,savedHeaderSnapshot=null,globalPlaceholderValues={};
 onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role||'staff'}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in'});
 async function refreshBusinessProfiles(){
  if(!user)return;
  try{
   const snap=await getDoc(doc(db,'appSettings','main')),settings=snap.data()?.settings||{};
   businessProfiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p&&p.company):[];
+  globalPlaceholderValues=settings.globalPlaceholders&&typeof settings.globalPlaceholders==='object'?settings.globalPlaceholders:{};
   if(!savedCompanySnapshot){
    businessProfile=businessProfiles.find(p=>p.id===businessProfile?.id)||businessProfiles.find(p=>p.id===settings.activeProfileId)||businessProfiles[0]||null;
    if(!id&&businessProfile){state.currency=preferredCurrency(businessProfile.company,initialCurrencySet?state.currency:null);initialCurrencySet=true;}
@@ -334,7 +335,7 @@ function preferredCurrency(company,current){
 function profileSnapshot(profile){
  const co=profile?.company||{};
  const raw=typeof co.headerText==='string'?co.headerText:(co.fields||[]).filter(x=>x&&x.place!=='footer'&&x.value).map(x=>(x.label?x.label+': ':'')+x.value).join('\n');
- return {id:profile?.id||null,name:co.name||'',logo:co.logo||'',info:raw,currencies:availableCurrencies(co),defaultCurrency:co.defaultCurrency||'MYR'};
+ return {id:profile?.id||null,name:co.name||'',logo:co.logo||'',info:raw,currencies:availableCurrencies(co),defaultCurrency:co.defaultCurrency||'MYR',placeholders:structuredClone(globalPlaceholderValues)};
 }
 function shownCompany(){return savedCompanySnapshot||profileSnapshot(businessProfile)}
 function activePresetHeader(){return savedHeaderSnapshot||businessProfile?.presetHeader||{}}
@@ -345,10 +346,18 @@ function renderPresetHeaderSlot(slot,company){
  const allowedFonts=['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'];
  const font=allowedFonts.includes(config[slot+'Font'])?config[slot+'Font']:'Arial';
  const align=['left','center','right'].includes(config[slot+'Align'])?config[slot+'Align']:'left';
- let content=renderCompanyInfo(source);
- content=content.replace(/\{companyName\}/gi,esc(company.name||'')).replace(/\{companyInfo\}/gi,renderCompanyInfo(String(company.info||'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
- // Slot font size is authoritative; embedded company-info size tags are not.
- content=content.replace(/\{logo\}/gi,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
+ const vars=company.placeholders||globalPlaceholderValues;
+ const textValues={companyName:company.name||'',companyInfo:String(company.info||'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')};
+ const rendered=String(source).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(match,key)=>{
+  if(key==='logo')return '\u0001PRESET_LOGO\u0001';
+  if(Object.prototype.hasOwnProperty.call(textValues,key))return '\u0001PRESET_VALUE_'+key+'\u0001';
+  if(Object.prototype.hasOwnProperty.call(vars,key))return '\u0001PRESET_GLOBAL_'+key+'\u0001';
+  return match;
+ });
+ let content=renderCompanyInfo(rendered);
+ content=content.replace(/\u0001PRESET_VALUE_(companyName|companyInfo)\u0001/g,(_,key)=>key==='companyInfo'?renderCompanyInfo(textValues[key]):esc(textValues[key]));
+ content=content.replace(/\u0001PRESET_GLOBAL_([a-zA-Z][a-zA-Z0-9_]*)\u0001/g,(_,key)=>renderCompanyInfo(String(vars[key]??'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
+ content=content.replace(/\u0001PRESET_LOGO\u0001/g,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
  return '<div class="preset-header-slot" style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+'">'+content+'</div>';
 }
 function renderCompanyInfo(info){
