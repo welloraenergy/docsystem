@@ -123,8 +123,11 @@ export async function openDocument(id,duplicate=false){
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource==="preset"){
-      const preset=encodeURIComponent(s.data().templateId||"rental3");
-      window.location.href="./?preset="+preset+(duplicate?"":"&presetDoc="+encodeURIComponent(id));
+      const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order';
+      const preset=encodeURIComponent(data.templateId||(isPo?'purchase-credit':'rental3'));
+      const family=isPo?'&family=purchase-order':'';
+      const saved=duplicate?'':(isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      window.location.href="./?preset="+preset+family+saved;
       return;
     }
     // A saved custom document must never inherit the last-used preset editor.
