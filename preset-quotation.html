@@ -305,14 +305,13 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
  window.addEventListener('resize',notifyParent);
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(notifyParent).observe(document.body);
 }
-const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='staff',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,presetHeaderSettings={},savedHeaderSnapshot=null;
+const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='staff',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,savedHeaderSnapshot=null;
 onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role||'staff'}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in'});
 async function refreshBusinessProfiles(){
  if(!user)return;
  try{
   const snap=await getDoc(doc(db,'appSettings','main')),settings=snap.data()?.settings||{};
   businessProfiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p&&p.company):[];
-  presetHeaderSettings=settings.presetHeaders||{};
   if(!savedCompanySnapshot){
    businessProfile=businessProfiles.find(p=>p.id===businessProfile?.id)||businessProfiles.find(p=>p.id===settings.activeProfileId)||businessProfiles[0]||null;
    if(!id&&businessProfile){state.currency=preferredCurrency(businessProfile.company,initialCurrencySet?state.currency:null);initialCurrencySet=true;}
@@ -337,7 +336,7 @@ function profileSnapshot(profile){
  return {id:profile?.id||null,name:co.name||'',logo:co.logo||'',info:raw,currencies:availableCurrencies(co),defaultCurrency:co.defaultCurrency||'MYR'};
 }
 function shownCompany(){return savedCompanySnapshot||profileSnapshot(businessProfile)}
-function activePresetHeader(){return savedHeaderSnapshot||presetHeaderSettings[state.preset]||{}}
+function activePresetHeader(){return savedHeaderSnapshot||businessProfile?.presetHeader||{}}
 function renderPresetHeaderSlot(slot,company){
  const config=activePresetHeader(),source=String(config[slot]||'');
  if(!source.trim())return '';
@@ -504,7 +503,7 @@ function render(){
 }
 window.view=async on=>{if(on&&!savedCompanySnapshot)await refreshBusinessProfiles();document.body.classList.toggle('preview',on);$('working').classList.toggle('active',!on);$('previewButton').classList.toggle('active',on);if(on)render();informWorkspace('view',{preview:!!on})};
 window.printDoc=()=>{document.body.classList.add('preview');$('working').classList.remove('active');$('previewButton').classList.add('active');render();informWorkspace('view',{preview:true});window.print()};
-window.save=async()=>{if(!user)return alert('Sign in from DocSystem first');if(!state.reference.trim())return alert('Enter a quotation number.');try{const ref=id?doc(db,'documents',id):doc(collection(db,'documents'));const prior=await getDoc(ref);const companySnapshot=savedCompanySnapshot||profileSnapshot(businessProfile);if(!companySnapshot.id)return alert('Select a Business Profile first.');const presetHeaderSnapshot=savedHeaderSnapshot||structuredClone(presetHeaderSettings[state.preset]||{});const record={companySnapshot,presetHeaderSnapshot,templateSource:'preset',templateId:state.preset,templateVersion:1,documentType:'Quotation',number:state.reference,date:state.date,presetData:state,profileId:companySnapshot.id,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:actualRole}:{})};await setDoc(ref,record,{merge:true});id=ref.id;savedCompanySnapshot=companySnapshot;savedHeaderSnapshot=presetHeaderSnapshot;renderBusinessSelector();$('status').textContent='Saved '+state.reference;announcePresetReady()}catch(e){alert('Save failed: '+e.message)}};
+window.save=async()=>{if(!user)return alert('Sign in from DocSystem first');if(!state.reference.trim())return alert('Enter a quotation number.');try{const ref=id?doc(db,'documents',id):doc(collection(db,'documents'));const prior=await getDoc(ref);const companySnapshot=savedCompanySnapshot||profileSnapshot(businessProfile);if(!companySnapshot.id)return alert('Select a Business Profile first.');const presetHeaderSnapshot=savedHeaderSnapshot||structuredClone(businessProfile?.presetHeader||{});const record={companySnapshot,presetHeaderSnapshot,templateSource:'preset',templateId:state.preset,templateVersion:1,documentType:'Quotation',number:state.reference,date:state.date,presetData:state,profileId:companySnapshot.id,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:actualRole}:{})};await setDoc(ref,record,{merge:true});id=ref.id;savedCompanySnapshot=companySnapshot;savedHeaderSnapshot=presetHeaderSnapshot;renderBusinessSelector();$('status').textContent='Saved '+state.reference;announcePresetReady()}catch(e){alert('Save failed: '+e.message)}};
 window.load=async()=>{if(!user)return alert('Sign in first');const number=prompt('Quotation number to open:');if(!number)return;try{const snaps=await getDocs(query(collection(db,'documents'),where('number','==',number),limit(30)));const found=snaps.docs.find(x=>x.data().templateSource==='preset');if(!found)return alert('Preset quotation not found');id=found.id;state=found.data().presetData;savedCompanySnapshot=found.data().companySnapshot||null;savedHeaderSnapshot=found.data().presetHeaderSnapshot||{};businessProfile=businessProfiles.find(p=>p.id===found.data().profileId)||businessProfile;draw();$('status').textContent='Opened '+number;announcePresetReady()}catch(e){alert('Open failed: '+e.message)}};
 if(document.body.classList.contains('embedded-preset')){
  const statusNode=$('status');
