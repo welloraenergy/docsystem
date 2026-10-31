@@ -191,7 +191,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="user">User</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
-<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspacePresetChoice" hidden>Preset Quotation<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
+<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order (PO)</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
 <div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
 <label class="workspace-business-label">Business Profile<select id="businessProfile" aria-label="Business Profile"></select></label>
 <div class="unified-toolbar-actions">
@@ -655,7 +655,7 @@ function activeWorkspacePreset(){return document.getElementById('workspaceTempla
 function syncPresetBusiness(){if(activeWorkspacePreset())sendPresetCommand('business',{profileId:document.getElementById('businessProfile').value})}
 function workspaceAction(action){
  if(activeWorkspacePreset()){
-  if(action==='new'){if(confirm('Start a new preset quotation? Unsaved changes will be lost.'))sendPresetCommand('new');return}
+  if(action==='new'){if(confirm('Start a new preset document? Unsaved changes will be lost.'))sendPresetCommand('new');return}
   if(action==='save')return sendPresetCommand('save');
   if(action==='print'){
    const frame=document.getElementById('presetWorkspaceFrame');
@@ -685,20 +685,33 @@ function showDocPage(page){
  if(root==='create'&&document.getElementById('workspaceTemplateSource').value==='custom')setWorkspaceView('working');
  if(root==='create')document.getElementById('workspaceStatus').textContent=activeWorkspacePreset()?'Preset document ready':'Custom document ready';
 }
+const poPresetChoices=[['purchase-credit','Purchase — Credit'],['purchase-cash','Purchase — Cash'],['purchase-progress-claim','Purchase — Progress Claim'],['rental','Rental'],['inspection-repair','Inspection / Repair'],['logistics','Logistics']];
+const quotationPresetChoices=[['rental3','Rental (Qty 3)'],['rental10','Rental (Qty 10)'],['rentcon53','Rental + Consumables (Qty 5+3)'],['rentcon105','Rental + Consumables (Qty 10+5)'],['specialtkr','Rental — Special TKR']];
+function fillPresetTypes(preserve=false){
+ const family=document.getElementById('workspacePresetFamily').value;
+ const select=document.getElementById('workspacePresetSelect'),previous=select.value;
+ const choices=family==='purchase-order'?poPresetChoices:quotationPresetChoices;
+ select.innerHTML=choices.map(([id,label])=>'<option value="'+id+'">'+esc(label)+'</option>').join('');
+ if(preserve&&choices.some(([id])=>id===previous))select.value=previous;
+}
 function setWorkspaceSource(source,reload=false,documentId=null){
  const preset=source==='preset',main=document.getElementById('docMain');
  document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
  document.getElementById('workspacePresetChoice').hidden=!preset;
+ document.getElementById('workspaceFamilyChoice').hidden=!preset;
+ document.getElementById('workspacePresetFamily').disabled=!preset;
  document.getElementById('workspaceCustomChoice').hidden=preset;
  document.getElementById('workspacePresetSelect').disabled=!preset;
  document.getElementById('presetWorkspace').hidden=!preset;
  main.classList.toggle('preset-editor-mode',preset);
  document.body.classList.toggle('preset-current',preset&&document.getElementById('create').classList.contains('active'));
- document.getElementById('workspaceStatus').textContent=preset?'Loading preset quotation…':'Custom document ready';
+ document.getElementById('workspaceStatus').textContent=preset?'Loading preset document…':'Custom document ready';
  document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView==='working';b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))});
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
-  const url='preset-quotation.html?version=20261031-terms-flow-line1&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
+  const family=document.getElementById('workspacePresetFamily').value;
+  const editor=family==='purchase-order'?'preset-po.html?version=20261031-po1':'preset-quotation.html?version=20261031-terms-flow-line1';
+  const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
  }else{
@@ -757,7 +770,7 @@ document.addEventListener('click',e=>{
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
  if(e.target.id==='pdfBtn'){workspaceAction('print');return}
  const item=e.target.closest('[data-open-preset]');
- if(item){document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
+ if(item){document.getElementById('workspacePresetFamily').value='quotation';fillPresetTypes();document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const libraryChoice=e.target.closest('[data-library-kind]');
  if(libraryChoice){
   const selected=libraryChoice.dataset.libraryKind;
@@ -879,6 +892,7 @@ if(e.target.dataset.placeholderKey){globals()[e.target.dataset.placeholderKey]=e
 if(e.target.id==='docTitle'){doc.title=e.target.value;renderPreview()}if(e.target.dataset.field){doc.fieldValues[e.target.dataset.field]=e.target.value;renderPreview()}if(e.target.dataset.ri!==undefined){let ri=+e.target.dataset.ri;doc.items[ri][e.target.dataset.key]=e.target.value;updateFormulaInputs(ri);renderPreview()}if(e.target.id==='notes'){doc.notes=e.target.value;renderPreview()}if(e.target.id==='companyName'){profile().company.name=e.target.value;saveSettings();updateProfileLabels();renderPreview()}if(e.target.id==='companyFooter'){profile().company.footer=e.target.value;saveSettings();renderPreview()}if(e.target.id==='companyInfo'){profile().company.headerText=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.cflabel!==undefined){profile().company.fields[+e.target.dataset.cflabel].label=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.cfvalue!==undefined){profile().company.fields[+e.target.dataset.cfvalue].value=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.dflabel!==undefined){tpl().fields[+e.target.dataset.dflabel][1]=e.target.value;saveSettings();renderPreview()}if(e.target.id==='paperSize'||e.target.id==='pageMargins'){tpl()[e.target.id]=e.target.value;saveSettings();renderPreview()}if(e.target.id==='dividerPosition'){tpl().dividerPosition=e.target.value;saveSettings();renderPreview()}if(e.target.id==='tplTitle'){tpl().title=e.target.value;doc.title=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjlabel!==undefined){tpl().adjustments[+e.target.dataset.adjlabel].label=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjvalue!==undefined){tpl().adjustments[+e.target.dataset.adjvalue].value=Number(e.target.value||0);saveSettings();renderPreview()}if(['sig1','sig2','sig3'].includes(e.target.id)){let t=tpl();t.sigs=[sig1.value,sig2.value,sig3.value];saveSettings();renderPreview()}if(['sigName1','sigName2','sigName3'].includes(e.target.id)){let t=tpl();t.sigNames=[sigName1.value,sigName2.value,sigName3.value];saveSettings();renderPreview()}});
 document.addEventListener('change',e=>{if(e.target.id==='presetHeaderProfileSelect'){switchProfile(e.target.value,doc.type);return}
  if(e.target.id==='workspaceTemplateSource'){setWorkspaceSource(e.target.value);return;}
+ if(e.target.id==='workspacePresetFamily'){fillPresetTypes();setWorkspaceSource('preset',true);return;}
  if(e.target.id==='workspacePresetSelect'){setWorkspaceSource('preset',true);return;}
  if(e.target.dataset.layoutCount){
   const l=layoutConfig(e.target.dataset.layoutCount);l.columns=Number(e.target.value);
@@ -928,11 +942,15 @@ window.DocSystemBridge={
 
 // Route saved preset records back into the same Workspace.
 const incomingPreset=new URLSearchParams(location.search);
-if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')){
- const selected=incomingPreset.get('preset')||'rental3';
+fillPresetTypes();
+if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset.has('poDoc')){
+ const family=incomingPreset.has('poDoc')||incomingPreset.get('family')==='purchase-order'?'purchase-order':'quotation';
+ document.getElementById('workspacePresetFamily').value=family;
+ fillPresetTypes();
+ const selected=incomingPreset.get('preset')||(family==='purchase-order'?'purchase-credit':'rental3');
  const selector=document.getElementById('workspacePresetSelect');
  if(Array.from(selector.options).some(o=>o.value===selected))selector.value=selected;
- setWorkspaceSource('preset',true,incomingPreset.get('presetDoc'));
+ setWorkspaceSource('preset',true,incomingPreset.get('poDoc')||incomingPreset.get('presetDoc'));
  showDocPage('create');
  history.replaceState(null,'',location.pathname);
 }
