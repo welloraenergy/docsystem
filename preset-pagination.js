@@ -35,8 +35,8 @@ export function paginatePresetDocument(root, options = {}) {
     if (!body) return true;
     const sizes = [preferred];
     if (options.fit !== 'normal') {
-      for (let n = preferred - 0.5; n >= 7; n -= 0.5) sizes.push(n);
-      if (sizes[sizes.length - 1] !== 7) sizes.push(7);
+      for (let n = preferred - 0.5; n >= 6.5; n -= 0.5) sizes.push(n);
+      if (sizes[sizes.length - 1] !== 6.5) sizes.push(6.5);
     }
     for (const n of sizes) {
       body.style.fontSize = n + 'pt';
@@ -54,7 +54,7 @@ export function paginatePresetDocument(root, options = {}) {
     return { section, body };
   }
   function appendTerms(original) {
-    const preferred = Math.max(7, Math.min(9, Number(options.size) || 8));
+    const preferred = Math.max(6.5, Math.min(9, Number(options.size) || 8));
     page.appendChild(original);
     if (termsSize(original, preferred)) return;
     if (page.children.length > 1) {
