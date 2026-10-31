@@ -338,13 +338,17 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .paper .excel-terms .excel-term{break-inside:avoid!important;page-break-inside:avoid!important;margin-bottom:var(--term-gap,1.3mm)!important}
 .paper .excel-terms .excel-term .term-text{white-space:break-spaces!important;line-height:1.2!important}
 .paper .excel-table tbody tr{break-inside:avoid!important;page-break-inside:avoid!important}
-.paper .excel-table td{height:auto!important;min-height:9mm;vertical-align:top!important}
+.paper .excel-table td{height:9mm!important;vertical-align:top!important;white-space:pre-wrap!important}
 .paper .excel-table td:nth-child(2){white-space:break-spaces!important;overflow-wrap:anywhere}
 .form-only textarea[data-table][data-key="description"]{width:100%;min-width:150px;min-height:58px;resize:vertical;white-space:pre-wrap;tab-size:4}
 .paper .excel-sign-table{break-inside:avoid!important;page-break-inside:avoid!important}
 .paper .excel-terms-section{break-inside:avoid!important;page-break-inside:avoid!important}
 .preset-terms-fitting{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:10px 0;padding:10px;background:#f5f8fc;border:1px solid #d9e3ef;border-radius:8px}
 .preset-terms-fitting label{flex:1 1 145px;font-size:12px}
+/* Scrollbar is reserved permanently so preview width does not oscillate. */
+@media screen and (min-width:1100px){
+ body.embedded-preset .wrap>.preview-only{overflow-y:scroll!important;scrollbar-gutter:stable!important}
+}
 @media print{
  @page{size:A4 portrait;margin:0}
  body .wrap,body.embedded-preset .wrap{display:block!important;margin:0!important;padding:0!important;max-width:none!important}
@@ -368,9 +372,12 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
  if(internalToolbar){internalToolbar.hidden=true;internalToolbar.setAttribute('aria-hidden','true');internalToolbar.style.setProperty('display','none','important');}
  const ownHeader=document.querySelector('body > header');
  if(ownHeader){ownHeader.hidden=true;ownHeader.style.setProperty('display','none','important');}
+ let lastReportedHeight=0;
  const notifyParent=()=>{
   if(window.parent===window)return;
-  const height=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
+  const height=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight));
+  if(Math.abs(height-lastReportedHeight)<3)return;
+  lastReportedHeight=height;
   window.parent.postMessage({type:'docsystem-preset-height',height},location.origin);
  };
  window.addEventListener('load',notifyParent);
@@ -595,6 +602,9 @@ function draw(){$('preset').value=state.preset;renderBusinessSelector();drawFiel
 function resultTable(arr,table){if(!arr.length)return '';const rental=table==='rental';return '<h3>'+(rental?'Rental Equipment':'Consumables')+'</h3><table><thead><tr><th>No.</th><th>Description</th><th>Unit</th><th>Qty</th><th>'+(rental?'Daily Rental Rate':'Unit Price')+' ('+esc(state.currency)+')</th><th>'+(rental?'LIH/DBR':'Amount')+'</th></tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.description)+'</td><td>'+esc(r.unit)+'</td><td>'+esc(r.qty)+'</td><td>'+esc(r.rate)+'</td><td>'+(rental?esc(r.lih):fmt(Number(r.qty)*Number(r.rate)))+'</td></tr>').join('')+'</tbody></table>'}
 function formatExcelDate(v){if(!v)return '';const d=new Date(v+'T12:00:00');if(Number.isNaN(d.getTime()))return v;return new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^(\w+), (\d+) (\w+) (\d+)$/, '$1, $2 $3, $4')}
 function render(){
+ // Pagination must be measured at true A4 size, never at the previous preview zoom.
+ const pageContainer=$('paper');
+ pageContainer.style.zoom='1';
  const row=(label,value)=>'<div class="item'+(label==='Address'?' address-row':'')+'"><b>'+esc(label)+':</b><span'+(label==='Address'?' class="client-address-value"':'')+'>'+esc(value||'')+'</span></div>';
  const qrows=(key,title,arr)=>{
   const filled=r=>Object.values(r).some(v=>String(v??'').trim()!=='');
