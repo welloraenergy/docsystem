@@ -41,7 +41,31 @@
 .paper .po-clause6-lines{display:block;margin-top:1.2mm;padding-left:3mm;line-height:1.4}
 .paper .po-clause6-line{display:grid;grid-template-columns:25mm minmax(0,1fr);gap:1.5mm;align-items:start;min-height:3.8mm;white-space:pre-wrap}
 .paper .po-clause6-line span:last-child{overflow-wrap:anywhere}
-</style><style id="poSharedTermsControls20261101">.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.18}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}</style></head><body>
+</style><style id="poSharedTermsControls20261101">.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.18}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}</style><style id="poSignatureAndVerticalGridNormalization20261101">
+/* Exactly the three grouped signature cards used by Preset Quotations. */
+.po-signature-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.po-signature-group{border:1px solid #d8e0e8;border-radius:8px;display:flex;flex-direction:column;gap:8px;padding:12px;min-width:0;margin:0}
+.po-signature-group legend{font-weight:bold;padding:0 5px}
+.po-signature-group label{min-width:0}
+.po-signature-group input{width:100%;min-width:0}
+@media(max-width:690px){.po-signature-groups{grid-template-columns:1fr}}
+/* Visible Excel-like vertical grid separators between labels and values.
+   Applies to the PO vendor/quotation grid, not its underlying field content. */
+.paper .po-vendor{border:1px solid #444;border-collapse:collapse}
+.paper .po-vendor>div{padding:0!important}
+.paper .po-vendor-left{border-right:1px solid #444!important}
+.paper .po-vendor-right{border-left:0!important}
+.paper .po-vendor-row{gap:0!important;min-height:4mm}
+.paper .po-vendor-row strong{display:block;border-right:1px solid #aaa;min-height:100%;padding:1.1mm 1.4mm 0 .7mm;text-align:right}
+.paper .po-vendor-row span{display:block;padding:1.1mm 1.4mm .5mm;min-width:0}
+.paper .po-vendor .po-address-row strong,.paper .po-vendor .po-address-row span{min-height:16mm}
+.paper .po-items{border-collapse:collapse!important}
+.paper .po-items th,.paper .po-items td{border:1px solid #777!important}
+.paper .po-signatures{border-collapse:collapse!important;table-layout:fixed!important}
+.paper .po-signatures tr>th,.paper .po-signatures tr>td{border:1px solid #999!important}
+.paper .po-signatures thead th,.paper .po-signatures tbody th{border-color:#111!important}
+@media print{.paper .po-vendor-row strong{border-right:1px solid #aaa!important}.paper .po-items th,.paper .po-items td,.paper .po-signatures tr>td{border:1px solid #777!important}}
+</style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
@@ -51,7 +75,7 @@
 <section class="card"><h3>Delivery / Collection &amp; Contact Details</h3><div class="fields" id="poTermsFields"></div></section>
 <section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
-<section class="card"><h3>Signatures</h3><div class="fields" id="signatureFields"></div></section>
+<section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
@@ -163,7 +187,7 @@ function draw(){
  }
  drawRows();
  $('termsEditor').innerHTML=template.terms.map(t=>'<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong><textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">Optional: override this clause text. Leave empty to use the JSON template.</small></label>').join('');
- $('signatureFields').innerHTML=template.signatures.flatMap(x=>['name','position','date'].map(k=>'<label>'+esc(x)+' — '+k+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(x)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[x]?.[k]||'')+'"></label>')).join('');
+ $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'"></label>').join('')+'</fieldset>').join('');
  render();
 }
 function drawRows(){
