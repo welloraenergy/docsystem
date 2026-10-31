@@ -216,9 +216,11 @@ export function paginatePresetDocument(root, options = {}) {
   }
   const pages = Array.from(root.querySelectorAll('article.paper'));
   const termsPages = pages.filter(p => p.querySelector('.excel-terms-section')).length;
+  const firstTermsPage = pages.findIndex(p => p.querySelector('.excel-terms-section')) + 1;
   const actualSizes = pages.flatMap(p => Array.from(p.querySelectorAll('.excel-terms')).map(e => parseFloat(getComputedStyle(e).fontSize)));
   root.dataset.pageFitMode = requestedFit;
   root.dataset.pageFitTermsPages = String(termsPages);
+  root.dataset.pageFitTermsStartPage = String(firstTermsPage);
   root.dataset.pageFitTotalPages = String(pages.length);
   root.dataset.pageFitActualSizePx = actualSizes.length ? String(Math.min(...actualSizes)) : '';
   return pages.length;
