@@ -280,7 +280,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 @media print{body.embedded-preset .bar{display:none!important}}
 </style><style id="presetExplicitHeaderSlots">
 .paper .preset-header-slot{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.25}
-.paper .preset-header-slot .excel-business-logo{max-width:35mm;max-height:24mm;object-fit:contain}
+.paper .preset-header-slot .excel-business-logo{max-width:none;max-height:none;object-fit:contain}
 .paper .excel-company-name .preset-header-slot{font-weight:inherit}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
@@ -344,7 +344,7 @@ function renderPresetHeaderSlot(slot,company){
  const n=Number(config[slot+'Size']),size=Number.isFinite(n)&&n>=6&&n<=36?n:(slot==='name'?13:slot==='details'?8:10);
  let content=renderCompanyInfo(source);
  content=content.replace(/\{companyName\}/gi,esc(company.name||'')).replace(/\{companyInfo\}/gi,renderCompanyInfo(company.info||''));
- content=content.replace(/\{logo\}/gi,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo">':'');
+ content=content.replace(/\{logo\}/gi,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
  return '<div class="preset-header-slot" style="font-size:'+size+'pt">'+content+'</div>';
 }
 function renderCompanyInfo(info){
