@@ -152,7 +152,15 @@
  .paper .po-terms-section.excel-terms-section{border:1px solid #444!important}
  .paper .po-terms-section .po-terms::before{border-left:1px solid #999!important}
 }
-</style><style id="poClause6PermanentFields20261101">.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.paper .po-contact-clause .po-clause6-lines{white-space:normal}.po-signature-groups label,.po-terms-fitting label{min-width:0}</style></head><body>
+</style><style id="poClause6PermanentFields20261101">.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.paper .po-contact-clause .po-clause6-lines{white-space:normal}.po-signature-groups label,.po-terms-fitting label{min-width:0}</style><style id="poClause6EditFields20261101">
+.po-terms-contact-editor{border:1px solid #d8e0e8;border-radius:8px;padding:12px;margin:10px 0 12px;background:#fff;display:flex;flex-direction:column;gap:10px}
+.po-contact-edit-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.po-contact-edit-fields label{min-width:0}
+.po-contact-edit-fields input{min-width:0;width:100%}
+.po-contact-notes{margin-top:3px}
+.po-contact-notes textarea{width:100%}
+@media(max-width:700px){.po-contact-edit-fields{grid-template-columns:1fr}}
+</style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
@@ -267,13 +275,19 @@ function draw(){
   poReferenceFields:['poDate','poNumber'],
   poVendorFields:['vendorName','vendorAddress','vendorContact','vendorPhone','vendorEmail'],
   poQuotationFields:['vendorQuotationNo','vendorQuotationDate','currency','sstRate'],
-  poTermsFields:['fulfillmentMode','fulfillmentAddress','fulfillmentDate','welloraContactName','welloraContactPhone','welloraContactEmail']
+  poTermsFields:['fulfillmentMode','fulfillmentAddress','fulfillmentDate']
  };
  for(const [target,keys] of Object.entries(groups)){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
  }
  drawRows();
- $('termsEditor').innerHTML=template.terms.map(t=>'<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong>'+(t.number===6?'<small class="muted">a) Contact Name · b) Contact Number · c) Contact Email are always retained. Enter their values in Delivery / Collection & Contact Details above.</small>':'')+'<textarea data-term="'+t.number+'" rows="3" placeholder="'+(t.number===6?'Optional additional notes (does not replace a/b/c)':'Optional replacement clause text')+'">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">'+(t.number===6?'Optional additional notes appear below the three contact lines.':'Optional: override this clause text. Leave empty to use the JSON template.')+'</small></label>').join('');
+ $('termsEditor').innerHTML=template.terms.map(t=>{
+  if(t.number===6){
+   const contacts=[['a) Contact Name','welloraContactName','text'],['b) Contact Number','welloraContactPhone','tel'],['c) Contact Email','welloraContactEmail','email']];
+   return '<div class="po-terms-contact-editor"><strong>6. '+esc(t.title)+'</strong><div class="po-contact-edit-fields">'+contacts.map(([label,key,type])=>'<label>'+esc(label)+'<input type="'+type+'" data-po-field="'+key+'" value="'+esc(state.fields[key]||'')+'"></label>').join('')+'</div><label class="po-contact-notes">Additional notes (optional)<textarea data-term="6" rows="2" placeholder="Optional notes below a), b), c)">'+esc(state.termsOverrides?.[6]??'')+'</textarea></label></div>';
+  }
+  return '<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong><textarea data-term="'+t.number+'" rows="3" placeholder="Optional replacement clause text">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">Optional: override this clause text. Leave empty to use the JSON template.</small></label>';
+ }).join('');
  $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'"></label>').join('')+'</fieldset>').join('');
  render();
 }
