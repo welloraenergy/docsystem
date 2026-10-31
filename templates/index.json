@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogName": "DocSystem Preset Template Registry",
-  "updated": "2026-10-31",
+  "updated": "2026-11-01",
   "families": [
     {
       "id": "quotation",
@@ -18,6 +18,14 @@
       "editor": "preset-po.html",
       "templateCount": 6,
       "status": "po-editor-initial-integration-ready-for-browser-testing"
+    },
+    {
+      "id": "delivery-ticket",
+      "name": "Delivery Ticket / DO",
+      "manifest": "do/index.json",
+      "editor": "preset-do.html",
+      "templateCount": 1,
+      "status": "editor-integrated-pending-live-A4-and-Firebase-verification"
     }
   ],
   "isolation": {
@@ -26,7 +34,9 @@
       "businessProfile",
       "A4print",
       "firebaseDocumentPersistence",
-      "documentList"
+      "documentList",
+      "presetHeaderShortcodes",
+      "singleA4PaginationController"
     ],
     "neverMixFieldsBetweenFamilies": true
   },
@@ -34,5 +44,5 @@
     "branch": "restore/working-before-quotation-po-json-2026-10-31",
     "commit": "3b10bd8a866176b9775ba27e7e41214d10bbaf66"
   },
-  "note": "Quotation uses its existing working editor and has extracted JSON awaiting migration. PO editor now loads its own six JSON templates, with Firebase saving and an A4 preview; verify live rendering and original workbook fidelity before production use."
+  "note": "Quotation, Purchase Order and Delivery Ticket remain separate preset families. Delivery Ticket fields/signatures/photos follow its original Excel workbook; document design reuses existing business header, presets library, A4 controller and Firebase collection."
 }
