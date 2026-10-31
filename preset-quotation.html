@@ -283,7 +283,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 /* Inline [size=...] overrides the slot default; profile-origin size tags are removed in JS. */
 .paper .preset-header-slot .excel-business-logo{max-width:none;max-height:none;object-fit:contain}
 .paper .excel-company-name .preset-header-slot{font-weight:inherit}
-</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
+</style><style id="presetWebsiteLinkStyle">.paper .doc-website-link,.paper .doc-website-link:link,.paper .doc-website-link:visited{color:inherit!important;text-decoration:none!important;font:inherit}.paper .doc-website-link:hover{text-decoration:none!important}</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div id="rental3TermsControls" hidden><p class="muted">Terms belong to the selected quotation template. Fixed clauses cannot be edited; only document-specific fields are shown below. Rental and payment periods update applicable wording.</p><label id="standardFacilityAddressField">Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="specialTkrLocations" hidden><label>Clause 4 — Equipment Pick-up Address<textarea id="pickupAddress" rows="3"></textarea></label><label>Clause 5 — Equipment Return Address<textarea id="returnAddress" rows="3"></textarea></label></div><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
@@ -339,6 +339,16 @@ function profileSnapshot(profile){
 }
 function shownCompany(){return savedCompanySnapshot||profileSnapshot(businessProfile)}
 function activePresetHeader(){return savedHeaderSnapshot||businessProfile?.presetHeader||{}}
+function websiteLinkMarkup(value){
+ const label=String(value??'').trim();
+ if(!label)return '';
+ const candidate=/^https?:\/\//i.test(label)?label:'https://'+label;
+ try{
+  const u=new URL(candidate);
+  if(!['http:','https:'].includes(u.protocol)||!u.hostname.includes('.')||/\s/.test(label))return esc(label);
+  return '<a class="doc-website-link" href="'+esc(u.href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>';
+ }catch(e){return esc(label)}
+}
 function renderPresetHeaderSlot(slot,company){
  const config=activePresetHeader(),source=String(config[slot]||'');
  if(!source.trim())return '';
@@ -356,7 +366,7 @@ function renderPresetHeaderSlot(slot,company){
  });
  let content=renderCompanyInfo(rendered);
  content=content.replace(/\u0001PRESET_VALUE_(companyName|companyInfo)\u0001/g,(_,key)=>key==='companyInfo'?renderCompanyInfo(textValues[key]):esc(textValues[key]));
- content=content.replace(/\u0001PRESET_GLOBAL_([a-zA-Z][a-zA-Z0-9_]*)\u0001/g,(_,key)=>renderCompanyInfo(String(vars[key]??'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
+ content=content.replace(/\u0001PRESET_GLOBAL_([a-zA-Z][a-zA-Z0-9_]*)\u0001/g,(_,key)=>key==='website'?websiteLinkMarkup(vars[key]):renderCompanyInfo(String(vars[key]??'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
  content=content.replace(/\u0001PRESET_LOGO\u0001/g,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
  return '<div class="preset-header-slot" style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+'">'+content+'</div>';
 }
