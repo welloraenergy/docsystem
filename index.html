@@ -72,10 +72,10 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div id="settingsSubnav" class="clean-subnav" hidden>
 <button type="button" data-subpage="company">Business Profiles</button>
 <button type="button" data-subpage="global">Global Settings</button>
-<button type="button" data-subpage="users">Users</button>
+<button type="button" id="cloudMenuUsers" data-subpage="users">Users</button>
 <button type="button" data-subpage="backup">Backup / Restore</button>
 </div>
-<div id="templatesSubnav" class="clean-subnav" hidden><button type="button" data-subpage="library">Template Library</button><button type="button" data-subpage="template">Custom Template Settings</button></div>
+<div id="templatesSubnav" class="clean-subnav" hidden><button type="button" data-subpage="library">Template Library</button><button type="button" class="cloud-admin-only" data-subpage="template">Custom Template Settings</button></div>
 <main class="working-mode" id="docMain">
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
