@@ -123,10 +123,10 @@ export async function openDocument(id,duplicate=false){
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource==="preset"){
-      const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order';
-      const preset=encodeURIComponent(data.templateId||(isPo?'purchase-credit':'rental3'));
-      const family=isPo?'&family=purchase-order':'';
-      const saved=duplicate?'':(isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket';
+      const preset=encodeURIComponent(data.templateId||(isDo?'standard':isPo?'purchase-credit':'rental3'));
+      const family=isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
+      const saved=duplicate?'':(isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
       window.location.href="./?preset="+preset+family+saved;
       return;
     }
