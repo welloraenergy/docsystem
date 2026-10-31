@@ -7,6 +7,7 @@ export function paginatePresetDocument(root, options = {}) {
   if (!first || !first.getBoundingClientRect().width) return;
   const nodes = Array.from(first.children);
   first.replaceChildren();
+  const requestedFit = ['flow','auto','normal'].includes(options.fit) ? options.fit : 'flow';
   const mm = 96 / 25.4;
   let page = first;
 
@@ -20,8 +21,11 @@ export function paginatePresetDocument(root, options = {}) {
     const pr = page.getBoundingClientRect();
     const nr = node.getBoundingClientRect();
     const scale = pr.width / (210 * mm);
-    const bottom = pr.top + (297 - 12 - 2) * mm * scale;
-    return nr.bottom <= bottom + 0.5;
+    // Measure against the actual A4 content bottom, accounting for the page's
+    // configured padding, rather than assuming one fixed preset padding.
+    const paddingBottom = parseFloat(getComputedStyle(page).paddingBottom) || 0;
+    const pageBottom = pr.top + (297 * mm * scale) - paddingBottom * scale - 2 * mm * scale;
+    return nr.bottom <= pageBottom + 0.5;
   }
   function appendWhole(node) {
     page.appendChild(node);
@@ -34,7 +38,7 @@ export function paginatePresetDocument(root, options = {}) {
     const body = section.querySelector('.excel-terms');
     if (!body) return true;
     const sizes = [preferred];
-    if (options.fit !== 'normal') {
+    if (requestedFit === 'auto') {
       for (let n = preferred - 0.5; n >= 6.5; n -= 0.5) sizes.push(n);
       if (sizes[sizes.length - 1] !== 6.5) sizes.push(6.5);
     }
@@ -206,9 +210,16 @@ export function paginatePresetDocument(root, options = {}) {
     }
   }
   for (const node of nodes) {
-    if (node.matches('section.excel-terms-section')) (options.fit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
+    if (node.matches('section.excel-terms-section')) (requestedFit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
     else if (node.matches('table.excel-table')) appendItemTable(node);
     else appendWhole(node);
   }
-  return root.querySelectorAll('article.paper').length;
+  const pages = Array.from(root.querySelectorAll('article.paper'));
+  const termsPages = pages.filter(p => p.querySelector('.excel-terms-section')).length;
+  const actualSizes = pages.flatMap(p => Array.from(p.querySelectorAll('.excel-terms')).map(e => parseFloat(getComputedStyle(e).fontSize)));
+  root.dataset.pageFitMode = requestedFit;
+  root.dataset.pageFitTermsPages = String(termsPages);
+  root.dataset.pageFitTotalPages = String(pages.length);
+  root.dataset.pageFitActualSizePx = actualSizes.length ? String(Math.min(...actualSizes)) : '';
+  return pages.length;
 }
