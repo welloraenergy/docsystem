@@ -11,12 +11,32 @@
  .paper .po-title{width:100%!important;flex:0 0 auto!important}
  .paper .po-meta{margin-top:11mm!important;margin-bottom:2mm!important;flex:0 0 auto!important}
 }
+</style><style id="excelPOFieldsSharedDesign20261101">
+/* Shared design language; PO fields/order follow the original Excel sheets. */
+.po-vendor-form{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;align-items:start}
+.po-vendor-form .fields{display:flex;flex-direction:column;gap:10px;min-width:0}
+.po-vendor-form .fields label{width:100%}
+.po-vendor-form .fields textarea{min-height:95px}
+.po-vendor-section{margin:4mm 0 5mm}
+.po-vendor-title{background:#080808;color:#fff;font-weight:700;text-align:center;padding:1.2mm 0;font-size:8.5pt;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.po-vendor{display:grid;grid-template-columns:minmax(0,57%) minmax(0,43%);gap:0;margin:0!important;border:1px solid #555;min-height:27mm;font-size:8pt}
+.po-vendor>div{padding:1.5mm 2mm;min-width:0}
+.po-vendor-right{border-left:1px solid #777}
+.po-vendor-row{display:grid;grid-template-columns:27mm minmax(0,1fr);gap:1.5mm;line-height:1.3;min-height:4mm;align-items:start}
+.po-vendor-row strong{text-align:right;font-weight:600}
+.po-vendor-row span{white-space:break-spaces;overflow-wrap:anywhere}
+.po-vendor-right .po-vendor-row{grid-template-columns:23mm minmax(0,1fr)}
+.paper .po-title>div{color:inherit}
+@media(max-width:700px){.po-vendor-form{grid-template-columns:1fr}}
+@media print{.po-vendor-title{background:#080808!important;color:#fff!important}}
 </style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
-<section class="card"><h3>Business and Supplier</h3><div class="fields" id="poFields"></div></section>
+<section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
+<section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
+<section class="card"><h3>Delivery / Collection &amp; Contact Details</h3><div class="fields" id="poTermsFields"></div></section>
 <section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><p class="muted">The six numbered clauses are defined by the selected PO template. Update the vendor and delivery/payment fields above to fill variable details.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="fields" id="signatureFields"></div></section>
@@ -111,12 +131,22 @@ async function chooseTemplate(id,clear=true){
 function draw(){
  if(!state||!template)return;
  $('poTemplate').value=state.poType;
- $('poFields').innerHTML=template.fields.map(f=>{
+ const htmlField=f=>{
   const value=state.fields[f.key]??'';
   const options=f.key==='currency'?Array.from(new Set([...(business().currencies||[]).map(x=>x.code),'MYR','USD'])):f.options;
-  const field=f.type==='multiline'?'<textarea data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='date'?'date':f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
-  return '<label class="'+(f.type==='multiline'?'wide':'')+'">'+esc(f.label)+field+'</label>'
- }).join('');
+  const control=f.type==='multiline'?'<textarea data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='date'?'date':f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
+  const label=({poDate:'Date',poNumber:'Reference No.',vendorName:'Company',vendorAddress:'Address',vendorContact:'Contact Person',vendorPhone:'Tel',vendorEmail:'Email',vendorQuotationNo:'Quotation No.',vendorQuotationDate:'Quotation Date',currency:'Currency',sstRate:'SST (%)'})[f.key]||f.label;
+  return '<label class="'+(f.type==='multiline'?'wide':'')+'">'+esc(label)+control+'</label>';
+ };
+ const groups={
+  poReferenceFields:['poDate','poNumber'],
+  poVendorFields:['vendorName','vendorAddress','vendorContact','vendorPhone','vendorEmail'],
+  poQuotationFields:['vendorQuotationNo','vendorQuotationDate','currency','sstRate'],
+  poTermsFields:['fulfillmentMode','fulfillmentAddress','fulfillmentDate','welloraContactName','welloraContactPhone','welloraContactEmail']
+ };
+ for(const [target,keys] of Object.entries(groups)){
+  $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
+ }
  drawRows();
  $('termsEditor').innerHTML=template.terms.map(t=>'<label style="margin-bottom:10px"><strong>'+t.number+'. '+esc(t.title)+'</strong><textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea><small class="muted">Optional: override this clause text. Leave empty to use the JSON template.</small></label>').join('');
  $('signatureFields').innerHTML=template.signatures.flatMap(x=>['name','position','date'].map(k=>'<label>'+esc(x)+' — '+k+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(x)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[x]?.[k]||'')+'"></label>')).join('');
@@ -163,7 +193,10 @@ function render(){
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
  const companyMarkup='<div class="po-head"><div class="po-company-ident">'+sharedPresetSlot('logo',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('name',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('details',headerCompany,headerCfg,globalPlaceholders)+'</div><div class="po-right"><div class="po-title">'+poHeaderTitle()+'</div><div class="po-meta">'+metaRow('Date',formatPresetDate(f.poDate))+metaRow('Reference No',f.poNumber)+'</div></div></div>';
- const vendorMarkup='<div class="po-vendor"><div><strong>Vendor:</strong><br>'+esc(poPresetValue(f.vendorName||''))+'<br>'+esc(poPresetValue(f.vendorAddress||''))+'<br>Contact: '+esc(poPresetValue(f.vendorContact||''))+'<br>Tel: '+esc(poPresetValue(f.vendorPhone||''))+'<br>Email: '+esc(poPresetValue(f.vendorEmail||''))+'</div><div><strong>Vendor Quotation:</strong> '+esc(poPresetValue(f.vendorQuotationNo||''))+'<br><strong>Quotation Date:</strong> '+esc(f.vendorQuotationDate||'')+'<br><strong>Currency:</strong> '+esc(f.currency||'MYR')+'<br><strong>PO Type:</strong> '+esc(template.title)+'</div></div>';
+ const vendorRow=(label,value)=>'<div class="po-vendor-row"><strong>'+esc(label)+':</strong><span>'+esc(poPresetValue(value||''))+'</span></div>';
+ const vendorMarkup='<section class="po-vendor-section"><div class="po-vendor-title">Vendor &amp; Quotation Information</div><div class="po-vendor">'+
+  '<div class="po-vendor-left">'+vendorRow('Company',f.vendorName)+vendorRow('Address',f.vendorAddress)+vendorRow('Contact Person',f.vendorContact)+vendorRow('Tel',f.vendorPhone)+vendorRow('Email',f.vendorEmail)+'</div>'+
+  '<div class="po-vendor-right">'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+vendorRow('Currency',f.currency||'MYR')+vendorRow('SST (%)',f.sstRate??0)+'</div></div></section>';
  const table='<table class="po-items excel-table"><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
  const totalTable='<table class="po-totals"><tr><td>Subtotal</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
  const amountWords='<div class="po-words"><strong>Total Amount in Words: </strong>'+esc(f.currency||'MYR')+' '+esc(moneyWords(grand))+'</div>';
