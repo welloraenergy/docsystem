@@ -2,7 +2,7 @@ import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 let db=null;
-let user=null, role=null, currentId=null, writeTimer=null, loading=false; const rank={staff:1,manager:2,superadmin:3};
+let user=null, role=null, currentId=null, writeTimer=null, loading=false; const rank={user:1,staff:1,manager:2,superadmin:3};
 const el=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const notify=s=>{el("cloudStatus").textContent=s;};
@@ -93,7 +93,7 @@ export async function loadDocs(){
     }
     el("cloudList").innerHTML=snaps.empty?"<p>No documents found.</p>":snaps.docs.map(s=>{
       const d=s.data(),ownerRole=d.creatorRole||creators.get(d.createdBy);
-      const canDelete=d.createdBy===user.uid || (rank[role]>(rank[ownerRole]||99));
+      const canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
       return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType)+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
     }).join("");
     notify("Online · "+snaps.size+" documents loaded");
@@ -104,11 +104,19 @@ export async function deleteDocument(id){
   try{
     const ref=doc(db,"documents",id),snap=await getDoc(ref);
     if(!snap.exists())return alert("Document no longer exists.");
-    if(!confirm("Permanently delete "+(snap.data().number||id)+"? This cannot be undone."))return;
+    const record=snap.data();
+    if(!canAdmin()&&role!=="manager"&&record.createdBy!==user.uid){
+      alert("Only the document creator, a manager, or a superadmin can delete this document.");return;
+    }
+    if(!confirm("Permanently delete "+(record.number||id)+"? This cannot be undone."))return;
     await deleteDoc(ref);
     if(currentId===id)currentId=null;
     notify("Document deleted");await loadDocs();
-  }catch(error){alert("Delete failed: "+(error.code||error.message))}
+  }catch(error){
+    if(error.code==="permission-denied"){
+      alert("Delete denied by Firestore security rules. The document was not deleted. Firebase rules must grant this operation to your role.");
+    }else alert("Delete failed: "+(error.code||error.message));
+  }
 }
 export async function openDocument(id,duplicate=false){
   try{
@@ -134,8 +142,8 @@ export async function openDocument(id,duplicate=false){
 export async function loadUsers(){
   if(!user||!canManage())return;
   try{
-    const snaps=await getDocs(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","staff"]),limit(200)));
-    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","staff"]:["manager","staff"]).map(r=>'<option '+(r===x.role?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
+    const snaps=await getDocs(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","user","staff"]),limit(200)));
+    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","user"]:["manager","user"]).map(r=>'<option '+(r===x.role?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
   }catch(e){el("userList").textContent="Could not load users: "+e.message}
 }
 export async function saveUser(uid){
@@ -146,6 +154,7 @@ export async function saveUser(uid){
   if(uid===user.uid&&status==="inactive"){alert("You cannot deactivate yourself.");return}
   try{const ref=doc(db,"users",uid);const current=await getDoc(ref);if(!current.exists())throw Error("Account missing");
     if(!canAdmin()&&current.data().role!==newRole)throw Error("Manager cannot modify roles");
+    if(!canAdmin()&&current.data().role==="superadmin")throw Error("Manager cannot modify a superadmin account");
     await setDoc(ref,{role:newRole,status},{merge:true});notify("Account updated");await loadUsers();
   }catch(e){alert("Update failed: "+e.message)}
 }
@@ -155,6 +164,7 @@ export async function addUser(){
   const password=el("newUserPassword").value;
   const chosenRole=el("newUserRole").value;
   if(!email.includes("@") || password.length<6)return alert("Enter an email and a password of at least 6 characters.");
+  if(!["user","manager","superadmin"].includes(chosenRole))return alert("Select a valid role.");
   if(!canAdmin() && chosenRole==="superadmin")return alert("Superadmin assignment is restricted.");
   const button=el("cloudUserAdd");button.disabled=true;
   let secondary=null;
