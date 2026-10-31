@@ -40,6 +40,16 @@
 @media print{
  .paper .dt-sign thead th{white-space:nowrap!important;font-size:6.25pt!important}
 }
+</style><style id="deliveryTicketMetaSingleLine20261101">
+/* Same one-line date metadata behavior as Quotation and PO.
+   Delivery Ticket has two longer PO labels, so its label column is wider. */
+.paper .dt-head{grid-template-columns:minmax(0,58%) minmax(0,42%);gap:0}
+.paper .dt-right{min-width:0;align-items:stretch;padding-right:1mm}
+.paper .dt-meta{width:100%!important;max-width:100%;font-size:7pt;line-height:1.35;margin:9mm 0 0 auto}
+.paper .dt-meta-line{display:grid!important;grid-template-columns:32mm minmax(0,1fr)!important;column-gap:1.5mm!important;align-items:baseline;min-height:4.2mm}
+.paper .dt-meta-line b{white-space:nowrap!important;text-align:right;font-weight:600}
+.paper .dt-meta-line span{white-space:nowrap!important;overflow:visible!important;word-break:normal!important}
+@media print{.paper .dt-meta-line b,.paper .dt-meta-line span{white-space:nowrap!important}}
 </style></head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Delivery Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collection Address &amp; Contact Person</h3><div class="section-fields" id="collectionFields"></div></section>
