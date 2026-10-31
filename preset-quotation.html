@@ -567,7 +567,7 @@ function numberToEnglish(n){
 }
 function daysPhrase(v){
  const n=Math.max(1,Math.floor(Number(v)||30));
- return (dayWords[n]||numberToEnglish(n))+' ('+n+')';
+ return dayWords[n] || numberToEnglish(n)+' ('+n+')';
 }
 function usesStandardRentalTerms(){return ['rental3','rental10','rentcon53','rentcon105','specialtkr'].includes(state.preset)}
 function isSpecialTkr(){return state.preset==='specialtkr'}
@@ -581,7 +581,7 @@ function rental3Terms(){
   if(i===15)body='Payment for rental equipment shall be made within '+pay+' days from the date of the invoice. Invoice shall be billed monthly.';
   if(i===16)body='A late payment charge of ten percent (10%) per annum shall apply to any outstanding amount remaining unpaid after the expiry of the agreed '+pay+' days payment period.';
   if(i===17)body='This quotation shall remain valid for '+valid+' days from the quotation date stated herein, unless otherwise agreed in writing.';
-  if(i===14)title+=': '+d.charAt(0).toUpperCase()+d.slice(1)+' days';
+  // The full duration already appears in the clause body; keep the heading concise.
   return {title,body,num:i+1};
  });
 }
@@ -618,7 +618,7 @@ function specialTkrTerms(){
   if(i===3)body=state.pickupAddress||'';
   if(i===4)body=state.returnAddress||'';
   if(i===14)body='Should the Client cancel the order after issuance of the PO, the Client shall be liable for a minimum rental charge equivalent to '+d+' days together with reimbursement of all costs and expenses already incurred by Wellora Energy in connection with the order. Such costs may include, but are not limited to, inspection, repair, mobilisation, freight, trucking, lifting services, and other logistics or preparation costs.';
-  if(i===15){title+=': '+d.charAt(0).toUpperCase()+d.slice(1)+' days';body='A minimum rental period of '+d+' days shall apply to all equipment rented under this quotation. The Client shall be liable for the rental charges for the full minimum rental period of '+d+' days regardless of the actual period of equipment usage or early return.';}
+  if(i===15){body='A minimum rental period of '+d+' days shall apply to all equipment rented under this quotation. The Client shall be liable for the rental charges for the full minimum rental period of '+d+' days regardless of the actual period of equipment usage or early return.';}
   if(i===16)body='Payment for rental equipment shall be made within '+pay+' days from the date of the invoice. Invoice shall be billed monthly.';
   if(i===17)body='A late payment charge of ten percent (10%) per annum shall apply to any outstanding amount remaining unpaid after the expiry of the agreed '+pay+' days payment period.';
   if(i===18)body='This quotation shall remain valid for '+valid+' days from the quotation date stated herein, unless otherwise agreed in writing.';
