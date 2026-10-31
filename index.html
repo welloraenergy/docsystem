@@ -201,7 +201,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="user">User</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
-<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order (PO)</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
+<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order (PO)</option><option value="delivery-ticket">Delivery Ticket / DO</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
 <div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
 <label class="workspace-business-label">Business Profile<select id="businessProfile" aria-label="Business Profile"></select></label>
 <div class="unified-toolbar-actions">
@@ -236,7 +236,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="cloud-entry"><div><b>Purchase — Progress Claim</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="purchase-progress-claim">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="rental">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Inspection / Repair</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="inspection-repair">Use in Workspace</button></div>
-<div class="cloud-entry"><div><b>Logistics</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="logistics">Use in Workspace</button></div></div><div class="card cloud-admin-only" id="presetHeaderConfigCard">
+<div class="cloud-entry"><div><b>Logistics</b><div class="muted">Purchase Order · Ready-Made Preset</div></div><button type="button" class="small" data-open-po-preset="logistics">Use in Workspace</button></div></div><h3>Wellora — Delivery Ticket / DO Presets</h3><div class="stack"><div class="cloud-entry"><div><b>Standard Delivery Ticket</b><div class="muted">Delivery Ticket · Ready-Made Preset</div></div><button type="button" class="small" data-open-do-preset="standard">Use in Workspace</button></div></div><div class="card cloud-admin-only" id="presetHeaderConfigCard">
 <h3>Shared Preset Header & Document Heading</h3>
 <p class="muted">Set once per Business Profile for all Quotation and Purchase Order presets. Logo, company name, business details, document heading, and formatting are shared across preset document families.</p>
 <label>Business Profile<select id="presetHeaderProfileSelect"></select></label>
@@ -701,11 +701,12 @@ function showDocPage(page){
  if(root==='create')document.getElementById('workspaceStatus').textContent=activeWorkspacePreset()?'Preset document ready':'Custom document ready';
 }
 const poPresetChoices=[['purchase-credit','Purchase — Credit'],['purchase-cash','Purchase — Cash'],['purchase-progress-claim','Purchase — Progress Claim'],['rental','Rental'],['inspection-repair','Inspection / Repair'],['logistics','Logistics']];
+const deliveryTicketPresetChoices=[['standard','Standard Delivery Ticket']];
 const quotationPresetChoices=[['rental3','Rental (Qty 3)'],['rental10','Rental (Qty 10)'],['rentcon53','Rental + Consumables (Qty 5+3)'],['rentcon105','Rental + Consumables (Qty 10+5)'],['specialtkr','Rental — Special TKR']];
 function fillPresetTypes(preserve=false){
  const family=document.getElementById('workspacePresetFamily').value;
  const select=document.getElementById('workspacePresetSelect'),previous=select.value;
- const choices=family==='purchase-order'?poPresetChoices:quotationPresetChoices;
+ const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:quotationPresetChoices;
  select.innerHTML=choices.map(([id,label])=>'<option value="'+id+'">'+esc(label)+'</option>').join('');
  if(preserve&&choices.some(([id])=>id===previous))select.value=previous;
 }
@@ -725,7 +726,7 @@ function setWorkspaceSource(source,reload=false,documentId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='purchase-order'?'preset-po.html?version=20261101-one-preset-pagefit-controller1':'preset-quotation.html?version=20261101-one-preset-pagefit-controller1';
+  const editor=family==='delivery-ticket'?'preset-do.html?version=20261101-do-initial1':family==='purchase-order'?'preset-po.html?version=20261101-one-preset-pagefit-controller1':'preset-quotation.html?version=20261101-one-preset-pagefit-controller1';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
@@ -784,6 +785,8 @@ document.addEventListener('click',e=>{
  if(e.target.id==='newBtn'){workspaceAction('new');return}
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
  if(e.target.id==='pdfBtn'){workspaceAction('print');return}
+ const doItem=e.target.closest('[data-open-do-preset]');
+ if(doItem){document.getElementById('workspacePresetFamily').value='delivery-ticket';fillPresetTypes();document.getElementById('workspacePresetSelect').value=doItem.dataset.openDoPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const poItem=e.target.closest('[data-open-po-preset]');
  if(poItem){document.getElementById('workspacePresetFamily').value='purchase-order';fillPresetTypes();document.getElementById('workspacePresetSelect').value=poItem.dataset.openPoPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
  const item=e.target.closest('[data-open-preset]');
@@ -960,14 +963,14 @@ window.DocSystemBridge={
 // Route saved preset records back into the same Workspace.
 const incomingPreset=new URLSearchParams(location.search);
 fillPresetTypes();
-if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset.has('poDoc')){
- const family=incomingPreset.has('poDoc')||incomingPreset.get('family')==='purchase-order'?'purchase-order':'quotation';
+if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset.has('poDoc')||incomingPreset.has('doDoc')){
+ const family=incomingPreset.has('doDoc')||incomingPreset.get('family')==='delivery-ticket'?'delivery-ticket':incomingPreset.has('poDoc')||incomingPreset.get('family')==='purchase-order'?'purchase-order':'quotation';
  document.getElementById('workspacePresetFamily').value=family;
  fillPresetTypes();
- const selected=incomingPreset.get('preset')||(family==='purchase-order'?'purchase-credit':'rental3');
+ const selected=incomingPreset.get('preset')||(family==='delivery-ticket'?'standard':family==='purchase-order'?'purchase-credit':'rental3');
  const selector=document.getElementById('workspacePresetSelect');
  if(Array.from(selector.options).some(o=>o.value===selected))selector.value=selected;
- setWorkspaceSource('preset',true,incomingPreset.get('poDoc')||incomingPreset.get('presetDoc'));
+ setWorkspaceSource('preset',true,incomingPreset.get('doDoc')||incomingPreset.get('poDoc')||incomingPreset.get('presetDoc'));
  showDocPage('create');
  history.replaceState(null,'',location.pathname);
 }
