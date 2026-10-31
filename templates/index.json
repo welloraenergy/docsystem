@@ -9,15 +9,15 @@
       "manifest": "quotation/index.json",
       "editor": "preset-quotation.html",
       "templateCount": 5,
-      "status": "json-prepared-current-editor-unchanged"
+      "status": "current-editor-active-json-prepared-not-live-sourced"
     },
     {
       "id": "purchase-order",
       "name": "Purchase Order",
       "manifest": "po/index.json",
-      "editor": null,
+      "editor": "preset-po.html",
       "templateCount": 6,
-      "status": "json-prepared-dedicated-editor-pending"
+      "status": "po-editor-initial-integration-ready-for-browser-testing"
     }
   ],
   "isolation": {
@@ -34,5 +34,5 @@
     "branch": "restore/working-before-quotation-po-json-2026-10-31",
     "commit": "3b10bd8a866176b9775ba27e7e41214d10bbaf66"
   },
-  "note": "These JSON definitions do not yet drive the live Workspace. Test them against existing Quotation behavior before migrating. Purchase Orders require their own form and renderer."
+  "note": "Quotation uses its existing working editor and has extracted JSON awaiting migration. PO editor now loads its own six JSON templates, with Firebase saving and an A4 preview; verify live rendering and original workbook fidelity before production use."
 }
