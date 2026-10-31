@@ -136,7 +136,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="cloud-entry"><div><b>Rental — Special TKR</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="specialtkr">Use in Workspace</button></div>
 </div><div class="card cloud-admin-only" id="presetHeaderConfigCard"><h3>Preset Header Shortcodes</h3><p class="muted">Nothing is inserted automatically. Add {logo}, {companyName}, or {companyInfo} wherever wanted; adjust the size of each area. Each preset has independent header settings.</p><label>Configure Preset<select id="presetHeaderConfigSelect"><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><div class="preset-header-config-grid"><div><label>Logo area<textarea rows="3" data-preset-header-field="logo" placeholder="{logo}"></textarea></label><label>Logo width (mm)<input type="number" min="10" max="70" data-preset-header-logo-width value="35"></label></div><div><label>Company name area<textarea rows="3" data-preset-header-field="name" placeholder="{companyName}"></textarea></label><label>Font size (pt)<input type="number" min="6" max="36" data-preset-header-size="name" value="13"></label></div><div><label>Company details area<textarea rows="4" data-preset-header-field="details" placeholder="{companyInfo}"></textarea></label><label>Font size (pt)<input type="number" min="6" max="36" data-preset-header-size="details" value="8"></label></div></div></div></div><div id="customLibrary" hidden><h3>Custom Document Templates</h3><p class="muted">Choose a document type to start editing. Managers can adjust its layout separately.</p><div id="customTemplateList" class="stack"></div><button type="button" class="small cloud-admin-only" data-open-custom-template>Configure Custom Templates</button></div></div></section>
 <section id="template" class="panel">
-<div class="card"><h2>Custom Document Layout</h2><p class="muted">No company information is inserted automatically. Place {logo}, {companyName}, {companyInfo} or other shortcodes in the desired header/footer panel. Each panel has its own alignment and font controls.</p></div>
+<div class="card"><h2>Shared Custom Document Header & Footer</h2><p class="muted">This layout belongs to the selected Business Profile and applies to <strong>all custom document types</strong> for that business (Quotation, Invoice, Delivery Order, etc.). It is independent of company data and preset designs. Only inserted shortcodes such as {logo}, {companyName} and {companyInfo} appear on the document.</p><p class="muted" id="customLayoutSaveStatus" role="status">Changes save automatically.</p></div>
 <div class="card"><h2>Header Layout</h2><p class="muted">Choose full width, two columns or three columns. Add, move and remove content in each panel.</p><div id="headerLayoutControls"></div></div>
 <div class="card"><h2>Footer Layout</h2><div id="footerLayoutControls"></div></div>
 <div class="card"><h2>Current Document Settings</h2><div class="muted" style="margin-bottom:8px">Business Profile → Document → Template Settings. Each business keeps its own version of every document template.</div><div class="row3"><label>Business Profile<select id="tplBusinessProfile"></select></label><label>Type<select id="tplType"></select></label><label>Title<input id="tplTitle"></label></div></div>
@@ -212,7 +212,12 @@ function normalizeProfiles(){
   })
 }
 normalizeProfiles();
-function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n=1;n<1000;n++){let k='extra_'+String(n).padStart(3,'0');if(!used.has(k))return k}return 'extra_'+Date.now()}function saveSettings(){localStorage.setItem(KEY,JSON.stringify(settings));window.DocSystemCloud?.settingsChanged()}
+function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n=1;n<1000;n++){let k='extra_'+String(n).padStart(3,'0');if(!used.has(k))return k}return 'extra_'+Date.now()}function saveSettings(){
+ localStorage.setItem(KEY,JSON.stringify(settings));
+ window.DocSystemCloud?.settingsChanged();
+ const note=document.getElementById('customLayoutSaveStatus');
+ if(note)note.textContent='Saved locally · syncing to Firebase';
+}
 function tpl(){return profile().templates[doc.type]}
 function blankRow(){let r={};tpl().columns.forEach(c=>r[c[0]]=c[0]==='item'?String(doc?.items?.length+1||1):'');return r}
 function switchProfile(id,preferredType){
@@ -309,20 +314,24 @@ function renderGlobalPlaceholders(){
  const root=document.getElementById('globalPlaceholders');if(!root)return;
  root.innerHTML=Object.entries(globals()).map(([key,value])=>'<div class="card"><div class="between"><strong>{'+esc(key)+'}</strong><button type="button" class="small danger" data-placeholder-remove="'+esc(key)+'">Remove</button></div><textarea rows="3" data-placeholder-key="'+esc(key)+'">'+esc(value)+'</textarea></div>').join('')||'<p class="muted">No custom placeholders yet.</p>';
 }
-function layoutConfig(area){
- const template=tpl();
- if(!template.layouts)template.layouts={};
- if(!template.layouts[area]){
-  template.layouts[area]=area==='header'
-   ?{columns:3,panels:[
-      {align:'left',text:''},
-      {align:'center',text:''},
-      {align:'right',text:''}
-    ]}
-   :{columns:1,panels:[{align:'center',text:''}]};
+function customLayoutConfig(area){
+ const p=profile();
+ if(!p.customLayouts){
+  // Adopt the current configured custom layout when consolidating the workspace.
+  const templates=Object.values(p.templates||{});
+  const priority=[p.templates?.[doc.type],...templates].filter(Boolean);
+  const findConfiguredLayout=kind=>priority.map(t=>t.layouts?.[kind]).find(l=>l&&Array.isArray(l.panels)&&l.panels.some(panel=>String(panelText(panel)).trim()));
+  p.customLayouts={
+   header:clone(findConfiguredLayout('header')||{columns:3,panels:[{align:'left',text:''},{align:'center',text:''},{align:'right',text:''}]}),
+   footer:clone(findConfiguredLayout('footer')||{columns:1,panels:[{align:'center',text:''}]})
+  };
  }
- const layout=template.layouts[area];
- if(![1,2,3].includes(Number(layout.columns)))layout.columns=3;
+ return p.customLayouts[area];
+}
+function layoutConfig(area){
+ const layout=customLayoutConfig(area);
+ if(![1,2,3].includes(Number(layout.columns)))layout.columns=area==='header'?3:1;
+ if(!Array.isArray(layout.panels))layout.panels=[];
  while(layout.panels.length<layout.columns)layout.panels.push({align:'left',text:''});
  return layout;
 }
