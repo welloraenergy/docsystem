@@ -61,6 +61,7 @@ onAuthStateChanged(auth, async user => {
   currentUid = uid;
   if (!user) {
     cloud.clearCloud();
+    window.DocSystemRole=null;
     window.DocSystemCloud=null;
     lock("Sign in with your approved account.");
     return;
@@ -70,16 +71,19 @@ onAuthStateChanged(auth, async user => {
     const snap = await getDoc(doc(db, "users", uid));
     if (currentUid !== uid) return;
     const profile = snap.exists() ? snap.data() : null;
-    const validRole = ["superadmin", "manager", "staff"].includes(profile?.role);
+    const validRole = ["superadmin", "manager", "user", "staff"].includes(profile?.role);
     if (!profile || profile.status !== "active" || !validRole ||
         (profile.email || "").toLowerCase() !== (user.email || "").toLowerCase()) {
       await signOut(auth);
       lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
       return;
     }
+    const normalizedRole=profile.role==="staff"?"user":profile.role;
+    const managerOrAbove=["superadmin","manager"].includes(normalizedRole);
+    window.DocSystemRole=normalizedRole;
     window.DocSystemCloud=cloud;
-    document.querySelectorAll('#settingsNavTab, [data-subpage="template"], #cloudMenuUsers').forEach(x=>x.hidden=!["superadmin","manager"].includes(profile.role));
-    unlock(user, profile);
+    document.querySelectorAll('#settingsNavTab, nav.tabs [data-tab="library"], [data-subpage="template"], #cloudMenuUsers').forEach(x=>x.hidden=!managerOrAbove);
+    unlock(user, {...profile,role:normalizedRole});
     cloud.startCloud(user, profile).catch(error => {
       console.error("DocSystem cloud initialization failed:", error);
       const status=document.getElementById("cloudStatus");
