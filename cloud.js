@@ -119,6 +119,12 @@ export async function openDocument(id,duplicate=false){
       window.location.href="./?preset="+preset+(duplicate?"":"&presetDoc="+encodeURIComponent(id));
       return;
     }
+    // A saved custom document must never inherit the last-used preset editor.
+    const sourcePicker=document.getElementById("workspaceTemplateSource");
+    if(sourcePicker && sourcePicker.value!=="custom"){
+      sourcePicker.value="custom";
+      sourcePicker.dispatchEvent(new Event("change",{bubbles:true}));
+    }
     bridge().setDocument(decode(s.data()));currentId=duplicate?null:id;
     if(duplicate)notify("Duplicate ready: change document number and save");
     else notify("Document opened: "+(s.data().number||""));
