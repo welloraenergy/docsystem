@@ -61,9 +61,18 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 #presetWorkspaceFrame{display:block;border:0;width:100%;height:1100px;background:#f1f5f9}
 #docMain.preset-editor-mode .workspace-view-tabs,#docMain.preset-editor-mode #create>.workspace-form{display:none!important}
 #docMain.preset-editor-mode>.preview{display:none!important}
-#docMain.preset-editor-mode #create{display:block!important}
-#docMain.preset-editor-mode #presetWorkspace{display:block!important}
+#docMain.preset-editor-mode #create.active{display:block!important}
+#docMain.preset-editor-mode #create.active #presetWorkspace{display:block!important}
 @media print{#docMain.preset-editor-mode{display:none!important}}
+</style><style id="workspaceNavigationRepairs">
+/* Do not display a document editor or its preview under Documents, Templates or Settings. */
+#docMain:not(.on-workspace-tab)>.preview{display:none!important}
+#docMain:not(.on-workspace-tab) #create{display:none!important}
+#docMain.preset-editor-mode #create:not(.active){display:none!important}
+#docMain #presetWorkspace[hidden],#workspacePresetChoice[hidden],#customLibrary[hidden],#presetLibrary[hidden]{display:none!important}
+#docMain:not(.on-workspace-tab) .workspace-view-tabs{display:none!important}
+#docMain .preview{max-width:100%}
+[data-library-kind].active{background:#193f72;color:white;border-color:#193f72}
 </style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
@@ -76,7 +85,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <button type="button" data-subpage="backup">Backup / Restore</button>
 </div>
 <div id="templatesSubnav" class="clean-subnav" hidden><button type="button" data-subpage="library">Template Library</button><button type="button" class="cloud-admin-only" data-subpage="template">Custom Template Settings</button></div>
-<main class="working-mode" id="docMain">
+<main class="working-mode on-workspace-tab" id="docMain">
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="staff">Staff</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
@@ -95,7 +104,7 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
 <section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Built-in: {logo}, {companyName}, {companyname}, {companyInfo}, {doctype}, {docno}, {docdate}, {page}. Other preset fields are editable.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
-<section id="library" class="panel"><div class="card"><h2>Template Library</h2><p class="muted">Ready-made presets use their own layouts and forms; custom templates keep the designs created in DocSystem.</p><div class="row"><button class="small" data-library-kind="preset">Preset Templates</button><button class="small" data-library-kind="custom">Custom Templates</button></div><div id="presetLibrary"><h3>Wellora — Quotation Presets</h3><div class="stack">
+<section id="library" class="panel"><div class="card"><h2>Template Library</h2><p class="muted">Ready-made presets use their own layouts and forms; custom templates keep the designs created in DocSystem.</p><div class="row"><button class="small" data-library-kind="preset" class="active" aria-pressed="true">Preset Templates</button><button class="small" data-library-kind="custom" aria-pressed="false">Custom Templates</button></div><div id="presetLibrary"><h3>Wellora — Quotation Presets</h3><div class="stack">
 <div class="cloud-entry"><div><b>Rental (Qty 3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental3">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental (Qty 10)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental10">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental + Consumables (Qty 5+3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon53">Use in Workspace</button></div>
@@ -409,13 +418,15 @@ function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'a
 function setWorkspaceView(view){const mode=view==='preview'?'preview':'working',main=document.getElementById('docMain');main.classList.toggle('preview-mode',mode==='preview');main.classList.toggle('working-mode',mode==='working');document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});if(mode==='preview')renderPreview();}
 function showDocPage(page){
  const settings=['company','global','users','backup'],template=['library','template'];
- const root=page==='settings'? 'company':page==='templates'?'library':page;
+ const root=page==='settings'?'company':page==='templates'?'library':page;
  const target=settings.includes(root)?'settings':template.includes(root)?'library':root;
  document.querySelectorAll('nav.tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===target));
  document.querySelectorAll('.workspace>.panel').forEach(p=>p.classList.toggle('active',p.id===root));
  document.getElementById('settingsSubnav').hidden=target!=='settings';
  document.getElementById('templatesSubnav').hidden=target!=='library';
  document.querySelectorAll('.clean-subnav button').forEach(b=>b.classList.toggle('active',b.dataset.subpage===root));
+ // Only the Workspace may show the separate document preview.
+ document.getElementById('docMain').classList.toggle('on-workspace-tab',root==='create');
  if(root==='create'&&document.getElementById('workspaceTemplateSource').value==='custom')setWorkspaceView('working');
 }
 function setWorkspaceSource(source,reload=false,documentId=null){
@@ -444,6 +455,16 @@ window.addEventListener('message',e=>{
 document.addEventListener('click',e=>{
  const item=e.target.closest('[data-open-preset]');
  if(item){document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
+ const libraryChoice=e.target.closest('[data-library-kind]');
+ if(libraryChoice){
+  const selected=libraryChoice.dataset.libraryKind;
+  document.getElementById('presetLibrary').hidden=selected!=='preset';
+  document.getElementById('customLibrary').hidden=selected!=='custom';
+  document.querySelectorAll('[data-library-kind]').forEach(b=>{const active=b.dataset.libraryKind===selected;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+  return;
+ }
+ const customTemplate=e.target.closest('[data-open-custom-template]');
+ if(customTemplate){showDocPage('template');return}
  const sub=e.target.closest('[data-subpage]');
  if(sub){showDocPage(sub.dataset.subpage);return;}
 
