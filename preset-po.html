@@ -168,7 +168,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261101-fitting-measure-fix1';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261101-fitting-measure-fix2';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -345,12 +345,13 @@ function render(){
  const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
  $('pageCount').textContent=totalPages+' page(s)';
  const termPages=Number(paperRoot.dataset.pageFitTermsPages)||0;
+ const termsStartPage=Number(paperRoot.dataset.pageFitTermsStartPage)||1;
  const fitMode=paperRoot.dataset.pageFitMode||'flow';
  const effectivePx=Number(paperRoot.dataset.pageFitActualSizePx)||0;
  const effectivePt=effectivePx ? Math.round(effectivePx*72/96*10)/10 : (state.termsFontSize||8);
  const explanation=termPages<=1
-  ? 'Terms fit on one A4 page; changing fitting modes may not visibly move text until the terms overflow.'
-  : 'Terms continue across '+termPages+' A4 pages.';
+  ? (termsStartPage===1?'Terms fit on page 1; fitting modes may look identical until the terms overflow.':'Terms start on page '+termsStartPage+' and fit there without splitting.')
+  : 'Terms start on page '+termsStartPage+' and continue across '+termPages+' A4 pages.';
  const detail=fitMode==='flow'?'Continue across pages':fitMode==='auto'?'Auto Fit':'Normal size / add page';
  $('termsFitStatus').textContent=detail+' · '+(fitMode==='auto'?'Effective font '+effectivePt+' pt. ':'')+explanation;
  fitPreview();
