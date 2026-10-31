@@ -462,7 +462,12 @@ function workspaceAction(action){
  if(activeWorkspacePreset()){
   if(action==='new'){if(confirm('Start a new preset quotation? Unsaved changes will be lost.'))sendPresetCommand('new');return}
   if(action==='save')return sendPresetCommand('save');
-  if(action==='print')return sendPresetCommand('print');
+  if(action==='print'){
+   const frame=document.getElementById('presetWorkspaceFrame');
+   try{if(typeof frame.contentWindow?.printDoc==='function')return frame.contentWindow.printDoc();}
+   catch(e){console.warn('Preset print unavailable',e)}
+   document.getElementById('workspaceStatus').textContent='Preset editor not ready to print';return;
+  }
  }else{
   if(action==='new'){if(confirm('Start a new custom document?')){newDoc(doc.type);window.DocSystemCloud?.changedDocument();refresh()}return}
   if(action==='save')return window.DocSystemCloud?.saveDocument();
