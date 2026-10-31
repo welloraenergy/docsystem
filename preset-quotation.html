@@ -347,7 +347,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .preset-terms-fitting label{flex:1 1 145px;font-size:12px}
 /* Scrollbar is reserved permanently so preview width does not oscillate. */
 @media screen and (min-width:1100px){
- body.embedded-preset .wrap>.preview-only{overflow-y:scroll!important;scrollbar-gutter:stable!important}
+ body.embedded-preset .wrap>.preview-only{overflow-y:scroll!important;scrollbar-gutter:stable!important;max-height:950px!important}
 }
 @media print{
  @page{size:A4 portrait;margin:0}
@@ -375,7 +375,8 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
  let lastReportedHeight=0;
  const notifyParent=()=>{
   if(window.parent===window)return;
-  const height=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight));
+  const wrap=document.querySelector('.wrap');
+  const height=Math.ceil((wrap?.getBoundingClientRect().bottom||document.body.scrollHeight)+24);
   if(Math.abs(height-lastReportedHeight)<3)return;
   lastReportedHeight=height;
   window.parent.postMessage({type:'docsystem-preset-height',height},location.origin);
