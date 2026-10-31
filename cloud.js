@@ -143,7 +143,7 @@ export async function loadUsers(){
   if(!user||!canManage())return;
   try{
     const snaps=await getDocs(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","user","staff"]),limit(200)));
-    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","user"]:["manager","user"]).map(r=>'<option '+(r===x.role?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
+    el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","user"]:["manager","user"]).map(r=>'<option '+(r===(x.role==='staff'?'user':x.role)?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
   }catch(e){el("userList").textContent="Could not load users: "+e.message}
 }
 export async function saveUser(uid){
@@ -153,9 +153,10 @@ export async function saveUser(uid){
   const status=row.querySelector("select[data-status-uid]").value;
   if(uid===user.uid&&status==="inactive"){alert("You cannot deactivate yourself.");return}
   try{const ref=doc(db,"users",uid);const current=await getDoc(ref);if(!current.exists())throw Error("Account missing");
-    if(!canAdmin()&&current.data().role!==newRole)throw Error("Manager cannot modify roles");
     if(!canAdmin()&&current.data().role==="superadmin")throw Error("Manager cannot modify a superadmin account");
-    await setDoc(ref,{role:newRole,status},{merge:true});notify("Account updated");await loadUsers();
+    const storedRole=canAdmin()?newRole:current.data().role;
+    if(!["superadmin","manager","user","staff"].includes(storedRole))throw Error("Invalid role");
+    await setDoc(ref,{role:storedRole,status},{merge:true});notify("Account updated");await loadUsers();
   }catch(e){alert("Update failed: "+e.message)}
 }
 export async function addUser(){
