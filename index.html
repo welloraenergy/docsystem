@@ -275,13 +275,22 @@ function updateProfileLabels(){
   [businessProfile,companyProfile,tplBusinessProfile].forEach(sel=>{let o=sel&&sel.querySelector('option[value="'+CSS.escape(settings.activeProfileId)+'"]');if(o)o.textContent=profileLabel(profile())})
 }
 function renderCreate(){let t=tpl();renderDocCurrency();docTitle.value=doc.title;docFields.innerHTML=t.fields.map(f=>{let control=f[2]==='multiline'?'<textarea rows="3" data-field="'+f[0]+'">'+esc(doc.fieldValues[f[0]]||'')+'</textarea>':'<input data-field="'+f[0]+'" value="'+esc(doc.fieldValues[f[0]]||'')+'">';return '<label>'+esc(f[1])+control+'</label>'}).join('');let h='<thead><tr>'+t.columns.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';doc.items.forEach((r,i)=>h+='<tr>'+t.columns.map(c=>'<td><input data-ri="'+i+'" data-key="'+c[0]+'" '+(c[2]==='formula'?'readonly':'')+' value="'+esc(c[2]==='formula'?formulaDisplay(r,c):r[c[0]]||'')+'"></td>').join('')+'<td><button class="trash" data-del="'+i+'">×</button></td></tr>');items.innerHTML=h+'</tbody>';notes.value=doc.notes||''}
+function detailsWithoutName(info,name){
+ const companyName=String(name||'').trim();
+ if(!companyName)return String(info||'');
+ const escaped=companyName.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&').replace(/\s+/g,'\\s+');
+ const nameRegex=new RegExp(escaped,'gi');
+ return String(info||'').split(/\r?\n/).map(line=>{
+  let clean=line.replace(nameRegex,'');
+  for(let i=0;i<4;i++)clean=clean.replace(/\[(b|i|u|size|font)(?:=[^\]]+)?\]\s*\[\/\1\]/gi,'');
+  const plain=clean.replace(/\[(?:\/?(?:b|i|u|size|font))(?:=[^\]]+)?\]/gi,'').trim();
+  if(!plain||/^(?:company(?: name)?|business(?: name)?)\s*:\s*$/i.test(plain))return '';
+  return clean.trim();
+ }).filter(Boolean).join('\n');
+}
 function companyInfoText(c){
  const text=typeof c.headerText==='string'?c.headerText:(c.fields||[]).filter(f=>f.place!=='footer'&&f.value).map(f=>(f.label?f.label+': ':'')+f.value).join('\n');
- const companyName=String(c.name||'').trim().toLowerCase();
- return String(text).split(/\r?\n/).filter(line=>{
-  const plain=line.replace(/\[(?:\/?(?:b|i|u|size|font))(?:=[^\]]+)?\]/gi,'').trim().replace(/\s+/g,' ').toLowerCase();
-  return !companyName||plain!==companyName;
- }).join('\n').replace(/^\n+/,'');
+ return detailsWithoutName(text,c.name);
 }
 const RESERVED_PLACEHOLDERS=new Set(['logo','companyName','companyname','companyInfo','documentType','doctype','footerText','pageNumber','page','docno','docdate']);
 const PRESET_PLACEHOLDERS={
