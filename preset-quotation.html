@@ -271,7 +271,7 @@ body.preview .preview-only{display:block}
 </style><style id="profilePresetIntegration">.preset-business-choice{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12px;white-space:nowrap}.preset-business-choice select{max-width:220px}.paper .excel-company-details{white-space:pre-wrap!important;overflow-wrap:anywhere}@media(max-width:680px){.preset-business-choice{width:100%}}</style><style id="embeddedWorkspacePresentation">
 body.embedded-preset{background:#f1f5f9}
 body.embedded-preset>header{display:none!important}
-body.embedded-preset .bar{padding:10px 12px;position:sticky;top:0;z-index:10;border:1px solid #e0e7ef;border-radius:9px}
+body.embedded-preset .bar{display:none!important}
 body.embedded-preset .bar>a,body.embedded-preset .bar>#preset{display:none!important}
 body.embedded-preset .wrap{margin:10px auto 0;padding:0 1px;max-width:100%}
 body.embedded-preset .form-only{width:100%}
@@ -310,6 +310,7 @@ async function refreshBusinessProfiles(){
   renderBusinessSelector();
   if(!savedCompanySnapshot)drawFieldsOnly();
   render();
+  announcePresetReady();
  }catch(e){console.warn('Business Profile lookup failed',e);$('status').textContent='Cannot load Business Profiles'}
 }
 function availableCurrencies(company){
@@ -335,6 +336,34 @@ function renderCompanyInfo(info){
  value=value.replace(/\[font=(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)\]([\s\S]*?)\[\/font\]/gi,(_,n,t)=>'<span style="font-family:'+n+'">'+t+'</span>');
  return value;
 }
+function informWorkspace(type,extra={}){
+ if(!document.body.classList.contains('embedded-preset')||window.parent===window)return;
+ window.parent.postMessage({type:'docsystem-preset-'+type,...extra},location.origin);
+}
+function announcePresetReady(){
+ informWorkspace('ready',{
+  profiles:businessProfiles.map(p=>({id:p.id,name:p.company.name||'Business'})),
+  selected:savedCompanySnapshot?.id||businessProfile?.id||'',
+  locked:!!id,
+  status:$('status').textContent||'Preset ready'
+ });
+}
+function choosePresetBusiness(profileId){
+ if(id){announcePresetReady();return}
+ const selected=businessProfiles.find(p=>p.id===profileId);
+ if(!selected){announcePresetReady();return}
+ businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;
+ renderBusinessSelector();drawFieldsOnly();render();announcePresetReady();
+}
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='docsystem-preset-command')return;
+ const cmd=event.data.action;
+ if(cmd==='view'){window.view(!!event.data.preview);return}
+ if(cmd==='save'){window.save();return}
+ if(cmd==='print'){window.printDoc();return}
+ if(cmd==='new'){fresh(state.preset);$('status').textContent='New quotation';announcePresetReady();informWorkspace('view',{preview:false});return}
+ if(cmd==='business'){choosePresetBusiness(event.data.profileId);return}
+});
 function renderBusinessSelector(){
  const target=$('businessProfileSelect');if(!target)return;
  let options=businessProfiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.company.name||'Business')+'</option>').join('');
@@ -453,10 +482,14 @@ function render(){
  const company=shownCompany();const address=String(company.info||'');
  $('paper').innerHTML='<article class="paper"><div class="excel-company"><div class="excel-identity">'+(company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo">':'<div class="excel-brandmark" aria-label="Company logo">W</div>')+'<div class="excel-company-name">'+esc(company.name||'')+'</div><div class="excel-company-details">'+renderCompanyInfo(address)+'</div></div><div class="excel-right"><div class="excel-title">QUOTATION</div><div class="excel-ref"><div class="ref-line"><span>Date:</span><span>'+esc(formatExcelDate(state.date))+'</span></div><div class="ref-line"><span>Reference No:</span><span>'+esc(state.reference||'')+'</span></div><div class="ref-line"><span>Currency:</span><span>'+esc(state.currency||'')+'</span></div></div></div></div><div class="excel-client-title">Client Information</div><div class="excel-client"><div>'+row('Company',state.client)+row('Address',state.address)+row('Contact Person',state.contact)+row('Tel',state.telephone)+row('Email',state.email)+'</div><div>'+row('RFQ No',state.rfq)+row('Date',formatExcelDate(state.rfqDate))+row('Operator',state.operator)+row('Rig',state.rig)+row('Well',state.well)+row('Load Out',state.loadout)+'</div></div>'+(intro?'<p class="excel-rfq">'+intro+'</p>':'')+qrows('rental','Rental',state.rental)+'<div class="excel-notes">*LIH = Lost In Hole<br>*DBR = Damage Beyond Repair</div>'+qrows('consumables','Consumables',state.consumables)+(state.consumables.length?'<p style="text-align:right;font-weight:700">Consumables Total: '+esc(state.currency)+' '+fmt(state.consumables.reduce((sum,r)=>sum+(Number(r.qty)||0)*(Number(r.rate)||0),0))+'</p>':'')+'<section class="excel-terms-section"><div class="excel-terms-header">Terms and Conditions</div><div class="excel-terms">'+terms+'</div></section><p style="font-size:8pt">Please do not hesitate to contact us if you have any questions.</p><table class="excel-sign-table"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+['Prepared By','Reviewed By','Approved By'].map((s,i)=>{const v=state.signatures[i],d=typeof v==='object'?v:{name:v||'',position:'',date:''};return '<tr><th scope="row">'+s+'</th><td>'+esc(d.name||'')+'</td><td>'+esc(d.position||'')+'</td><td>'+esc(d.date?formatExcelDate(d.date):'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table></article>';
 }
-window.view=async on=>{if(on&&!savedCompanySnapshot)await refreshBusinessProfiles();document.body.classList.toggle('preview',on);$('working').classList.toggle('active',!on);$('previewButton').classList.toggle('active',on);if(on)render()};
+window.view=async on=>{if(on&&!savedCompanySnapshot)await refreshBusinessProfiles();document.body.classList.toggle('preview',on);$('working').classList.toggle('active',!on);$('previewButton').classList.toggle('active',on);if(on)render();informWorkspace('view',{preview:!!on})};
 window.printDoc=async()=>{await view(true);window.print()};
-window.save=async()=>{if(!user)return alert('Sign in from DocSystem first');if(!state.reference.trim())return alert('Enter a quotation number.');try{const ref=id?doc(db,'documents',id):doc(collection(db,'documents'));const prior=await getDoc(ref);const companySnapshot=savedCompanySnapshot||profileSnapshot(businessProfile);if(!companySnapshot.id)return alert('Select a Business Profile first.');const record={companySnapshot,templateSource:'preset',templateId:state.preset,templateVersion:1,documentType:'Quotation',number:state.reference,date:state.date,presetData:state,profileId:companySnapshot.id,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:actualRole}:{})};await setDoc(ref,record,{merge:true});id=ref.id;savedCompanySnapshot=companySnapshot;renderBusinessSelector();$('status').textContent='Saved '+state.reference}catch(e){alert('Save failed: '+e.message)}};
-window.load=async()=>{if(!user)return alert('Sign in first');const number=prompt('Quotation number to open:');if(!number)return;try{const snaps=await getDocs(query(collection(db,'documents'),where('number','==',number),limit(30)));const found=snaps.docs.find(x=>x.data().templateSource==='preset');if(!found)return alert('Preset quotation not found');id=found.id;state=found.data().presetData;savedCompanySnapshot=found.data().companySnapshot||null;businessProfile=businessProfiles.find(p=>p.id===found.data().profileId)||businessProfile;draw();$('status').textContent='Opened '+number}catch(e){alert('Open failed: '+e.message)}};
-$('preset').innerHTML=presets.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;drawFieldsOnly();render();};
-$('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'))fresh(e.target.value);else e.target.value=state.preset};document.addEventListener('input',e=>{const d=e.target.dataset;if(d.field)state[d.field]=e.target.value;else if(d.table)state[d.table][+d.row][d.key]=e.target.value;else if(d.signRow!==undefined){const i=+d.signRow;if(typeof state.signatures[i]!=='object')state.signatures[i]={name:state.signatures[i]||'',position:'',date:''};state.signatures[i][d.signKey]=e.target.value;}else if(e.target.id==='terms')state.terms=e.target.value;else if(e.target.id==='facilityAddress')state.facilityAddress=e.target.value;else if(e.target.id==='pickupAddress')state.pickupAddress=e.target.value;else if(e.target.id==='returnAddress')state.returnAddress=e.target.value;if(usesStandardRentalTerms())$('rental3TermsReadOnly').innerHTML=activePresetClausesHtml();render()});fresh(new URLSearchParams(location.search).get('preset')||'rental3');const openId=new URLSearchParams(location.search).get('docId');if(openId){onAuthStateChanged(auth,async u=>{if(!u)return;try{const snap=await getDoc(doc(db,'documents',openId));if(snap.exists()&&snap.data().templateSource==='preset'){state=snap.data().presetData;id=openId;savedCompanySnapshot=snap.data().companySnapshot||null;businessProfile=businessProfiles.find(p=>p.id===snap.data().profileId)||businessProfile;draw();$('status').textContent='Opened '+snap.data().number}}catch(e){$('status').textContent='Could not open document: '+e.message}})}
+window.save=async()=>{if(!user)return alert('Sign in from DocSystem first');if(!state.reference.trim())return alert('Enter a quotation number.');try{const ref=id?doc(db,'documents',id):doc(collection(db,'documents'));const prior=await getDoc(ref);const companySnapshot=savedCompanySnapshot||profileSnapshot(businessProfile);if(!companySnapshot.id)return alert('Select a Business Profile first.');const record={companySnapshot,templateSource:'preset',templateId:state.preset,templateVersion:1,documentType:'Quotation',number:state.reference,date:state.date,presetData:state,profileId:companySnapshot.id,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:actualRole}:{})};await setDoc(ref,record,{merge:true});id=ref.id;savedCompanySnapshot=companySnapshot;renderBusinessSelector();$('status').textContent='Saved '+state.reference;announcePresetReady()}catch(e){alert('Save failed: '+e.message)}};
+window.load=async()=>{if(!user)return alert('Sign in first');const number=prompt('Quotation number to open:');if(!number)return;try{const snaps=await getDocs(query(collection(db,'documents'),where('number','==',number),limit(30)));const found=snaps.docs.find(x=>x.data().templateSource==='preset');if(!found)return alert('Preset quotation not found');id=found.id;state=found.data().presetData;savedCompanySnapshot=found.data().companySnapshot||null;businessProfile=businessProfiles.find(p=>p.id===found.data().profileId)||businessProfile;draw();$('status').textContent='Opened '+number;announcePresetReady()}catch(e){alert('Open failed: '+e.message)}};
+if(document.body.classList.contains('embedded-preset')){
+ const statusNode=$('status');
+ new MutationObserver(()=>informWorkspace('status',{status:statusNode.textContent||'Ready'})).observe(statusNode,{childList:true,subtree:true,characterData:true});
+}
+$('preset').innerHTML=presets.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;drawFieldsOnly();render();announcePresetReady();};
+$('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'))fresh(e.target.value);else e.target.value=state.preset};document.addEventListener('input',e=>{const d=e.target.dataset;if(d.field)state[d.field]=e.target.value;else if(d.table)state[d.table][+d.row][d.key]=e.target.value;else if(d.signRow!==undefined){const i=+d.signRow;if(typeof state.signatures[i]!=='object')state.signatures[i]={name:state.signatures[i]||'',position:'',date:''};state.signatures[i][d.signKey]=e.target.value;}else if(e.target.id==='terms')state.terms=e.target.value;else if(e.target.id==='facilityAddress')state.facilityAddress=e.target.value;else if(e.target.id==='pickupAddress')state.pickupAddress=e.target.value;else if(e.target.id==='returnAddress')state.returnAddress=e.target.value;if(usesStandardRentalTerms())$('rental3TermsReadOnly').innerHTML=activePresetClausesHtml();render()});fresh(new URLSearchParams(location.search).get('preset')||'rental3');const openId=new URLSearchParams(location.search).get('docId');if(openId){onAuthStateChanged(auth,async u=>{if(!u)return;try{const snap=await getDoc(doc(db,'documents',openId));if(snap.exists()&&snap.data().templateSource==='preset'){state=snap.data().presetData;id=openId;savedCompanySnapshot=snap.data().companySnapshot||null;businessProfile=businessProfiles.find(p=>p.id===snap.data().profileId)||businessProfile;draw();$('status').textContent='Opened '+snap.data().number;announcePresetReady()}}catch(e){$('status').textContent='Could not open document: '+e.message}})}
 </script></body></html>
