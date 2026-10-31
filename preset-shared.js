@@ -46,3 +46,27 @@ export function sharedPresetSlot(slot, company={}, config={}, globals={}) {
   return key==='website'?webLink(value):richPresetText(String(value??'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,''));
  })+'</div>';
 }
+
+export function expandPresetText(source,company={},globals={}) {
+ const variables={...globals,...(company.placeholders||{})};
+ const builtins={
+  companyName:company.name||'',companyname:company.name||'',
+  companyInfo:company.info||'',doctype:company.documentTitle||'',
+  documentTitle:company.documentTitle||'',docno:company.documentNumber||'',
+  docdate:company.documentDate||'',page:String(company.page||1)
+ };
+ let result=String(source??'');
+ const seen=new Set();
+ for(let pass=0;pass<4;pass++){
+  if(seen.has(result))break;
+  seen.add(result);
+  const next=result.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(match,key)=>{
+   if(Object.hasOwn(builtins,key))return String(builtins[key]??'');
+   if(Object.hasOwn(variables,key))return String(variables[key]??'');
+   return match;
+  });
+  if(next===result)break;
+  result=next;
+ }
+ return result;
+}
