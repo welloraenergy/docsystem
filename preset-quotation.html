@@ -338,8 +338,10 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .paper .excel-terms .excel-term{break-inside:avoid!important;page-break-inside:avoid!important;margin-bottom:var(--term-gap,1.3mm)!important}
 .paper .excel-terms .excel-term .term-text{white-space:break-spaces!important;line-height:1.2!important}
 .paper .excel-table tbody tr{break-inside:avoid!important;page-break-inside:avoid!important}
-.paper .excel-table td{height:9mm!important;vertical-align:top!important;white-space:pre-wrap!important}
+.paper .excel-table tbody tr{height:11mm!important}
+.paper .excel-table td{height:11mm!important;vertical-align:top!important;white-space:pre-wrap!important;padding:1.4mm 1mm!important}
 .paper .excel-table td:nth-child(2){white-space:break-spaces!important;overflow-wrap:anywhere}
+/* Height is a minimum for empty rows; table cells can grow for multiline content. */
 .form-only textarea[data-table][data-key="description"]{width:100%;min-width:150px;min-height:58px;resize:vertical;white-space:pre-wrap;tab-size:4}
 .paper .excel-sign-table{break-inside:avoid!important;page-break-inside:avoid!important}
 .paper .excel-terms-section{break-inside:avoid!important;page-break-inside:avoid!important}
