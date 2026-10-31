@@ -725,7 +725,7 @@ function setWorkspaceSource(source,reload=false,documentId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='purchase-order'?'preset-po.html?version=20261101-po-currency-location2':'preset-quotation.html?version=20261101-header-spacing-gold1';
+  const editor=family==='purchase-order'?'preset-po.html?version=20261101-excel-fields-design-normalized1':'preset-quotation.html?version=20261101-header-spacing-gold1';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
