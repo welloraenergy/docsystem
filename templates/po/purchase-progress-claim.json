@@ -238,6 +238,20 @@
         "welloraContactName",
         "welloraContactPhone",
         "welloraContactEmail"
+      ],
+      "contactLines": [
+        {
+          "label": "a) Contact Name:",
+          "binding": "welloraContactName"
+        },
+        {
+          "label": "b) Contact Number:",
+          "binding": "welloraContactPhone"
+        },
+        {
+          "label": "c) Contact Email:",
+          "binding": "welloraContactEmail"
+        }
       ]
     }
   ],
@@ -249,5 +263,16 @@
   "notes": {
     "implementation": "JSON data only. Do not use Quotation preset editor or modify quotation presets. Workbook VBA custom functions lastSaved and NumbertoWords must be implemented in JavaScript for PO rendering.",
     "wording": "Clause wording was copied from workbook cells; formula-based clauses 3 and 4 are expressed as fulfillment bindings."
+  },
+  "signatureLayout": {
+    "style": "quotation-signature-table",
+    "columns": [
+      "Role",
+      "Name",
+      "Position",
+      "Date",
+      "Signature"
+    ],
+    "signatureColumn": "blank-for-manual-signature"
   }
 }
