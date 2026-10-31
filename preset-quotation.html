@@ -347,9 +347,9 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .paper .excel-terms-section{break-inside:avoid!important;page-break-inside:avoid!important}
 .preset-terms-fitting{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:10px 0;padding:10px;background:#f5f8fc;border:1px solid #d9e3ef;border-radius:8px}
 .preset-terms-fitting label{flex:1 1 145px;font-size:12px}
-/* Scrollbar is reserved permanently so preview width does not oscillate. */
+/* No nested preview scrolling: the outer DocSystem page handles vertical navigation. */
 @media screen and (min-width:1100px){
- body.embedded-preset .wrap>.preview-only{overflow-y:scroll!important;scrollbar-gutter:stable!important;max-height:950px!important}
+ body.embedded-preset .wrap>.preview-only{position:static!important;top:auto!important;max-height:none!important;overflow-y:visible!important;overflow-x:visible!important;overscroll-behavior:auto!important;scrollbar-gutter:auto!important}
 }
 @media print{
  @page{size:A4 portrait;margin:0}
@@ -358,6 +358,10 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .paper{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;padding:9mm 10mm 12mm!important;break-after:page!important;page-break-after:always!important;box-shadow:none!important}
  .paper:last-child{break-after:auto!important;page-break-after:auto!important}
  .form-only,header,.bar,.notice{display:none!important}
+}
+@media screen {
+ html:has(body.embedded-preset),body.embedded-preset{overflow-y:hidden!important;height:auto!important;min-height:0!important}
+ body.embedded-preset .preview-only{position:static!important;max-height:none!important;overflow:visible!important}
 }
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
@@ -385,7 +389,16 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
  };
  window.addEventListener('load',notifyParent);
  window.addEventListener('resize',notifyParent);
- if(typeof ResizeObserver!=='undefined')new ResizeObserver(notifyParent).observe(document.body);
+ if(typeof ResizeObserver!=='undefined'){
+  const observer=new ResizeObserver(notifyParent);
+  const wrap=document.querySelector('.wrap');
+  if(wrap)observer.observe(wrap);
+  const form=wrap?.querySelector('.form-only');
+  if(form)observer.observe(form);
+  const preview=wrap?.querySelector('.preview-only');
+  if(preview)observer.observe(preview);
+ }
+
 }
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='user',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,savedHeaderSnapshot=null,globalPlaceholderValues={};
 onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role==='staff'?'user':(profile.data()?.role||'user')}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in'});
