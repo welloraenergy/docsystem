@@ -109,8 +109,8 @@ export async function openDocument(id,duplicate=false){
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource==="preset"){
-      const mode=duplicate?"&duplicate=1":"&docId="+encodeURIComponent(id);
-      window.location.href="preset-quotation.html?preset="+encodeURIComponent(s.data().templateId||"rental3")+mode;
+      const preset=encodeURIComponent(s.data().templateId||"rental3");
+      window.location.href="./?preset="+preset+(duplicate?"":"&presetDoc="+encodeURIComponent(id));
       return;
     }
     bridge().setDocument(decode(s.data()));currentId=duplicate?null:id;
