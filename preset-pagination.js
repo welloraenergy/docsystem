@@ -1,3 +1,29 @@
+// Shared controls and behavior for every preset document family.
+export const PRESET_TERMS_SIZES = Object.freeze([6.5,7,7.5,8,8.5,9]);
+export const PRESET_FITTING_MODES = Object.freeze([
+  {value:'flow',label:'Continue across pages (complete lines) — Default'},
+  {value:'auto',label:'Auto Fit (minimum 6.5pt)'},
+  {value:'normal',label:'Normal size / add page'}
+]);
+export function presetFittingControlsMarkup(){
+ return '<label>Terms font size<select id="termsFontSize">'+PRESET_TERMS_SIZES.map(size=>'<option value="'+size+'">'+size+' pt</option>').join('')+'</select></label>'+
+  '<label>Page fitting<select id="termsPageFit">'+PRESET_FITTING_MODES.map(mode=>'<option value="'+mode.value+'">'+mode.label+'</option>').join('')+'</select></label>';
+}
+export function presetFittingOptions(state){
+ const requested=Number(state?.termsFontSize);
+ const size=PRESET_TERMS_SIZES.includes(requested)?requested:8;
+ const fit=PRESET_FITTING_MODES.some(m=>m.value===state?.termsPageFit)?state.termsPageFit:'flow';
+ return {size,fit,fitFollowingSelector:'table.excel-sign-table, table.po-signatures'};
+}
+export function syncPresetFittingControls(state){
+ const options=presetFittingOptions(state);
+ const size=document.getElementById('termsFontSize');
+ const fit=document.getElementById('termsPageFit');
+ if(size)size.value=String(options.size);
+ if(fit)fit.value=options.fit;
+ return options;
+}
+
 // Shared A4 pagination for Quotation and Purchase Order presets.
 // Called after render(), before the preview is visually scaled.
 // Terms are kept together whenever possible; if longer than an A4 page,
@@ -42,28 +68,32 @@ export function paginatePresetDocument(root, options = {}) {
       for (let n = preferred - 0.5; n >= 6.5; n -= 0.5) sizes.push(n);
       if (sizes[sizes.length - 1] !== 6.5) sizes.push(6.5);
     }
-    // With PO, fitting Terms alone is insufficient: the following signature
-    // block must also fit on this physical A4 page. Quotation behavior is
-    // unchanged unless fitFollowingSelector is explicitly provided.
-    const following = requestedFit === 'auto' && options.fitFollowingSelector
-      ? nodes.find(n => n.matches?.(options.fitFollowingSelector))
-      : null;
+    // Auto Fit measures the complete trailing material through the signature
+    // table (including intervening paragraphs). Works for Quotation, PO,
+    // and subsequent document families without family-specific code.
+    const sectionIndex=nodes.indexOf(section);
+    const firstTermsIndex=nodes.findIndex(n=>n.matches?.('section.excel-terms-section'));
+    const searchFrom=sectionIndex>=0?sectionIndex+1:firstTermsIndex+1;
+    const followingIndex=nodes.findIndex((n,i)=>i>=searchFrom && n.matches?.(options.fitFollowingSelector || 'table.excel-sign-table, table.po-signatures'));
+    const following=requestedFit==='auto'&&followingIndex>=0
+      ? nodes.slice(searchFrom,followingIndex+1)
+      : [];
     let sectionFits = false;
     for (const n of sizes) {
       body.style.fontSize = n + 'pt';
       section.style.setProperty('--term-gap', n < preferred ? '1mm' : '1.3mm');
       sectionFits = fits(section);
       if (!sectionFits) continue;
-      if (!following) return true;
-      const test = following.cloneNode(true);
-      page.appendChild(test);
-      const together = fits(test);
-      test.remove();
+      if (!following.length) return true;
+      const tests=following.map(n=>n.cloneNode(true));
+      for(const test of tests)page.appendChild(test);
+      const together=fits(tests[tests.length-1]);
+      for(const test of tests)test.remove();
       if (together) return true;
     }
     // If signatures still cannot fit even at 6.5 pt, use that true minimum
     // and allow normal A4 pagination to move the signatures to page two.
-    if (following && sectionFits) return true;
+    if (following.length && sectionFits) return true;
     return false;
   }
   function emptyTerms(original) {
