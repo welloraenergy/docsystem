@@ -86,7 +86,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 body.preset-current header #newBtn,body.preset-current header #saveBtn,body.preset-current header #pdfBtn{display:none!important}
 @media(max-width:700px){.unified-workspace-toolbar{align-items:stretch}.unified-workspace-toolbar .workspace-business-label{flex:1 1 100%}.unified-toolbar-actions{flex:1 1 100%}.unified-toolbar-actions button{flex:1 1 auto}}
 @media print{#unifiedWorkspaceToolbar{display:none!important}}
-</style><style id="presetSlotSettingsStyle">.preset-header-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.preset-header-config-grid textarea{width:100%;font-family:monospace}#presetHeaderConfigCard{margin-top:18px}@media(max-width:760px){.preset-header-config-grid{grid-template-columns:1fr}}</style></head>
+</style><style id="presetSlotSettingsStyle">.preset-header-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.preset-header-config-grid textarea{width:100%;font-family:monospace}#presetHeaderConfigCard{margin-top:18px}@media(max-width:760px){.preset-header-config-grid{grid-template-columns:1fr}}</style><style id="websiteLinkStyle">.doc-website-link,.doc-website-link:link,.doc-website-link:visited{color:inherit!important;text-decoration:none!important;font:inherit}.doc-website-link:hover{text-decoration:none!important}</style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
 <header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button></div></header>
@@ -397,6 +397,16 @@ function panelCss(p){
  const st=panelStyle(p),font=PANEL_FONTS.includes(st.font)?st.font:PANEL_FONTS[0],size=Math.max(6,Math.min(36,Number(st.size)||10));
  return 'font-family:'+font+';font-size:'+size+'pt;font-weight:'+(st.weight==='bold'?'bold':'normal')+';font-style:'+(st.italic==='italic'?'italic':'normal')+';';
 }
+function websiteLinkMarkup(value){
+ const label=String(value??'').trim();
+ if(!label)return '';
+ const candidate=/^https?:\/\//i.test(label)?label:'https://'+label;
+ try{
+  const u=new URL(candidate);
+  if(!['http:','https:'].includes(u.protocol)||!u.hostname.includes('.')||/\s/.test(label))return esc(label);
+  return '<a class="doc-website-link" href="'+esc(u.href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>';
+ }catch(e){return esc(label)}
+}
 function formatPanelText(value){
  let html=value;
  html=html.replace(/\[b\]([\s\S]*?)\[\/b\]/gi,'<strong>$1</strong>');
@@ -420,7 +430,7 @@ function layoutHtml(area,page,count){
     const key=match[1];
     if(key==='logo')return co.logo?'<img class="logo" src="'+esc(co.logo)+'" style="width:'+logoWidth+'mm;max-width:100%;max-height:none;height:auto" alt="Company logo">':'';
     if(Object.prototype.hasOwnProperty.call(values,key))return key==='companyInfo'||key==='footerText'?formatPanelText(esc(values[key])):esc(values[key]);
-    if(Object.prototype.hasOwnProperty.call(globals(),key))return resolve(globals()[key],depth+1);
+    if(Object.prototype.hasOwnProperty.call(globals(),key))return key==='website'?websiteLinkMarkup(globals()[key]):resolve(globals()[key],depth+1);
     return esc(part);
    }).join('');
   }
