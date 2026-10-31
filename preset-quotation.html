@@ -321,12 +321,22 @@ function preferredCurrency(company,current){
  const list=availableCurrencies(company).map(x=>x.code);
  return list.includes(current)?current:list.includes(company?.defaultCurrency)?company.defaultCurrency:list[0];
 }
+function detailsWithoutName(info,name){
+ const companyName=String(name||'').trim().toLowerCase();
+ return String(info||'').split(/\r?\n/).filter(line=>{
+  const plain=line.replace(/\[(?:\/?(?:b|i|u|size|font))(?:=[^\]]+)?\]/gi,'').trim().replace(/\s+/g,' ').toLowerCase();
+  return !companyName||plain!==companyName;
+ }).join('\n').replace(/^\n+/,'');
+}
 function profileSnapshot(profile){
  const co=profile?.company||{};
- const info=typeof co.headerText==='string'?co.headerText:(co.fields||[]).filter(x=>x&&x.place!=='footer'&&x.value).map(x=>(x.label?x.label+': ':'')+x.value).join('\n');
- return {id:profile?.id||null,name:co.name||'',logo:co.logo||'',info,currencies:availableCurrencies(co),defaultCurrency:co.defaultCurrency||'MYR'};
+ const raw=typeof co.headerText==='string'?co.headerText:(co.fields||[]).filter(x=>x&&x.place!=='footer'&&x.value).map(x=>(x.label?x.label+': ':'')+x.value).join('\n');
+ return {id:profile?.id||null,name:co.name||'',logo:co.logo||'',info:detailsWithoutName(raw,co.name),currencies:availableCurrencies(co),defaultCurrency:co.defaultCurrency||'MYR'};
 }
-function shownCompany(){return savedCompanySnapshot||profileSnapshot(businessProfile)}
+function shownCompany(){
+ const source=savedCompanySnapshot||profileSnapshot(businessProfile);
+ return {...source,info:detailsWithoutName(source.info,source.name)};
+}
 function renderCompanyInfo(info){
  let value=esc(info||'');
  value=value.replace(/\[b\]([\s\S]*?)\[\/b\]/gi,'<strong>$1</strong>');
