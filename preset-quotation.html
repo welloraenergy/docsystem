@@ -375,6 +375,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div class="grid preset-term-settings" id="presetTermSettings"></div><div class="preset-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><div id="rental3TermsControls" hidden><p class="muted">Terms belong to the selected quotation template. Fixed clauses cannot be edited; only document-specific fields are shown below. Rental and payment periods update applicable wording.</p><label id="standardFacilityAddressField">Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="specialTkrLocations" hidden><label>Clause 4 — Equipment Pick-up Address<textarea id="pickupAddress" rows="3"></textarea></label><label>Clause 5 — Equipment Return Address<textarea id="returnAddress" rows="3"></textarea></label></div><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
 import {paginatePresetDocument} from "./preset-pagination.js?v=20261031-flow1";
+import {sharedPresetSlot} from "./preset-shared.js?v=20261101-common1";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,collection,doc,getDoc,setDoc,serverTimestamp,query,where,getDocs,limit} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
@@ -451,26 +452,8 @@ function websiteLinkMarkup(value){
  }catch(e){return esc(label)}
 }
 function renderPresetHeaderSlot(slot,company){
- const config=activePresetHeader(),source=String(config[slot]||'');
- if(!source.trim())return '';
- const n=Number(config[slot+'Size']),size=Number.isFinite(n)&&n>=6&&n<=36?n:(slot==='name'?13:slot==='details'?8:10);
- const allowedFonts=['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'];
- const font=allowedFonts.includes(config[slot+'Font'])?config[slot+'Font']:'Arial';
- const align=['left','center','right'].includes(config[slot+'Align'])?config[slot+'Align']:'left';
- const vars=company.placeholders||globalPlaceholderValues;
- const textValues={companyName:company.name||'',companyInfo:String(company.info||'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')};
- const rendered=String(source).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(match,key)=>{
-  if(key==='logo')return '\u0001PRESET_LOGO\u0001';
-  if(Object.prototype.hasOwnProperty.call(textValues,key))return '\u0001PRESET_VALUE_'+key+'\u0001';
-  if(Object.prototype.hasOwnProperty.call(vars,key))return '\u0001PRESET_GLOBAL_'+key+'\u0001';
-  return match;
- });
- let content=renderCompanyInfo(rendered);
- content=content.replace(/\u0001PRESET_VALUE_(companyName|companyInfo)\u0001/g,(_,key)=>key==='companyInfo'?renderCompanyInfo(textValues[key]):esc(textValues[key]));
- content=content.replace(/\u0001PRESET_GLOBAL_([a-zA-Z][a-zA-Z0-9_]*)\u0001/g,(_,key)=>key==='website'?websiteLinkMarkup(vars[key]):renderCompanyInfo(String(vars[key]??'').replace(/\[\/?size(?:=\d{1,2})?\]/gi,'')));
- content=content.replace(/\u0001PRESET_LOGO\u0001/g,company.logo?'<img class="excel-business-logo" src="'+esc(company.logo)+'" alt="Company logo" style="width:'+Math.min(70,Math.max(10,Number(config.logoWidth)||35))+'mm;height:auto;max-width:none;max-height:none">':'');
- const color=validatedHeaderColor(config[slot+'Color'],slot==='name'?'#081527':'#111111');
- return '<div class="preset-header-slot" style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+';color:'+color+'">'+content+'</div>';
+ const current={...company,documentTitle:state.docTitle||'QUOTATION',documentNumber:state.reference||'',documentDate:state.date||''};
+ return sharedPresetSlot(slot,current,activePresetHeader(),globalPlaceholderValues);
 }
 function validatedHeaderColor(value,fallback){
  return /^#[0-9a-fA-F]{6}$/.test(String(value||''))?value:fallback;
