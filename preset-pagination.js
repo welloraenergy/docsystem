@@ -1,4 +1,4 @@
-// Pagination of preset quotations into physical A4 pages.
+// Shared A4 pagination for Quotation and Purchase Order presets.
 // Called after render(), before the preview is visually scaled.
 // Terms are kept together whenever possible; if longer than an A4 page,
 // only complete numbered clauses are moved to the next page.
@@ -79,6 +79,19 @@ export function paginatePresetDocument(root, options = {}) {
       part = makeSection();
     }
     for (const clause of clauses) {
+      // Preserve structured lines (e.g. PO Clause 6 a/b/c contacts) as
+      // real elements. Moving the whole clause prevents labels and values
+      // from being collapsed by the word-splitting algorithm.
+      if (clause.querySelector('.po-clause6-lines, .po-clause6-line')) {
+        part.body.appendChild(clause);
+        if (!fits(part.section)) {
+          clause.remove();
+          if (part.body.children.length === 0) part.section.remove();
+          newPart();
+          part.body.appendChild(clause);
+        }
+        continue;
+      }
       const originalText = clause.querySelector('.term-text');
       if (!originalText) {
         part.body.appendChild(clause);
