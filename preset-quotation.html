@@ -314,6 +314,24 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  body.embedded-preset .preview-only {display:block!important;position:static!important;max-height:none!important;overflow:visible!important}
  body.embedded-preset #paper {zoom:1!important;width:auto!important}
 }
+</style><style id="normalizedPresetWorkspace20261031">
+@media screen {
+ body.embedded-preset .wrap {
+  width:100%!important;max-width:none!important;
+ }
+ body.embedded-preset .wrap>.form-only {display:block!important;min-width:0!important;}
+ body.embedded-preset .wrap>.preview-only {display:block!important;min-width:0!important;}
+ /* Show both areas even when the legacy preview flag is set by Print/PDF. */
+ body.embedded-preset.preview .wrap>.form-only {display:block!important;}
+ @media(max-width:1099px) {
+  body.embedded-preset .wrap {display:block!important;padding:0 4px!important;}
+  body.embedded-preset .wrap>.form-only,
+  body.embedded-preset .wrap>.preview-only {
+   display:block!important;width:100%!important;max-width:none!important;
+   position:static!important;max-height:none!important;overflow:auto!important;
+  }
+ }
+}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div id="rental3TermsControls" hidden><p class="muted">Terms belong to the selected quotation template. Fixed clauses cannot be edited; only document-specific fields are shown below. Rental and payment periods update applicable wording.</p><label id="standardFacilityAddressField">Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="specialTkrLocations" hidden><label>Clause 4 — Equipment Pick-up Address<textarea id="pickupAddress" rows="3"></textarea></label><label>Clause 5 — Equipment Return Address<textarea id="returnAddress" rows="3"></textarea></label></div><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
