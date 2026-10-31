@@ -42,11 +42,28 @@ export function paginatePresetDocument(root, options = {}) {
       for (let n = preferred - 0.5; n >= 6.5; n -= 0.5) sizes.push(n);
       if (sizes[sizes.length - 1] !== 6.5) sizes.push(6.5);
     }
+    // With PO, fitting Terms alone is insufficient: the following signature
+    // block must also fit on this physical A4 page. Quotation behavior is
+    // unchanged unless fitFollowingSelector is explicitly provided.
+    const following = requestedFit === 'auto' && options.fitFollowingSelector
+      ? nodes.find(n => n.matches?.(options.fitFollowingSelector))
+      : null;
+    let sectionFits = false;
     for (const n of sizes) {
       body.style.fontSize = n + 'pt';
       section.style.setProperty('--term-gap', n < preferred ? '1mm' : '1.3mm');
-      if (fits(section)) return true;
+      sectionFits = fits(section);
+      if (!sectionFits) continue;
+      if (!following) return true;
+      const test = following.cloneNode(true);
+      page.appendChild(test);
+      const together = fits(test);
+      test.remove();
+      if (together) return true;
     }
+    // If signatures still cannot fit even at 6.5 pt, use that true minimum
+    // and allow normal A4 pagination to move the signatures to page two.
+    if (following && sectionFits) return true;
     return false;
   }
   function emptyTerms(original) {
