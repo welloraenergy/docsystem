@@ -418,7 +418,7 @@ function showDocPage(page){
  document.querySelectorAll('.clean-subnav button').forEach(b=>b.classList.toggle('active',b.dataset.subpage===root));
  if(root==='create'&&document.getElementById('workspaceTemplateSource').value==='custom')setWorkspaceView('working');
 }
-function setWorkspaceSource(source,reload=false){
+function setWorkspaceSource(source,reload=false,documentId=null){
  const preset=source==='preset',main=document.getElementById('docMain');
  document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
  document.getElementById('workspacePresetChoice').hidden=!preset;
@@ -427,7 +427,7 @@ function setWorkspaceSource(source,reload=false){
  main.classList.toggle('preset-editor-mode',preset);
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
-  const url='preset-quotation.html?preset='+encodeURIComponent(id)+'&embedded=1';
+  const url='preset-quotation.html?preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
  }else{
@@ -583,6 +583,17 @@ window.DocSystemBridge={
    doc=clone(p.doc);normalizeProfiles();refresh()
  }
 };
+
+// Route saved preset records back into the same Workspace.
+const incomingPreset=new URLSearchParams(location.search);
+if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')){
+ const selected=incomingPreset.get('preset')||'rental3';
+ const selector=document.getElementById('workspacePresetSelect');
+ if(Array.from(selector.options).some(o=>o.value===selected))selector.value=selected;
+ setWorkspaceSource('preset',true,incomingPreset.get('presetDoc'));
+ showDocPage('create');
+ history.replaceState(null,'',location.pathname);
+}
 </script>
 <script type="module" src="auth.js"></script>
 </body></html>
