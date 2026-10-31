@@ -50,16 +50,37 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 #preview .layout-preserve, .pagination-measure .layout-preserve {white-space:pre-wrap!important}
 @media print {.shortcode-line{display:block!important;white-space:pre-wrap!important;min-height:1em}.layout-preserve{white-space:pre-wrap!important}}
 </style>
-</head>
+<style id="cleanWorkspaceNavigation">
+.clean-subnav{display:flex;gap:8px;flex-wrap:wrap;max-width:1600px;margin:10px auto 0;padding:0 16px}
+.clean-subnav[hidden],#presetWorkspace[hidden],#workspacePresetChoice[hidden]{display:none!important}
+.clean-subnav button{background:#f4f7fb;border:1px solid #cbd6e4;color:#254065;border-radius:7px;padding:9px 13px;cursor:pointer}
+.clean-subnav button.active{background:#193f72;border-color:#193f72;color:#fff}
+.workspace-picker{margin-bottom:12px!important}
+.workspace-picker .row{align-items:end}
+#presetWorkspace{width:100%;min-width:0}
+#presetWorkspaceFrame{display:block;border:0;width:100%;height:1100px;background:#f1f5f9}
+#docMain.preset-editor-mode .workspace-view-tabs,#docMain.preset-editor-mode #create>.workspace-form{display:none!important}
+#docMain.preset-editor-mode>.preview{display:none!important}
+#docMain.preset-editor-mode #create{display:block!important}
+#docMain.preset-editor-mode #presetWorkspace{display:block!important}
+@media print{#docMain.preset-editor-mode{display:none!important}}
+</style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
 <header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button><button id="newBtn">New</button><label class="filebtn">Open<input id="openFile" type="file" accept=".json,application/json"></label><button id="saveBtn">Save Online</button><button id="pdfBtn" class="primary">Export PDF</button></div></header>
-<nav class="tabs"><button class="tab active" data-tab="create">Create</button><button class="tab" data-tab="documents">Documents</button><button id="cloudMenuUsers" class="tab" data-tab="users" hidden>Users</button><button class="tab" data-tab="company">Business Profiles</button><button class="tab" data-tab="global">Global Settings</button><button class="tab" data-tab="library">Template Library</button><button class="tab" data-tab="template">Doc Template Settings</button><button class="tab" data-tab="backup">Backup / Restore</button></nav>
+<nav class="tabs" aria-label="Main navigation"><button class="tab active" data-tab="create">Workspace</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="library">Templates</button><button id="settingsNavTab" class="tab cloud-admin-only" data-tab="settings">Settings</button></nav>
+<div id="settingsSubnav" class="clean-subnav" hidden>
+<button type="button" data-subpage="company">Business Profiles</button>
+<button type="button" data-subpage="global">Global Settings</button>
+<button type="button" data-subpage="users">Users</button>
+<button type="button" data-subpage="backup">Backup / Restore</button>
+</div>
+<div id="templatesSubnav" class="clean-subnav" hidden><button type="button" data-subpage="library">Template Library</button><button type="button" data-subpage="template">Custom Template Settings</button></div>
 <main class="working-mode" id="docMain">
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="staff">Staff</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
-<section id="create" class="panel active"><div class="card"><div class="between"><strong>Template Source</strong><span class="muted">Choose custom or ready-made</span></div><div class="row"><label>Template Type<select id="workspaceTemplateSource"><option value="custom">Custom — DocSystem Templates</option><option value="preset">Preset — Wellora Excel Quotations</option></select></label><label>Ready-Made Quotation<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label></div><button type="button" id="openWorkspacePreset" class="small" disabled>Open Preset Working Form</button></div><div class="workspace-view-tabs" role="group" aria-label="Workspace view"><button type="button" class="workspace-view active" data-workspace-view="working" aria-pressed="true">Working Form</button><button type="button" class="workspace-view" data-workspace-view="preview" aria-pressed="false">Preview</button></div><div class="workspace-form">
+<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspacePresetChoice" hidden>Preset Quotation<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label></div></div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-view-tabs" role="group" aria-label="Workspace view"><button type="button" class="workspace-view active" data-workspace-view="working" aria-pressed="true">Working Form</button><button type="button" class="workspace-view" data-workspace-view="preview" aria-pressed="false">Preview</button></div><div class="workspace-form">
 <div class="card"><div class="row3"><label>Business Profile<select id="businessProfile"></select></label><label>Document Type<select id="docType"></select></label><label>Document Title<input id="docTitle"></label></div><div class="row" style="margin-top:10px"><label>Document Currency<select id="docCurrency"></select></label><div class="muted" style="align-self:end">Currencies available for the selected business profile</div></div></div>
 <div class="card"><h2>Document Details</h2><div id="docFields" class="stack"></div></div>
 <div class="card"><div class="between"><h2>Items</h2><button id="addItem" class="small">+ Add Row</button></div><div class="tblwrap"><table id="items" class="editTable"></table></div></div>
@@ -75,11 +96,11 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 </section>
 <section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Built-in: {logo}, {companyName}, {companyname}, {companyInfo}, {doctype}, {docno}, {docdate}, {page}. Other preset fields are editable.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
 <section id="library" class="panel"><div class="card"><h2>Template Library</h2><p class="muted">Ready-made presets use their own layouts and forms; custom templates keep the designs created in DocSystem.</p><div class="row"><button class="small" data-library-kind="preset">Preset Templates</button><button class="small" data-library-kind="custom">Custom Templates</button></div><div id="presetLibrary"><h3>Wellora — Quotation Presets</h3><div class="stack">
-<div class="cloud-entry"><div><b>Rental (Qty 3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><a class="small" href="preset-quotation.html?preset=rental3">Open Working Form</a></div>
-<div class="cloud-entry"><div><b>Rental (Qty 10)</b><div class="muted">Quotation · Ready-Made Preset</div></div><a class="small" href="preset-quotation.html?preset=rental10">Open Working Form</a></div>
-<div class="cloud-entry"><div><b>Rental + Consumables (Qty 5+3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><a class="small" href="preset-quotation.html?preset=rentcon53">Open Working Form</a></div>
-<div class="cloud-entry"><div><b>Rental + Consumables (Qty 10+5)</b><div class="muted">Quotation · Ready-Made Preset</div></div><a class="small" href="preset-quotation.html?preset=rentcon105">Open Working Form</a></div>
-<div class="cloud-entry"><div><b>Rental — Special TKR</b><div class="muted">Quotation · Ready-Made Preset</div></div><a class="small" href="preset-quotation.html?preset=specialtkr">Open Working Form</a></div>
+<div class="cloud-entry"><div><b>Rental (Qty 3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental3">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Rental (Qty 10)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental10">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Rental + Consumables (Qty 5+3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon53">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Rental + Consumables (Qty 10+5)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon105">Use in Workspace</button></div>
+<div class="cloud-entry"><div><b>Rental — Special TKR</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="specialtkr">Use in Workspace</button></div>
 </div></div><div id="customLibrary" hidden><h3>Custom Document Templates</h3><p class="muted">Existing document layouts remain editable under Doc Template Settings.</p><button type="button" class="small" data-open-custom-template>Open Custom Template Settings</button></div></div></section>
 <section id="template" class="panel">
 <div class="card"><h2>Current Document Settings</h2><div class="muted" style="margin-bottom:8px">Business Profile → Document → Template Settings. Each business keeps its own version of every document template.</div><div class="row3"><label>Business Profile<select id="tplBusinessProfile"></select></label><label>Type<select id="tplType"></select></label><label>Title<input id="tplTitle"></label></div></div>
@@ -386,7 +407,46 @@ function renderPreview(){
 }
 function download(name,obj){let b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
 function setWorkspaceView(view){const mode=view==='preview'?'preview':'working',main=document.getElementById('docMain');main.classList.toggle('preview-mode',mode==='preview');main.classList.toggle('working-mode',mode==='working');document.querySelectorAll('[data-workspace-view]').forEach(b=>{const on=b.dataset.workspaceView===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});if(mode==='preview')renderPreview();}
-document.addEventListener('click',e=>{if(e.target.id==='openWorkspacePreset'){window.location.href='preset-quotation.html?preset='+encodeURIComponent(document.getElementById('workspacePresetSelect').value);return;}
+function showDocPage(page){
+ const settings=['company','global','users','backup'],template=['library','template'];
+ const root=page==='settings'? 'company':page==='templates'?'library':page;
+ const target=settings.includes(root)?'settings':template.includes(root)?'library':root;
+ document.querySelectorAll('nav.tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===target));
+ document.querySelectorAll('.workspace>.panel').forEach(p=>p.classList.toggle('active',p.id===root));
+ document.getElementById('settingsSubnav').hidden=target!=='settings';
+ document.getElementById('templatesSubnav').hidden=target!=='library';
+ document.querySelectorAll('.clean-subnav button').forEach(b=>b.classList.toggle('active',b.dataset.subpage===root));
+ if(root==='create'&&document.getElementById('workspaceTemplateSource').value==='custom')setWorkspaceView('working');
+}
+function setWorkspaceSource(source,reload=false){
+ const preset=source==='preset',main=document.getElementById('docMain');
+ document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
+ document.getElementById('workspacePresetChoice').hidden=!preset;
+ document.getElementById('workspacePresetSelect').disabled=!preset;
+ document.getElementById('presetWorkspace').hidden=!preset;
+ main.classList.toggle('preset-editor-mode',preset);
+ if(preset){
+  const id=document.getElementById('workspacePresetSelect').value;
+  const url='preset-quotation.html?preset='+encodeURIComponent(id)+'&embedded=1';
+  const frame=document.getElementById('presetWorkspaceFrame');
+  if(reload||!frame.getAttribute('src'))frame.src=url;
+ }else{
+  main.classList.remove('preview-mode');main.classList.add('working-mode');
+  document.querySelectorAll('[data-workspace-view]').forEach(b=>{const active=b.dataset.workspaceView==='working';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ }
+}
+window.addEventListener('message',e=>{
+ if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
+ if(e.data?.type==='docsystem-preset-height'&&Number.isFinite(e.data.height)){
+  document.getElementById('presetWorkspaceFrame').style.height=Math.max(560,Math.min(20000,Math.ceil(e.data.height)))+'px';
+ }
+});
+document.addEventListener('click',e=>{
+ const item=e.target.closest('[data-open-preset]');
+ if(item){document.getElementById('workspacePresetSelect').value=item.dataset.openPreset;setWorkspaceSource('preset',true);showDocPage('create');return;}
+ const sub=e.target.closest('[data-subpage]');
+ if(sub){showDocPage(sub.dataset.subpage);return;}
+
  const companyFormat=e.target.closest('[data-company-format]');
  if(companyFormat){
   const editor=document.getElementById('companyInfo'),kind=companyFormat.dataset.companyFormat;
@@ -427,7 +487,7 @@ document.addEventListener('click',e=>{if(e.target.id==='openWorkspacePreset'){wi
   if(move){const to=+bi+Number(offset);if(to>=0&&to<blocks.length)[blocks[+bi],blocks[to]]=[blocks[to],blocks[+bi]];}
   saveSettings();renderLayoutControls();renderPreview();return;
  }
- let tab=e.target.closest('.tab');if(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab.dataset.tab));if(tab.dataset.tab==='create')setWorkspaceView('working');}
+ let tab=e.target.closest('nav.tabs .tab');if(tab){showDocPage(tab.dataset.tab);return;}
 if(e.target.id==='addPlaceholder'){
  const key=newPlaceholderKey.value.trim(),value=newPlaceholderValue.value;
  if(!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(key)||RESERVED_PLACEHOLDERS.has(key))return alert('Choose a valid, non-reserved placeholder name.');
@@ -477,7 +537,8 @@ document.addEventListener('input',e=>{if(e.target.dataset.placeholderKey){global
  }
  if(e.target.dataset.defaultCurrency){profile().company.defaultCurrency=e.target.dataset.defaultCurrency;saveSettings();renderCurrencies();renderDocCurrency();return}
 if(e.target.id==='docTitle'){doc.title=e.target.value;renderPreview()}if(e.target.dataset.field){doc.fieldValues[e.target.dataset.field]=e.target.value;renderPreview()}if(e.target.dataset.ri!==undefined){let ri=+e.target.dataset.ri;doc.items[ri][e.target.dataset.key]=e.target.value;updateFormulaInputs(ri);renderPreview()}if(e.target.id==='notes'){doc.notes=e.target.value;renderPreview()}if(e.target.id==='companyName'){profile().company.name=e.target.value;saveSettings();updateProfileLabels();renderPreview()}if(e.target.id==='companyFooter'){profile().company.footer=e.target.value;saveSettings();renderPreview()}if(e.target.id==='companyInfo'){profile().company.headerText=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.cflabel!==undefined){profile().company.fields[+e.target.dataset.cflabel].label=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.cfvalue!==undefined){profile().company.fields[+e.target.dataset.cfvalue].value=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.dflabel!==undefined){tpl().fields[+e.target.dataset.dflabel][1]=e.target.value;saveSettings();renderPreview()}if(e.target.id==='paperSize'||e.target.id==='pageMargins'){tpl()[e.target.id]=e.target.value;saveSettings();renderPreview()}if(e.target.id==='dividerPosition'){tpl().dividerPosition=e.target.value;saveSettings();renderPreview()}if(e.target.id==='tplTitle'){tpl().title=e.target.value;doc.title=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjlabel!==undefined){tpl().adjustments[+e.target.dataset.adjlabel].label=e.target.value;saveSettings();renderPreview()}if(e.target.dataset.adjvalue!==undefined){tpl().adjustments[+e.target.dataset.adjvalue].value=Number(e.target.value||0);saveSettings();renderPreview()}if(['sig1','sig2','sig3'].includes(e.target.id)){let t=tpl();t.sigs=[sig1.value,sig2.value,sig3.value];saveSettings();renderPreview()}if(['sigName1','sigName2','sigName3'].includes(e.target.id)){let t=tpl();t.sigNames=[sigName1.value,sigName2.value,sigName3.value];saveSettings();renderPreview()}});
-document.addEventListener('change',e=>{if(e.target.id==='workspaceTemplateSource'){const on=e.target.value==='preset';document.getElementById('workspacePresetSelect').disabled=!on;document.getElementById('openWorkspacePreset').disabled=!on;return;}
+document.addEventListener('change',e=>{if(e.target.id==='workspaceTemplateSource'){setWorkspaceSource(e.target.value);return;}
+ if(e.target.id==='workspacePresetSelect'){setWorkspaceSource('preset',true);return;}
  if(e.target.dataset.layoutCount){
   const l=layoutConfig(e.target.dataset.layoutCount);l.columns=Number(e.target.value);
   while(l.panels.length<l.columns)l.panels.push({align:'left',blocks:[]});
