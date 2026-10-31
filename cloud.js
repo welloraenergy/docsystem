@@ -46,8 +46,14 @@ export function settingsChanged(){
   if(!user||!canManage()||loading)return;
   clearTimeout(writeTimer);
   writeTimer=setTimeout(async()=>{
-    try {await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedBy:user.uid,updatedAt:serverTimestamp()});notify("Settings saved online");}
-    catch(e){notify("Settings save failed: "+e.message);}
+    try {
+      await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedBy:user.uid,updatedAt:serverTimestamp()});
+      notify("Settings saved online");
+      window.dispatchEvent(new CustomEvent('docsystem-settings-sync',{detail:{ok:true}}));
+    }catch(e){
+      notify("Settings save failed: "+e.message);
+      window.dispatchEvent(new CustomEvent('docsystem-settings-sync',{detail:{ok:false,message:e.message}}));
+    }
   },900);
 }
 export function changedDocument(){currentId=null;}
