@@ -331,19 +331,6 @@ function preferredCurrency(company,current){
  const list=availableCurrencies(company).map(x=>x.code);
  return list.includes(current)?current:list.includes(company?.defaultCurrency)?company.defaultCurrency:list[0];
 }
-function detailsWithoutName(info,name){
- const companyName=String(name||'').trim();
- if(!companyName)return String(info||'');
- const escaped=companyName.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&').replace(/\s+/g,'\\s+');
- const nameRegex=new RegExp(escaped,'gi');
- return String(info||'').split(/\r?\n/).map(line=>{
-  let clean=line.replace(nameRegex,'');
-  for(let i=0;i<4;i++)clean=clean.replace(/\[(b|i|u|size|font)(?:=[^\]]+)?\]\s*\[\/\1\]/gi,'');
-  const plain=clean.replace(/\[(?:\/?(?:b|i|u|size|font))(?:=[^\]]+)?\]/gi,'').trim();
-  if(!plain||/^(?:company(?: name)?|business(?: name)?)\s*:\s*$/i.test(plain))return '';
-  return clean.trim();
- }).filter(Boolean).join('\n');
-}
 function profileSnapshot(profile){
  const co=profile?.company||{};
  const raw=typeof co.headerText==='string'?co.headerText:(co.fields||[]).filter(x=>x&&x.place!=='footer'&&x.value).map(x=>(x.label?x.label+': ':'')+x.value).join('\n');
