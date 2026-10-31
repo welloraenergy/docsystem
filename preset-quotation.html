@@ -276,6 +276,7 @@ body.embedded-preset .bar>a,body.embedded-preset .bar>#preset{display:none!impor
 body.embedded-preset .wrap{margin:10px auto 0;padding:0 1px;max-width:100%}
 body.embedded-preset .form-only{width:100%}
 body.embedded-preset .form-only .card{max-width:none}
+body.embedded-preset .preview-only>.notice{display:none!important}
 @media print{body.embedded-preset .bar{display:none!important}}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
