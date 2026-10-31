@@ -175,6 +175,16 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 @media print {
  #preview>.paper {zoom:1!important}
 }
+</style><style id="normalizedPresetFamilySelector20261101">
+/* One consistent hierarchy: Template Source → Document Family → Type. */
+@media screen and (min-width:1000px){
+ #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end!important;gap:12px!important}
+ #docMain.on-workspace-tab .workspace-picker>.row>label{width:100%!important;max-width:none!important;min-width:0!important}
+ #docMain.on-workspace-tab .workspace-picker>.row>label select{width:100%!important}
+}
+@media screen and (max-width:999px){
+ #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:12px!important}
+}
 </style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
@@ -715,7 +725,7 @@ function setWorkspaceSource(source,reload=false,documentId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='purchase-order'?'preset-po.html?version=20261101-shared-business-header-library1':'preset-quotation.html?version=20261031-terms-flow-line1';
+  const editor=family==='purchase-order'?'preset-po.html?version=20261101-normalized-presets-globalcodes2':'preset-quotation.html?version=20261101-normalized-presets-globalcodes2';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
