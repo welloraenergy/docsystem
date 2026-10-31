@@ -53,6 +53,94 @@ export function paginatePresetDocument(root, options = {}) {
     section.appendChild(body);
     return { section, body };
   }
+  // Flow mode begins at the remaining space on page one and carries text
+  // forward only after a whole word at the end of a rendered line.
+  function appendTermsFlow(original) {
+    const originalBody = original.querySelector('.excel-terms');
+    if (!originalBody) { appendWhole(original); return; }
+    const clauses = Array.from(originalBody.querySelectorAll(':scope > .excel-term'));
+    const size = Math.max(6.5, Math.min(9, Number(options.size) || 8));
+    const makeSection = () => {
+      const part = emptyTerms(original);
+      part.body.style.fontSize = size + 'pt';
+      part.section.style.setProperty('--term-gap', '1.3mm');
+      page.appendChild(part.section);
+      return part;
+    };
+    let part = makeSection();
+    // If even the heading cannot fit at the end of the page, begin on a fresh one.
+    if (!fits(part.section) && page.children.length > 1) {
+      part.section.remove();
+      nextPage();
+      part = makeSection();
+    }
+    function newPart() {
+      nextPage();
+      part = makeSection();
+    }
+    for (const clause of clauses) {
+      const originalText = clause.querySelector('.term-text');
+      if (!originalText) {
+        part.body.appendChild(clause);
+        if (!fits(part.section) && part.body.children.length > 1) {
+          clause.remove(); newPart(); part.body.appendChild(clause);
+        }
+        continue;
+      }
+      const heading = originalText.querySelector('strong');
+      // The current preset renderer stores the clause heading in <strong>,
+      // followed by plain text. Retain exact wording and whitespace.
+      const bodyText = Array.from(originalText.childNodes)
+        .filter(n => n !== heading).map(n => n.textContent).join('');
+      const words = bodyText.match(/\S+\s*/g) || [bodyText];
+      let offset = 0, firstFragment = true;
+      while (offset < words.length) {
+        const fragment = clause.cloneNode(true);
+        const text = fragment.querySelector('.term-text');
+        text.replaceChildren();
+        if (firstFragment && heading) text.appendChild(heading.cloneNode(true));
+        if (!firstFragment) {
+          const number = fragment.querySelector('.term-num');
+          if (number) number.textContent = '';
+          fragment.classList.add('excel-term-continuation');
+        }
+        part.body.appendChild(fragment);
+        const setWords = count => {
+          const trailing = words.slice(offset, offset + count).join('');
+          // Preserve one separating space following the bold clause heading.
+          if (text.lastChild?.nodeType === Node.TEXT_NODE) text.lastChild.remove();
+          text.appendChild(document.createTextNode(trailing));
+        };
+        // First find the largest number of words that fits on this page.
+        // This places the break after a complete word on a completed line.
+        let low = 0, high = words.length - offset;
+        while (low < high) {
+          const mid = Math.ceil((low + high) / 2);
+          setWords(mid);
+          if (fits(part.section)) low = mid;
+          else high = mid - 1;
+        }
+        setWords(low);
+        if (low === 0) {
+          fragment.remove();
+          // Avoid empty-page loops in very narrow or unusually styled pages.
+          if (part.body.children.length === 0 && page.children.length === 1) {
+            setWords(1);
+            part.body.appendChild(fragment);
+            offset++;
+            firstFragment = false;
+          }
+          newPart();
+          continue;
+        }
+        offset += low;
+        firstFragment = false;
+        if (offset < words.length) newPart();
+      }
+    }
+    // Remove empty trailing terms header from a boundary page.
+    if (!part.body.children.length) part.section.remove();
+  }
   function appendTerms(original) {
     const preferred = Math.max(6.5, Math.min(9, Number(options.size) || 8));
     page.appendChild(original);
@@ -105,7 +193,7 @@ export function paginatePresetDocument(root, options = {}) {
     }
   }
   for (const node of nodes) {
-    if (node.matches('section.excel-terms-section')) appendTerms(node);
+    if (node.matches('section.excel-terms-section')) (options.fit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
     else if (node.matches('table.excel-table')) appendItemTable(node);
     else appendWhole(node);
   }
