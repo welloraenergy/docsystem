@@ -173,6 +173,14 @@ function migrateSettings(s){
     s={version:2,activeProfileId:p.id,profiles:[p]};
   }
   if(!s.activeProfileId||!s.profiles.some(p=>p.id===s.activeProfileId))s.activeProfileId=s.profiles[0].id;
+  // Replace the previous individual preset headers with one header per Business Profile.
+  // Prefer the Rental (Qty 3) configuration already entered by the user.
+  if(s.presetHeaders){
+   const selected=s.profiles.find(p=>p.id===s.activeProfileId)||s.profiles[0];
+   const existing=s.presetHeaders.rental3||Object.values(s.presetHeaders).find(v=>v&&[v.logo,v.name,v.details].some(Boolean));
+   if(existing&&!selected.presetHeader)selected.presetHeader=clone(existing);
+   delete s.presetHeaders;
+  }
   return s
 }
 settings=migrateSettings(settings);
