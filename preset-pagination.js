@@ -231,6 +231,9 @@ export function paginatePresetDocument(root, options = {}) {
     }
   }
   for (const node of nodes) {
+    // A preset may mark its photo appendix (or any major section) to begin
+    // on a fresh A4 page. This remains inside the one shared controller.
+    if (node.hasAttribute('data-preset-new-page') && page.children.length) nextPage();
     if (node.matches('section.excel-terms-section')) (requestedFit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
     else if (node.matches('table.excel-table')) appendItemTable(node);
     else appendWhole(node);
