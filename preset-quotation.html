@@ -228,6 +228,43 @@ body.preview .preview-only{display:block}
  .paper .excel-terms{border:1px solid #555!important}
  .paper .excel-terms::before{border-left:1px solid #999!important}
 }
+</style><style id="unifiedTermsSection">
+/* Treat the heading and numbered clauses as one uninterrupted A4 section. */
+.paper .excel-terms-section{
+  display:block;
+  width:100%;
+  margin:2.5mm 0 2mm;
+  padding:0;
+  border:1px solid #444;
+  box-sizing:border-box;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+.paper .excel-terms-section .excel-terms-header{
+  display:block;
+  width:100%;
+  margin:0!important;
+  padding:1mm 0!important;
+  border:0!important;
+  background:#000!important;
+  color:#fff!important;
+  text-align:center;
+  box-sizing:border-box;
+}
+.paper .excel-terms-section .excel-terms{
+  margin:0!important;
+  border:0!important;
+  padding:1.5mm 1.8mm 1.5mm 0!important;
+  box-sizing:border-box;
+}
+.paper .excel-terms-section .excel-terms::before{
+  left:8mm;
+}
+@media print{
+ .paper .excel-terms-section{border:1px solid #444!important;break-inside:avoid;page-break-inside:avoid}
+ .paper .excel-terms-section .excel-terms-header{margin:0!important;border:0!important}
+ .paper .excel-terms-section .excel-terms{border:0!important;margin:0!important}
+}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div id="rental3TermsControls" hidden><p class="muted">Terms belong to the selected quotation template. Fixed clauses cannot be edited; only document-specific fields are shown below. Rental and payment periods update applicable wording.</p><label>Clause 3 — Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address"></textarea></label><div id="specialTkrLocations" hidden><label>Clause 4 — Equipment Pick-up Address<textarea id="pickupAddress" rows="3"></textarea></label><label>Clause 5 — Equipment Return Address<textarea id="returnAddress" rows="3"></textarea></label></div><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
@@ -339,7 +376,7 @@ function render(){
  const intro=state.rfqDate?'With reference to your Request for Quotation (RFQ), dated '+esc(formatExcelDate(state.rfqDate))+', we are pleased to quote you the following item(s), subject to our terms and conditions:':'';
  const terms=usesStandardRentalTerms()?activePresetClausesHtml():String(state.terms||'').split(/\n(?=\d+[.)]\s)/).map((x,i)=>'<div class="excel-term"><span class="term-num">'+(i+1)+'.</span><div class="term-text">'+esc(x.replace(/^\d+[.)]\s*/,''))+'</div></div>').join('');
  const address='202601028841 (1690936-D)\nLot 38, Block D, 2nd Floor,\nLazenda Centre, Jalan Okk Abdullah,\n87000 W.P. Labuan, Malaysia\nTel: +6087-428 318\nURL: https://welloraenergy.com/';
- $('paper').innerHTML='<article class="paper"><div class="excel-company"><div class="excel-identity">'+(businessProfile?.company?.logo?'<img class="excel-business-logo" src="'+esc(businessProfile.company.logo)+'" alt="Company logo">':'<div class="excel-brandmark" aria-label="Company logo">W</div>')+'<div class="excel-company-name">'+esc(businessProfile?.company?.name||'Wellora Energy Sdn. Bhd.')+'</div><div class="excel-company-details">'+esc(address)+'</div></div><div class="excel-right"><div class="excel-title">QUOTATION</div><div class="excel-ref"><div class="ref-line"><span>Date:</span><span>'+esc(formatExcelDate(state.date))+'</span></div><div class="ref-line"><span>Reference No:</span><span>'+esc(state.reference||'')+'</span></div><div class="ref-line"><span>Currency:</span><span>'+esc(state.currency||'')+'</span></div></div></div></div><div class="excel-client-title">Client Information</div><div class="excel-client"><div>'+row('Company',state.client)+row('Address',state.address)+row('Contact Person',state.contact)+row('Tel',state.telephone)+row('Email',state.email)+'</div><div>'+row('RFQ No',state.rfq)+row('Date',formatExcelDate(state.rfqDate))+row('Operator',state.operator)+row('Rig',state.rig)+row('Well',state.well)+row('Load Out',state.loadout)+'</div></div>'+(intro?'<p class="excel-rfq">'+intro+'</p>':'')+qrows('rental','Rental',state.rental)+'<div class="excel-notes">*LIH = Lost In Hole<br>*DBR = Damage Beyond Repair</div>'+qrows('consumables','Consumables',state.consumables)+(state.consumables.length?'<p style="text-align:right;font-weight:700">Consumables Total: '+esc(state.currency)+' '+fmt(state.consumables.reduce((sum,r)=>sum+(Number(r.qty)||0)*(Number(r.rate)||0),0))+'</p>':'')+'<div class="excel-terms-header">Terms and Conditions</div><div class="excel-terms">'+terms+'</div><p style="font-size:8pt">Please do not hesitate to contact us if you have any questions.</p><table class="excel-sign-table"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+['Prepared By','Reviewed By','Approved By'].map((s,i)=>{const v=state.signatures[i],d=typeof v==='object'?v:{name:v||'',position:'',date:''};return '<tr><th scope="row">'+s+'</th><td>'+esc(d.name||'')+'</td><td>'+esc(d.position||'')+'</td><td>'+esc(d.date?formatExcelDate(d.date):'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table></article>';
+ $('paper').innerHTML='<article class="paper"><div class="excel-company"><div class="excel-identity">'+(businessProfile?.company?.logo?'<img class="excel-business-logo" src="'+esc(businessProfile.company.logo)+'" alt="Company logo">':'<div class="excel-brandmark" aria-label="Company logo">W</div>')+'<div class="excel-company-name">'+esc(businessProfile?.company?.name||'Wellora Energy Sdn. Bhd.')+'</div><div class="excel-company-details">'+esc(address)+'</div></div><div class="excel-right"><div class="excel-title">QUOTATION</div><div class="excel-ref"><div class="ref-line"><span>Date:</span><span>'+esc(formatExcelDate(state.date))+'</span></div><div class="ref-line"><span>Reference No:</span><span>'+esc(state.reference||'')+'</span></div><div class="ref-line"><span>Currency:</span><span>'+esc(state.currency||'')+'</span></div></div></div></div><div class="excel-client-title">Client Information</div><div class="excel-client"><div>'+row('Company',state.client)+row('Address',state.address)+row('Contact Person',state.contact)+row('Tel',state.telephone)+row('Email',state.email)+'</div><div>'+row('RFQ No',state.rfq)+row('Date',formatExcelDate(state.rfqDate))+row('Operator',state.operator)+row('Rig',state.rig)+row('Well',state.well)+row('Load Out',state.loadout)+'</div></div>'+(intro?'<p class="excel-rfq">'+intro+'</p>':'')+qrows('rental','Rental',state.rental)+'<div class="excel-notes">*LIH = Lost In Hole<br>*DBR = Damage Beyond Repair</div>'+qrows('consumables','Consumables',state.consumables)+(state.consumables.length?'<p style="text-align:right;font-weight:700">Consumables Total: '+esc(state.currency)+' '+fmt(state.consumables.reduce((sum,r)=>sum+(Number(r.qty)||0)*(Number(r.rate)||0),0))+'</p>':'')+'<section class="excel-terms-section"><div class="excel-terms-header">Terms and Conditions</div><div class="excel-terms">'+terms+'</div></section><p style="font-size:8pt">Please do not hesitate to contact us if you have any questions.</p><table class="excel-sign-table"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+['Prepared By','Reviewed By','Approved By'].map((s,i)=>{const v=state.signatures[i],d=typeof v==='object'?v:{name:v||'',position:'',date:''};return '<tr><th scope="row">'+s+'</th><td>'+esc(d.name||'')+'</td><td>'+esc(d.position||'')+'</td><td>'+esc(d.date?formatExcelDate(d.date):'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table></article>';
 }
 window.view=async on=>{if(on&&user){try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings;if(settings?.profiles?.length)businessProfile=settings.profiles.find(p=>p.id===businessProfile?.id)||settings.profiles.find(p=>/wellora/i.test(p.company?.name||''))||settings.profiles[0]}catch(e){console.warn('Logo refresh unavailable',e)}}document.body.classList.toggle('preview',on);$('working').classList.toggle('active',!on);$('previewButton').classList.toggle('active',on);if(on)render()};
 window.printDoc=async()=>{await view(true);window.print()};
