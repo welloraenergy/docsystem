@@ -287,6 +287,11 @@ import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.
 import {getFirestore,collection,doc,getDoc,setDoc,serverTimestamp,query,where,getDocs,limit} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 if(new URLSearchParams(location.search).get('embedded')==='1'){
  document.body.classList.add('embedded-preset');
+ // Embedded preset is an editor only. The parent Workspace owns every toolbar control.
+ const internalToolbar=document.querySelector('body > .bar');
+ if(internalToolbar){internalToolbar.hidden=true;internalToolbar.setAttribute('aria-hidden','true');internalToolbar.style.setProperty('display','none','important');}
+ const ownHeader=document.querySelector('body > header');
+ if(ownHeader){ownHeader.hidden=true;ownHeader.style.setProperty('display','none','important');}
  const notifyParent=()=>{
   if(window.parent===window)return;
   const height=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
