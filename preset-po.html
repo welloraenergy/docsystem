@@ -25,14 +25,62 @@ const auth=getAuth(app),db=getFirestore(app);
 const params=new URLSearchParams(location.search);
 const embedded=params.get('embedded')==='1';
 if(embedded)document.body.classList.add('embedded');
-let user=null,role='user',profile=null,profiles=[],savedSnapshot=null,docId=params.get('docId')||null,template=null,manifest=null,state=null,loaded=false,renderBusy=false;
+let user=null,role='user',profile=null,profiles=[],globalPlaceholders={},savedSnapshot=null,savedHeaderSnapshot=null,docId=params.get('docId')||null,template=null,manifest=null,state=null,loaded=false,renderBusy=false;
 const posted=(kind,extra={})=>{if(embedded&&window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...extra},location.origin)};
 const notify=message=>{$('status').textContent=message;posted('status',{status:message})};
 const money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 const num=n=>Number.isFinite(Number(n))?Number(n):0;
 const fieldsByKey=new Map();
-function profileData(){const co=profile?.company||{};return {id:profile?.id||'',name:co.name||'',logo:co.logo||'',info:typeof co.headerText==='string'?co.headerText:(co.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),currencies:co.currencies||[],defaultCurrency:co.defaultCurrency||'MYR'} }
+function profileData(){const co=profile?.company||{};return {id:profile?.id||'',name:co.name||'',logo:co.logo||'',info:typeof co.headerText==='string'&&co.headerText.trim()?co.headerText:(co.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),currencies:co.currencies||[],defaultCurrency:co.defaultCurrency||'MYR',placeholders:globalPlaceholders} }
 function business(){return savedSnapshot||profileData()}
+
+function poHeaderSettings(){return savedHeaderSnapshot||profile?.presetHeader||{}}
+function poRichMarkup(source){
+ let html=esc(source||'');
+ html=html.replace(/\[b\]([\s\S]*?)\[\/b\]/gi,'<strong>$1</strong>');
+ html=html.replace(/\[i\]([\s\S]*?)\[\/i\]/gi,'<em>$1</em>');
+ html=html.replace(/\[u\]([\s\S]*?)\[\/u\]/gi,'<u>$1</u>');
+ html=html.replace(/\[size=(\d{1,2})\]([\s\S]*?)\[\/size\]/gi,(_,n,v)=>'<span style="font-size:'+Math.max(6,Math.min(36,Number(n)))+'pt">'+v+'</span>');
+ html=html.replace(/\[font=(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)\]([\s\S]*?)\[\/font\]/gi,(_,n,v)=>'<span style="font-family:'+n+'">'+v+'</span>');
+ html=html.replace(/\[color=(#[0-9a-fA-F]{6})\]([\s\S]*?)\[\/color\]/gi,(_,n,v)=>'<span style="color:'+n+'">'+v+'</span>');
+ return html;
+}
+function poHeaderSlot(slot,co){
+ const cfg=poHeaderSettings();
+ const source=String(cfg[slot]||({logo:'{logo}',name:'{companyName}',details:'{companyInfo}'}[slot]));
+ const font=['Arial','Georgia','Verdana','Tahoma','Courier New','Times New Roman'].includes(cfg[slot+'Font'])?cfg[slot+'Font']:'Arial';
+ const size=Math.max(6,Math.min(36,Number(cfg[slot+'Size'])||(slot==='name'?13:slot==='details'?8:10)));
+ const align=['left','center','right'].includes(cfg[slot+'Align'])?cfg[slot+'Align']:'left';
+ const color=/^#[0-9a-fA-F]{6}$/.test(cfg[slot+'Color']||'')?cfg[slot+'Color']:'#111111';
+ const keys=[];
+ let html=poRichMarkup(source.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(_,key)=>{
+  const index=keys.push(key)-1;return 'DOCSYSTEM_TOKEN_'+index+'_END';
+ }));
+ html=html.replace(/DOCSYSTEM_TOKEN_(\d+)_END/g,(_,i)=>{
+  const key=keys[Number(i)],values=co.placeholders||globalPlaceholders;
+  if(key==='logo')return co.logo?'<img src="'+esc(co.logo)+'" alt="Logo" style="width:'+Math.max(10,Math.min(70,Number(cfg.logoWidth)||35))+'mm;height:auto;max-width:100%">':'';
+  if(key==='companyName')return esc(co.name||'');
+  if(key==='companyInfo')return poRichMarkup(co.info||'');
+  if(Object.prototype.hasOwnProperty.call(values,key)){
+   const value=String(values[key]??'');
+   if(key==='website'){
+    try{const url=new URL(/^https?:\/\//i.test(value)?value:'https://'+value);if(['http:','https:'].includes(url.protocol)&&url.hostname.includes('.'))return '<a href="'+esc(url.href)+'" style="color:inherit;text-decoration:none">'+esc(value)+'</a>'}catch{}
+   }
+   return poRichMarkup(value);
+  }
+  return '{'+esc(key)+'}';
+ });
+ return '<div style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+';color:'+color+';white-space:pre-wrap">'+html+'</div>';
+}
+function poHeaderTitle(){
+ const cfg=poHeaderSettings(),font=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(cfg.titleFont)?cfg.titleFont:'Arial';
+ const size=Math.max(8,Math.min(36,Number(cfg.titleSize)||16));
+ const color=/^#[0-9a-fA-F]{6}$/.test(cfg.titleColor||'')?cfg.titleColor:'#111111';
+ const align=['left','center','right'].includes(cfg.titleAlign)?cfg.titleAlign:'right';
+ const source=String(cfg.titleText??'{documentTitle}').replace(/\{documentTitle\}/gi,'DOCSYSTEM_TITLE_TOKEN');
+ return '<div style="font-family:'+font+';font-size:'+size+'pt;color:'+color+';text-align:'+align+';font-weight:bold;white-space:pre-wrap">'+poRichMarkup(source).replaceAll('DOCSYSTEM_TITLE_TOKEN','PURCHASE ORDER')+'</div>';
+}
+
 async function chooseTemplate(id,clear=true){
  const entry=manifest.templates.find(t=>t.id===id)||manifest.templates[0];
  if(!entry)return;
@@ -97,7 +145,7 @@ function render(){
  const visible=state.items.filter(row=>template.items.columns.some(c=>c.type!=='calculated'&&String(row[c.key]??'').trim()));
  const cols=template.items.columns;
  const itemRows=(visible.length?visible:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):esc(row[c.key]||''))+'</td>').join('')+'</tr>').join('');
- const companyMarkup='<div class="po-head"><div>'+(co.logo?'<img src="'+esc(co.logo)+'" alt="Company logo">':'')+'<div class="po-company">'+esc(co.name||'Wellora Energy Sdn. Bhd.')+'</div><div class="po-company-info">'+esc(co.info)+'</div></div><div><div class="po-title">PURCHASE ORDER</div><div class="po-meta">PO Date: '+esc(f.poDate||'')+'<br>Reference: '+esc(f.poNumber||'')+'</div></div></div>';
+ const companyMarkup='<div class="po-head"><div class="po-company-ident">'+poHeaderSlot('logo',co)+poHeaderSlot('name',co)+poHeaderSlot('details',co)+'</div><div><div class="po-title">'+poHeaderTitle()+'</div><div class="po-meta">PO Date: '+esc(f.poDate||'')+'<br>Reference: '+esc(f.poNumber||'')+'</div></div></div>';
  const vendorMarkup='<div class="po-vendor"><div><strong>Vendor:</strong><br>'+esc(f.vendorName||'')+'<br>'+esc(f.vendorAddress||'')+'<br>Contact: '+esc(f.vendorContact||'')+'<br>Tel: '+esc(f.vendorPhone||'')+'<br>Email: '+esc(f.vendorEmail||'')+'</div><div><strong>Vendor Quotation:</strong> '+esc(f.vendorQuotationNo||'')+'<br><strong>Quotation Date:</strong> '+esc(f.vendorQuotationDate||'')+'<br><strong>Currency:</strong> '+esc(f.currency||'MYR')+'<br><strong>PO Type:</strong> '+esc(template.title)+'</div></div>';
  const table='<table class="po-items excel-table"><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
  const totalTable='<table class="po-totals"><tr><td>Subtotal</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
@@ -117,7 +165,7 @@ function fitPreview(){
  const available=Math.max(1,holder.clientWidth-10),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
-function newPo(){docId=null;savedSnapshot=null;chooseTemplate($('poTemplate').value,true)}
+function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;chooseTemplate($('poTemplate').value,true)}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim())return alert('Enter PO Reference Number before saving.');
@@ -131,13 +179,13 @@ async function save(){
   }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
-  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:state,profileId:snapshot.id,companySnapshot:snapshot,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:state,profileId:snapshot.id,companySnapshot:snapshot,presetHeaderSnapshot:savedHeaderSnapshot||structuredClone(profile?.presetHeader||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved PO '+state.fields.poNumber);ready();
  }catch(error){alert('PO save failed: '+error.message)}
 }
 async function loadSaved(id){
  if(!user||!id)return;
- try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=data.presetData;savedSnapshot=data.companySnapshot||null;profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);notify('Opened PO '+data.number);ready()}
+ try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=data.presetData;savedSnapshot=data.companySnapshot||null;savedHeaderSnapshot=data.presetHeaderSnapshot||null;profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);notify('Opened PO '+data.number);ready()}
  catch(e){notify('Cannot open PO: '+e.message)}
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
@@ -177,7 +225,7 @@ async function start(){
 onAuthStateChanged(auth,async u=>{
  user=u;if(!u){notify('Sign in from DocSystem first');return}
  try{const profileSnap=await getDoc(doc(db,'users',u.uid));role=profileSnap.data()?.role||'user'}catch{}
- try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;
+ try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};globalPlaceholders=settings.globalPlaceholders&&typeof settings.globalPlaceholders==='object'?settings.globalPlaceholders:{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;
  if(!loaded)await start();
  if(docId)await loadSaved(docId);else{state.fields.currency=business().defaultCurrency||'MYR';draw();notify('PO ready');ready()}
  }catch(e){notify('Business profile loading failed: '+e.message)}
