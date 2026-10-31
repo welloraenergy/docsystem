@@ -161,14 +161,14 @@
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
 <section class="card"><h3>Delivery / Collection &amp; Contact Details</h3><div class="fields" id="poTermsFields"></div></section>
 <section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
-<section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
+<section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><p id="termsFitStatus" class="muted" role="status" aria-live="polite">Checking how the terms fit on A4…</p><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261101-terms-controls-structured1';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261101-fitting-measure-fix1';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -340,8 +340,19 @@ function render(){
  const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">TERMS &amp; CONDITIONS</div><div class="po-terms excel-terms" style="font-size:'+Math.max(6.5,Math.min(9,Number(state.termsFontSize)||8))+'pt">'+template.terms.map(clauseMarkup).join('')+'</div></section>';
  const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(v.date||'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
- paginatePresetDocument($('paper'),{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
- $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
+ // Page fitting is evaluated on unscaled, physical A4 pages.
+ const paperRoot=$('paper');
+ const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
+ $('pageCount').textContent=totalPages+' page(s)';
+ const termPages=Number(paperRoot.dataset.pageFitTermsPages)||0;
+ const fitMode=paperRoot.dataset.pageFitMode||'flow';
+ const effectivePx=Number(paperRoot.dataset.pageFitActualSizePx)||0;
+ const effectivePt=effectivePx ? Math.round(effectivePx*72/96*10)/10 : (state.termsFontSize||8);
+ const explanation=termPages<=1
+  ? 'Terms fit on one A4 page; changing fitting modes may not visibly move text until the terms overflow.'
+  : 'Terms continue across '+termPages+' A4 pages.';
+ const detail=fitMode==='flow'?'Continue across pages':fitMode==='auto'?'Auto Fit':'Normal size / add page';
+ $('termsFitStatus').textContent=detail+' · '+(fitMode==='auto'?'Effective font '+effectivePt+' pt. ':'')+explanation;
  fitPreview();
  posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{renderBusy=false}
