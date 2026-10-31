@@ -26,6 +26,20 @@
  .paper .dt-total th,.paper .dt-total .dt-total-value{border:1px solid #444!important}
  .paper .dt-sign-name{border-bottom:1px solid #aaa!important}
 }
+</style><style id="deliveryTicketSignatureSingleLine20261101">
+/* The original Delivery Ticket Excel has a single-line signature header row. */
+.paper .dt-sign{width:100%;table-layout:fixed}
+.paper .dt-sign thead th{
+ white-space:nowrap!important;overflow:visible;
+ word-break:normal!important;overflow-wrap:normal!important;
+ font-size:6.25pt!important;letter-spacing:-.12px;
+ line-height:1.2!important;padding:1.2mm .35mm!important;
+ vertical-align:middle!important;text-align:center!important
+}
+.paper .dt-sign thead tr{height:6mm}
+@media print{
+ .paper .dt-sign thead th{white-space:nowrap!important;font-size:6.25pt!important}
+}
 </style></head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Delivery Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collection Address &amp; Contact Person</h3><div class="section-fields" id="collectionFields"></div></section>
@@ -90,7 +104,7 @@ function render(){
  const cols=template.items.columns;
  const items='<table class="dt-items excel-table"><colgroup><col style="width:7%"><col style="width:41%"><col style="width:24%"><col style="width:12%"><col style="width:16%"></colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='qty'?'quantity':'')+'">'+esc(text(r[c.key]||''))+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
  const total='<table class="dt-total"><colgroup><col style="width:7%"><col style="width:41%"><col style="width:24%"><col style="width:12%"><col style="width:16%"></colgroup><tbody><tr><td colspan="3" class="dt-total-spacer"></td><th scope="row">Total Qty</th><td class="dt-total-value">'+esc(qtyTotal())+'</td></tr></tbody></table>';
- const sign='<table class="dt-sign"><colgroup><col style="width:14%"><col style="width:26%"><col style="width:16%"><col style="width:19%"><col style="width:12%"><col style="width:13%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td class="dt-name-position"><div class="dt-sign-name"><b>Name:</b><span>'+esc(text(d.name))+'</span></div><div class="dt-sign-position"><b>Position:</b><span>'+esc(text(d.position))+'</span></div></td><td>'+esc(text(d.contactNumber))+'</td><td>'+esc(text(d.companyName))+'</td><td>'+esc(formatDate(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
+ const sign='<table class="dt-sign"><colgroup><col style="width:14%"><col style="width:24%"><col style="width:15%"><col style="width:17%"><col style="width:10%"><col style="width:20%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td class="dt-name-position"><div class="dt-sign-name"><b>Name:</b><span>'+esc(text(d.name))+'</span></div><div class="dt-sign-position"><b>Position:</b><span>'+esc(text(d.position))+'</span></div></td><td>'+esc(text(d.contactNumber))+'</td><td>'+esc(text(d.companyName))+'</td><td>'+esc(formatDate(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
  const photos='<table class="dt-photos excel-table"><thead><tr><th colspan="2">Photos</th></tr></thead><tbody>'+Array.from({length:5},(_,i)=>'<tr>'+[0,1].map(col=>{const idx=i*2+col,src=state.photos[idx];return '<td>'+(src?'<img src="'+esc(src)+'" alt="Photo '+(idx+1)+'">':'<span class="blank-photo">Photo '+(idx+1)+'</span>')+'</td>'}).join('')+'</tr>').join('')+'</tbody></table>';
  $('paper').innerHTML='<article class="paper">'+headerHtml+template.sections.map(information).join('')+items+total+sign+photos+'</article>';
  const pages=paginatePresetDocument($('paper'),{fit:'normal'});
