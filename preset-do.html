@@ -59,6 +59,29 @@
 .paper .dt-meta-line b{white-space:nowrap!important;text-align:right;font-weight:600}
 .paper .dt-meta-line span{white-space:nowrap!important;overflow:visible!important;word-break:normal!important}
 @media print{.paper .dt-meta-line b,.paper .dt-meta-line span{white-space:nowrap!important}}
+</style><style id="deliveryTicketTenItemsPageOne20261101">
+/* Compact only the physical DO layout. Inputs retain their multiline capacity.
+   With extra item rows, the single preset pagination controller advances
+   the signatures naturally instead of scaling text or deleting content. */
+.paper .dt-section{margin-top:2mm!important;margin-bottom:2mm!important}
+.paper .dt-info{min-height:21mm!important}
+.paper .dt-row{min-height:3.5mm!important;line-height:1.2!important}
+.paper .dt-row b,.paper .dt-row span{padding-top:.7mm!important;padding-bottom:.35mm!important}
+.paper .dt-row.address{min-height:11mm!important}
+.paper .dt-items td{height:7mm!important;padding-top:1mm!important;padding-bottom:.8mm!important}
+.paper .dt-items th{padding-top:1mm!important;padding-bottom:1mm!important}
+.paper .dt-total{margin-bottom:1.5mm!important}
+.paper .dt-total th,.paper .dt-total td{padding-top:1mm!important;padding-bottom:1mm!important}
+.paper .dt-sign{margin-top:1.5mm!important;margin-bottom:3mm!important}
+.paper .dt-sign tbody td{height:18mm!important}
+.paper .dt-name-position>div{min-height:9mm!important}
+.paper .dt-name-position span{min-height:7mm!important}
+@media print{
+ .paper .dt-info{min-height:21mm!important}
+ .paper .dt-row.address{min-height:11mm!important}
+ .paper .dt-items td{height:7mm!important}
+ .paper .dt-sign tbody td{height:18mm!important}
+}
 </style></head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Delivery Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collection Address &amp; Contact Person</h3><div class="section-fields" id="collectionFields"></div></section>
