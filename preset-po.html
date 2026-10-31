@@ -176,7 +176,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261101-fitting-measure-fix2';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261101-po-signature-fit1';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -359,10 +359,13 @@ function render(){
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
  // Page fitting is evaluated on unscaled, physical A4 pages.
  const paperRoot=$('paper');
- const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
+ const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||8,fit:state.termsPageFit||'flow',fitFollowingSelector:'table.po-signatures'});
  $('pageCount').textContent=totalPages+' page(s)';
  const termPages=Number(paperRoot.dataset.pageFitTermsPages)||0;
  const termsStartPage=Number(paperRoot.dataset.pageFitTermsStartPage)||1;
+ const pages=Array.from(paperRoot.querySelectorAll('article.paper'));
+ const lastTermsPage=pages.findLastIndex(p=>p.querySelector('.excel-terms-section'))+1;
+ const signaturePage=pages.findIndex(p=>p.querySelector('table.po-signatures'))+1;
  const fitMode=paperRoot.dataset.pageFitMode||'flow';
  const effectivePx=Number(paperRoot.dataset.pageFitActualSizePx)||0;
  const effectivePt=effectivePx ? Math.round(effectivePx*72/96*10)/10 : (state.termsFontSize||8);
@@ -370,7 +373,12 @@ function render(){
   ? (termsStartPage===1?'Terms fit on page 1; fitting modes may look identical until the terms overflow.':'Terms start on page '+termsStartPage+' and fit there without splitting.')
   : 'Terms start on page '+termsStartPage+' and continue across '+termPages+' A4 pages.';
  const detail=fitMode==='flow'?'Continue across pages':fitMode==='auto'?'Auto Fit':'Normal size / add page';
- $('termsFitStatus').textContent=detail+' · '+(fitMode==='auto'?'Effective font '+effectivePt+' pt. ':'')+explanation;
+ const signatureStatus=fitMode==='auto'
+  ? (signaturePage&&lastTermsPage===signaturePage
+    ? 'Signature block stays with Terms on A4 page '+signaturePage+'.'
+    : 'At the minimum Terms size, the signature block needs another A4 page.')
+  : '';
+ $('termsFitStatus').textContent=detail+' · '+(fitMode==='auto'?'Effective Terms font '+effectivePt+' pt. '+signatureStatus:explanation);
  fitPreview();
  posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{renderBusy=false}
