@@ -92,7 +92,7 @@ export function paginatePresetDocument(root, options = {}) {
       // followed by plain text. Retain exact wording and whitespace.
       const bodyText = Array.from(originalText.childNodes)
         .filter(n => n !== heading).map(n => n.textContent).join('');
-      const words = bodyText.match(/\S+\s*/g) || [bodyText];
+      const words = bodyText.match(/\s*\S+\s*/g) || [bodyText];
       let offset = 0, firstFragment = true;
       while (offset < words.length) {
         const fragment = clause.cloneNode(true);
