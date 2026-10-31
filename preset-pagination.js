@@ -1,30 +1,4 @@
-// Shared controls and behavior for every preset document family.
-export const PRESET_TERMS_SIZES = Object.freeze([6.5,7,7.5,8,8.5,9]);
-export const PRESET_FITTING_MODES = Object.freeze([
-  {value:'flow',label:'Continue across pages (complete lines) — Default'},
-  {value:'auto',label:'Auto Fit (minimum 6.5pt)'},
-  {value:'normal',label:'Normal size / add page'}
-]);
-export function presetFittingControlsMarkup(){
- return '<label>Terms font size<select id="termsFontSize">'+PRESET_TERMS_SIZES.map(size=>'<option value="'+size+'">'+size+' pt</option>').join('')+'</select></label>'+
-  '<label>Page fitting<select id="termsPageFit">'+PRESET_FITTING_MODES.map(mode=>'<option value="'+mode.value+'">'+mode.label+'</option>').join('')+'</select></label>';
-}
-export function presetFittingOptions(state){
- const requested=Number(state?.termsFontSize);
- const size=PRESET_TERMS_SIZES.includes(requested)?requested:8;
- const fit=PRESET_FITTING_MODES.some(m=>m.value===state?.termsPageFit)?state.termsPageFit:'flow';
- return {size,fit,fitFollowingSelector:'table.excel-sign-table, table.po-signatures'};
-}
-export function syncPresetFittingControls(state){
- const options=presetFittingOptions(state);
- const size=document.getElementById('termsFontSize');
- const fit=document.getElementById('termsPageFit');
- if(size)size.value=String(options.size);
- if(fit)fit.value=options.fit;
- return options;
-}
-
-// Shared A4 pagination for Quotation and Purchase Order presets.
+// Single A4 page-fitting controller used directly by Quotation, PO and future presets.
 // Called after render(), before the preview is visually scaled.
 // Terms are kept together whenever possible; if longer than an A4 page,
 // only complete numbered clauses are moved to the next page.
@@ -74,7 +48,7 @@ export function paginatePresetDocument(root, options = {}) {
     const sectionIndex=nodes.indexOf(section);
     const firstTermsIndex=nodes.findIndex(n=>n.matches?.('section.excel-terms-section'));
     const searchFrom=sectionIndex>=0?sectionIndex+1:firstTermsIndex+1;
-    const followingIndex=nodes.findIndex((n,i)=>i>=searchFrom && n.matches?.(options.fitFollowingSelector || 'table.excel-sign-table, table.po-signatures'));
+    const followingIndex=nodes.findIndex((n,i)=>i>=searchFrom && n.matches?.('table.excel-sign-table, table.po-signatures'));
     const following=requestedFit==='auto'&&followingIndex>=0
       ? nodes.slice(searchFrom,followingIndex+1)
       : [];
