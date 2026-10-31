@@ -41,7 +41,7 @@
 .paper .po-clause6-lines{display:block;margin-top:1.2mm;padding-left:3mm;line-height:1.4}
 .paper .po-clause6-line{display:grid;grid-template-columns:25mm minmax(0,1fr);gap:1.5mm;align-items:start;min-height:3.8mm;white-space:pre-wrap}
 .paper .po-clause6-line span:last-child{overflow-wrap:anywhere}
-</style></head><body>
+</style><style id="poSharedTermsControls20261101">.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.18}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}</style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
@@ -50,7 +50,7 @@
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
 <section class="card"><h3>Delivery / Collection &amp; Contact Details</h3><div class="fields" id="poTermsFields"></div></section>
 <section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
-<section class="card"><h3>Terms &amp; Conditions</h3><p class="muted">The six numbered clauses are defined by the selected PO template. Update the vendor and delivery/payment fields above to fill variable details.</p><div id="termsEditor"></div></section>
+<section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="fields" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
 <script type="module">
@@ -130,7 +130,7 @@ async function chooseTemplate(id,clear=true){
  if(!response.ok)throw Error('Cannot load '+entry.path);
  template=await response.json();
  if(clear||!state){
-  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{}};
+  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},termsFontSize:8,termsPageFit:"flow"};
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
   state.fields.currency=business().defaultCurrency||'MYR';
@@ -143,6 +143,8 @@ async function chooseTemplate(id,clear=true){
 function draw(){
  if(!state||!template)return;
  $('poTemplate').value=state.poType;
+ $('termsFontSize').value=String(state.termsFontSize||8);
+ $('termsPageFit').value=['flow','auto','normal'].includes(state.termsPageFit)?state.termsPageFit:'flow';
  const htmlField=f=>{
   const value=state.fields[f.key]??'';
   const options=f.key==='currency'?Array.from(new Set([...(business().currencies||[]).map(x=>x.code),'MYR','USD'])):f.options;
@@ -224,10 +226,10 @@ function render(){
    '<span class="po-clause-body">'+esc(poPresetValue(expandedTerm(t)))+'</span>';
   return '<div class="po-term excel-term'+(isContact?' po-contact-clause':'')+'"><span class="po-term-num term-num">'+t.number+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(isContact?body:' '+body)+'</div></div>';
  };
- const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">TERMS &amp; CONDITIONS</div><div class="po-terms excel-terms">'+template.terms.map(clauseMarkup).join('')+'</div></section>';
+ const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">TERMS &amp; CONDITIONS</div><div class="po-terms excel-terms" style="font-size:'+Math.max(6.5,Math.min(9,Number(state.termsFontSize)||8))+'pt">'+template.terms.map(clauseMarkup).join('')+'</div></section>';
  const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(v.date||'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
- paginatePresetDocument($('paper'),{size:8,fit:'normal'});
+ paginatePresetDocument($('paper'),{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
  $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
  fitPreview();
  posted('height',{height:document.documentElement.scrollHeight+8});
@@ -279,6 +281,8 @@ $('poTemplate').addEventListener('change',e=>{if(confirm('Switch PO type and cle
 $('addRow').addEventListener('click',()=>{state.items.push(Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));drawRows();render()});
 $('removeRow').addEventListener('click',()=>{if(state.items.length>1){state.items.pop();drawRows();render()}});
 $('itemsEditor').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(!b)return;state.items.splice(Number(b.dataset.remove),1);if(!state.items.length)state.items=[{}];drawRows();render()});
+$('termsFontSize').addEventListener('change',e=>{state.termsFontSize=Number(e.target.value)||8;render()});
+$('termsPageFit').addEventListener('change',e=>{state.termsPageFit=e.target.value;render()});
 document.addEventListener('input',e=>{
  const d=e.target.dataset;if(d.poField){state.fields[d.poField]=e.target.value;render()}
  else if(d.row!==undefined){state.items[Number(d.row)][d.key]=e.target.value;const tr=e.target.closest('tr'),v=tr?.querySelector('.line-total');if(v)v.textContent=money(lineTotal(state.items[Number(d.row)]));render()}
