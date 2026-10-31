@@ -116,6 +116,32 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
  }
 }
 /* A narrow screen retains the original separate Working/Preview controls. */
+</style><style id="normalizedWorkspaceAndToolbar20261031">
+/* Both template families use one workspace width. The two working areas remain side by side. */
+@media screen {
+ #docMain.on-workspace-tab {max-width:1800px!important;width:100%!important;}
+ #docMain.on-workspace-tab.preset-editor-mode {
+  display:block!important;grid-template-columns:none!important;
+  max-width:1800px!important;
+ }
+ #docMain.on-workspace-tab.preset-editor-mode>.workspace {width:100%!important;max-width:none!important;}
+ #docMain.on-workspace-tab .workspace-view-tabs,
+ #docMain.on-workspace-tab [data-workspace-view] {display:none!important;}
+ #docMain.on-workspace-tab .unified-toolbar-actions {flex:1 1 400px;}
+ #docMain.on-workspace-tab #presetWorkspace,
+ #docMain.on-workspace-tab #presetWorkspaceFrame {width:100%!important;max-width:100%!important;}
+ /* Narrow view: display both custom editor and live preview sequentially, without mode toggles. */
+ @media(max-width:1099px) {
+  #docMain.on-workspace-tab:not(.preset-editor-mode) {display:block!important;}
+  #docMain.on-workspace-tab:not(.preset-editor-mode) #create>.workspace-form {display:block!important;}
+  #docMain.on-workspace-tab:not(.preset-editor-mode)>.preview {
+   display:block!important;position:static!important;left:auto!important;
+   visibility:visible!important;pointer-events:auto!important;
+   width:100%!important;max-width:none!important;overflow:auto!important;
+   margin-top:16px!important;
+  }
+ }
+}
 </style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
@@ -136,8 +162,6 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
 <label class="workspace-business-label">Business Profile<select id="businessProfile" aria-label="Business Profile"></select></label>
 <div class="unified-toolbar-actions">
-<button type="button" class="workspace-view active" data-workspace-view="working" aria-pressed="true">Working Form</button>
-<button type="button" class="workspace-view" data-workspace-view="preview" aria-pressed="false">Preview</button>
 <button type="button" id="newBtn">New</button>
 <button type="button" id="workspaceOpenSaved">Open Saved</button>
 <button type="button" id="saveBtn">Save Online</button>
