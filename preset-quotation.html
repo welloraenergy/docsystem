@@ -553,7 +553,22 @@ const RENTAL3_TERMS = [
 ["Quotation Validity",""]
 ];
 const dayWords={30:"thirty (30)",60:"sixty (60)",90:"ninety (90)",120:"one hundred and twenty (120)",150:"one hundred and fifty (150)",180:"one hundred and eighty (180)"};
-function daysPhrase(v){const n=Math.max(1,Math.floor(Number(v)||30));return dayWords[n]||String(n)+' ('+n+')'}
+function numberToEnglish(n){
+ const ones=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+ const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+ if(n<20)return ones[n];
+ if(n<100)return tens[Math.floor(n/10)]+(n%10?'-'+ones[n%10]:'');
+ if(n<1000)return ones[Math.floor(n/100)]+' hundred'+(n%100?' and '+numberToEnglish(n%100):'');
+ if(n<1000000){
+  const rest=n%1000;
+  return numberToEnglish(Math.floor(n/1000))+' thousand'+(rest?(rest<100?' and ':' ')+numberToEnglish(rest):'');
+ }
+ return String(n);
+}
+function daysPhrase(v){
+ const n=Math.max(1,Math.floor(Number(v)||30));
+ return (dayWords[n]||numberToEnglish(n))+' ('+n+')';
+}
 function usesStandardRentalTerms(){return ['rental3','rental10','rentcon53','rentcon105','specialtkr'].includes(state.preset)}
 function isSpecialTkr(){return state.preset==='specialtkr'}
 function rental3Terms(){
