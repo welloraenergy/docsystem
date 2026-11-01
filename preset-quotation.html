@@ -387,6 +387,7 @@ import {sharedPresetSlot,expandPresetText} from "./preset-shared.js?v=20261101-c
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,collection,doc,getDoc,setDoc,serverTimestamp,query,where,getDocs,limit} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {savePresetCopy,readPresetCopy} from "./preset-user-templates.js?v=20261101-copy-1";
 if(new URLSearchParams(location.search).get('embedded')==='1'){
  document.body.classList.add('embedded-preset');
  // Embedded preset is an editor only. The parent Workspace owns every toolbar control.
@@ -417,7 +418,7 @@ if(new URLSearchParams(location.search).get('embedded')==='1'){
 
 }
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});const auth=getAuth(app),db=getFirestore(app);let user=null,id=null,actualRole='user',businessProfile=null,businessProfiles=[],savedCompanySnapshot=null,initialCurrencySet=false,savedHeaderSnapshot=null,globalPlaceholderValues={};
-onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role==='staff'?'user':(profile.data()?.role||'user')}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in'});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){$('status').textContent='Sign in to DocSystem first';return}try{const profile=await getDoc(doc(db,'users',u.uid));actualRole=profile.data()?.role==='staff'?'user':(profile.data()?.role||'user')}catch(e){console.warn('Role lookup',e)}await refreshBusinessProfiles();$('status').textContent='Signed in';if(new URLSearchParams(location.search).has('copyId'))await openSavedPresetCopy()});
 async function refreshBusinessProfiles(){
  if(!user)return;
  try{
@@ -495,11 +496,41 @@ function choosePresetBusiness(profileId){
  businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;
  renderBusinessSelector();drawFieldsOnly();render();announcePresetReady();
 }
+
+let presetCopyApplied=false;
+async function saveAsNewPresetTemplate(name){
+ if(!user||!state?.preset)return alert('Sign in and open a quotation preset first');
+ if(!name||!name.trim())return;
+ try{
+  const saved=await savePresetCopy({user,family:'quotation',basePresetId:state.preset,name,state,profileId:savedCompanySnapshot?.id||businessProfile?.id||''});
+  $('status').textContent='Template saved: '+saved.name;
+  informWorkspace('template-saved',{name:saved.name,id:saved.id});
+ }catch(error){alert('Could not save template copy: '+error.message)}
+}
+async function openSavedPresetCopy(){
+ const copyId=new URLSearchParams(location.search).get('copyId');
+ if(!copyId||presetCopyApplied||id||!user)return;
+ try{
+  const copy=await readPresetCopy({user,id:copyId,family:'quotation'});
+  presetCopyApplied=true;
+  fresh(copy.basePresetId);
+  savedCompanySnapshot=null;savedHeaderSnapshot=null;
+  businessProfile=businessProfiles.find(p=>p.id===copy.profileId)||businessProfile;
+  state=copy.defaults;
+  state.preset=copy.basePresetId;
+  state.reference='';
+  state.date=new Date().toISOString().slice(0,10);
+  draw();
+  $('status').textContent='Template copy ready: '+copy.name+' · New document';
+  announcePresetReady();
+ }catch(error){presetCopyApplied=true;$('status').textContent='Template copy could not open: '+error.message}
+}
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='docsystem-preset-command')return;
  const cmd=event.data.action;
  if(cmd==='view'){window.view(!!event.data.preview);return}
  if(cmd==='save'){window.save();return}
+ if(cmd==='save-template'){saveAsNewPresetTemplate(event.data.name);return}
  if(cmd==='print'){window.printDoc();return}
  if(cmd==='new'){fresh(state.preset);$('status').textContent='New quotation';announcePresetReady();informWorkspace('view',{preview:false});return}
  if(cmd==='business'){choosePresetBusiness(event.data.profileId);return}
