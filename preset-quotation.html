@@ -652,20 +652,38 @@ function specialTkrTerms(){
  });
 }
 function renderClauses(clauses){return clauses.map(x=>'<div class="excel-term"><span class="term-num">'+x.num+'</span><div class="term-text"><strong>'+esc(x.title)+':</strong> '+esc(x.body)+'</div></div>').join('')}
+const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
 function activePresetClauses(){
  const omitted=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
+ const replacements=state.clauseReplacements||{};
  const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();
- return originals.filter(x=>!omitted.includes(Number(x.num))).map((x,i)=>({...x,num:i+1}));
+ const minDays=daysPhrase(state.minDays),paymentDays=daysPhrase(parseInt(state.payment,10)||30),validityDays=daysPhrase(parseInt(state.validity,10)||30);
+ const tokens={minDays,paymentDays,validityDays,facilityAddress:state.facilityAddress||'',pickupAddress:state.pickupAddress||'',returnAddress:state.returnAddress||''};
+ const resolve=body=>String(body||'').replace(/\{(minDays|paymentDays|validityDays|facilityAddress|pickupAddress|returnAddress)\}/g,(match,key)=>tokens[key]);
+ const visible=originals.filter(x=>!omitted.includes(Number(x.num))).map(x=>({...x,body:resolve(replacements[x.num]||x.body)}));
+ const extra=Array.isArray(state.extraTerms)?state.extraTerms.filter(x=>x&&x.enabled!==false&&(x.title||x.body)):[];
+ return [...visible,...extra.map(x=>({title:x.title||'Additional Statement',body:resolve(x.body||'')}))].map((x,i)=>({...x,num:i+1}));
 }
 function activePresetClausesHtml(){return renderClauses(activePresetClauses())}
 function quoteTermsEditorMarkup(){
  const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();
  const hidden=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
- return '<p class="muted">Customize this document or save it as a new reusable template. Uncheck clauses to remove them from the copy. Linked values and formulas remain active.</p>'+
- originals.map(t=>'<label style="display:flex;flex-direction:row;align-items:flex-start;gap:8px;margin:8px 0;padding:7px;border:1px solid #e1e8ef;border-radius:6px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;margin-top:3px;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><span style="min-width:0"><strong>'+t.num+'. '+esc(t.title)+'</strong><span style="display:block;font-size:12px;white-space:pre-wrap;margin-top:4px;line-height:1.4">'+esc(t.body||'')+'</span></span></label>').join('');
+ if(!editingPresetTemplate)return activePresetClausesHtml();
+ const replacements=state.clauseReplacements||{};
+ const extras=Array.isArray(state.extraTerms)?state.extraTerms:[];
+ const core=originals.map(t=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
+ '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>'+t.num+'. '+esc(t.title)+'</strong></label>'+
+ '<div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+
+ '<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label></div>').join('');
+ const added=extras.map((t,i)=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
+ '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-extra-show="'+i+'" style="width:auto" '+(t.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
+ '<label>Heading<input data-quote-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label>'+
+ '<label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label>'+
+ '<button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>').join('');
+ return '<p class="muted">Show or hide original clauses, optionally replace wording, then add new statements. Original terms and formula logic remain in the built-in source. For replacements use {minDays}, {paymentDays}, {validityDays} to keep linked values.</p>'+
+ core+'<h4>Additional statements</h4>'+added+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
 }
-
-function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:"",date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],termsFontSize:8,termsPageFit:"flow",signatures:["","",""]};draw()}
+function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:"",date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],clauseReplacements:{},extraTerms:[],termsFontSize:8,termsPageFit:"flow",signatures:["","",""]};draw()}
 function headingFormatControls(k){
  if(!['docTitle','headingLines'].includes(k))return '';
  return '<div class="panel-inline-tools" aria-label="Format '+(k==='docTitle'?'document heading':'additional lines')+'">'+
@@ -764,6 +782,10 @@ $('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'
  field.value=field.value.slice(0,start)+before+selected+after+field.value.slice(end);
  state[key]=field.value;field.focus();field.setSelectionRange(start+before.length,start+before.length+selected.length);render();
 });
+document.addEventListener('click',e=>{
+ if(e.target.id==='quoteAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render();return}
+ if(e.target.dataset.quoteExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.quoteExtraRemove),1);$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render();return}
+});
 document.addEventListener('input',e=>{if(e.target.dataset.quoteTerm!==undefined){
  const n=Number(e.target.dataset.quoteTerm);
  state.omittedTerms=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
@@ -771,6 +793,10 @@ document.addEventListener('input',e=>{if(e.target.dataset.quoteTerm!==undefined)
  if(!e.target.checked)state.omittedTerms.push(n);
  render();return;
 }
+if(e.target.dataset.quoteReplace!==undefined){state.clauseReplacements??={};state.clauseReplacements[e.target.dataset.quoteReplace]=e.target.value;render();return}
+if(e.target.dataset.quoteExtraTitle!==undefined){state.extraTerms[Number(e.target.dataset.quoteExtraTitle)].title=e.target.value;render();return}
+if(e.target.dataset.quoteExtraBody!==undefined){state.extraTerms[Number(e.target.dataset.quoteExtraBody)].body=e.target.value;render();return}
+if(e.target.dataset.quoteExtraShow!==undefined){state.extraTerms[Number(e.target.dataset.quoteExtraShow)].enabled=e.target.checked;render();return}
 if(e.target.id==='minimumRentalMode'){
  const custom=e.target.value==='custom',input=$('customMinimumRentalDays');
  input.hidden=!custom;
