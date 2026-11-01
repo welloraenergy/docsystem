@@ -669,19 +669,18 @@ function activePresetClausesHtml(){return renderClauses(activePresetClauses())}
 function quoteTermsEditorMarkup(){
  const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();
  const hidden=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
- if(!editingPresetTemplate)return activePresetClausesHtml();
  const replacements=state.clauseReplacements||{};
  const extras=Array.isArray(state.extraTerms)?state.extraTerms:[];
  const core=originals.map(t=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
- '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>'+t.num+'. '+esc(t.title)+'</strong></label>'+
+ '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>Show · '+t.num+'. '+esc(t.title)+'</strong></label>'+
  '<div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+
- '<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label></div>').join('');
+ (editingPresetTemplate?'<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label>':'')+'</div>').join('');
  const added=extras.map((t,i)=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-extra-show="'+i+'" style="width:auto" '+(t.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
  '<label>Heading<input data-quote-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label>'+
  '<label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label>'+
  '<button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>').join('');
- return '<p class="muted">Show or hide original clauses, optionally replace wording, then add new statements. Original terms and formula logic remain in the built-in source. For replacements use {minDays}, {paymentDays}, {validityDays} to keep linked values.</p>'+
+ return '<p class="muted">Original clauses are protected and cannot be removed. Toggle Show/Hide for this document, then add your own statements below. These selections are saved with the document. Formula-driven wording stays linked.'+(editingPresetTemplate?' To use dynamic values in custom wording: {minDays}, {paymentDays}, {validityDays}.':'')+'</p>'+
  core+'<h4>Additional statements</h4>'+added+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
 }
 function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:"",date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],clauseReplacements:{},extraTerms:[],termsFontSize:8,termsPageFit:"flow",signatures:["","",""]};draw()}
