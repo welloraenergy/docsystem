@@ -14,6 +14,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller2';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -93,10 +94,35 @@ async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()}
 window.printDoc=()=>{render();window.print()};
-window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')newDoc();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business')chooseBusiness(e.data.profileId);else if(a==='view')render()});
+
+let presetCopyApplied=false;
+async function saveAsNewPresetTemplate(name){
+ if(!user||!state)return alert('Sign in and open a preset first');
+ if(!name||!name.trim())return;
+ try{
+  const saved=await savePresetCopy({user,family:'invoice',basePresetId:'standard',name,state,profileId:business().id});
+  notify('Template saved: '+saved.name);
+  posted('template-saved',{name:saved.name,id:saved.id});
+ }catch(error){alert('Could not save template copy: '+error.message)}
+}
+async function openSavedPresetCopy(){
+ const copyId=params.get('copyId');
+ if(presetCopyApplied||!copyId||docId||!user)return;
+ try{
+  const copy=await readPresetCopy({user,id:copyId,family:'invoice'});
+  presetCopyApplied=true;
+  docId=null;savedCompany=null;savedHeader=null;
+  const selected=profiles.find(p=>p.id===copy.profileId);
+  if(selected)profile=selected;
+  state=copy.defaults;
+  state.fields.reference='';state.items=Array.isArray(state.items)?state.items:[];
+  draw();notify('Template copy ready: '+copy.name+' · New document');ready();
+ }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
+}
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(a==='new')newDoc();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business')chooseBusiness(e.data.profileId);else if(a==='view')render()});
 document.addEventListener('input',e=>{const d=e.target.dataset;if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj)obj[d.key]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;const tr=e.target.closest('tr');if(tr){const v=tr.querySelectorAll('td span');if(v[0])v[0].textContent=dates(state.items[Number(d.row)])??'';if(v[1])v[1].textContent=money(rowTotal(state.items[Number(d.row)]))} $('totalSummary').textContent='Sub-Total: '+money(subtotal())+' · SST: '+money(tax())+' · Grand Total: '+money(total())+' '+currencySymbol();render()}else if(d.note!==undefined){state.notes[Number(d.note)]=e.target.value;render()}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-group="fields"][data-key="currency"]')){state.fields.currency=e.target.value;drawRows();render()}});
 document.addEventListener('click',e=>{const id=e.target.id;if(id==='newBtn')newDoc();else if(id==='saveBtn')save();else if(id==='printBtn')window.printDoc();else if(id==='addRow'){state.items.push({no:String(state.items.length+1),description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''});drawRows();render()}else if(id==='removeRow'){if(state.items.length>1){state.items.pop();drawRows();render()}}else if(e.target.dataset.removeRow!==undefined){state.items.splice(Number(e.target.dataset.removeRow),1);if(!state.items.length)state.items=[{no:'1',description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''}];drawRows();render()}});
-onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDoc(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};globals=settings.globalPlaceholders||{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;if(!loaded){const rsp=await fetch('./templates/invoice/standard.json',{cache:'no-store'});if(!rsp.ok)throw Error('Invoice definition missing');template=await rsp.json();state=blank();loaded=true}if(docId)await loadSaved(docId);else{draw();notify('Invoice ready');ready()}}catch(e){notify('Invoice could not initialize: '+e.message)}});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDoc(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};globals=settings.globalPlaceholders||{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;if(!loaded){const rsp=await fetch('./templates/invoice/standard.json',{cache:'no-store'});if(!rsp.ok)throw Error('Invoice definition missing');template=await rsp.json();state=blank();loaded=true}if(docId)await loadSaved(docId);else if(params.get('copyId'))await openSavedPresetCopy();else{draw();notify('Invoice ready');ready()}}catch(e){notify('Invoice could not initialize: '+e.message)}});
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{fitPreview();posted('height',{height:document.documentElement.scrollHeight+8})}).observe(document.querySelector('.workspace'));
 </script></body></html>
