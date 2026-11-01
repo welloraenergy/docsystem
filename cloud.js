@@ -203,7 +203,8 @@ export async function loadSavedPresetCopies(){
   const label={'quotation':'Quotation','purchase-order':'Purchase Order','delivery-ticket':'Delivery Ticket','returning-ticket':'Returning Ticket','invoice':'Invoice'};
   const markup=copies.length?copies.map(copy=>
    '<div class="cloud-entry"><div><b>'+escape(copy.name)+'</b><div class="muted">'+escape(label[copy.family]||copy.family)+' · Based on '+escape(copy.basePresetId)+' · My Template</div></div>'+
-   '<button type="button" class="small" data-open-preset-copy="'+escape(copy.id)+'" data-copy-family="'+escape(copy.family)+'" data-copy-base="'+escape(copy.basePresetId)+'">Use / Edit</button></div>').join('')
+   '<button type="button" class="small" data-open-preset-copy="'+escape(copy.id)+'" data-copy-family="'+escape(copy.family)+'" data-copy-base="'+escape(copy.basePresetId)+'">Use in Workspace</button>'+
+   '<button type="button" class="small cloud-admin-only" data-edit-preset-copy="'+escape(copy.id)+'" data-copy-family="'+escape(copy.family)+'" data-copy-base="'+escape(copy.basePresetId)+'">Configure Copy</button></div>').join('')
    :'<p class="muted">No saved preset copies yet. Open a preset, edit it, and choose Save as New Template.</p>';
   containers.forEach(x=>x.innerHTML=markup);
  }catch(error){
