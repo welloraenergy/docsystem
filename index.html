@@ -722,6 +722,21 @@ const deliveryTicketPresetChoices=[['standard','Standard Delivery Ticket']];
 const returningTicketPresetChoices=[['standard','Standard Returning Ticket']];
 const invoicePresetChoices=[['standard','Standard Invoice']];
 const quotationPresetChoices=[['rental3','Rental (Qty 3)'],['rental10','Rental (Qty 10)'],['rentcon53','Rental + Consumables (Qty 5+3)'],['rentcon105','Rental + Consumables (Qty 10+5)'],['specialtkr','Rental — Special TKR']];
+
+function presetConfiguratorTypes(){
+ const family=document.getElementById('presetConfigureFamily').value;
+ const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:family==='returning-ticket'?returningTicketPresetChoices:family==='invoice'?invoicePresetChoices:quotationPresetChoices;
+ document.getElementById('presetConfigureType').innerHTML=choices.map(([id,title])=>'<option value="'+esc(id)+'">'+esc(title)+'</option>').join('');
+}
+function loadPresetConfigurator(copyId=null){
+ const family=document.getElementById('presetConfigureFamily').value,base=document.getElementById('presetConfigureType').value;
+ const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html'}[family];
+ if(!editor)return;
+ document.getElementById('presetConfigureFrame').src=editor+'?version=20261101-config-mode3&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
+}
+presetConfiguratorTypes();
+
 function fillPresetTypes(preserve=false){
  const family=document.getElementById('workspacePresetFamily').value;
  const select=document.getElementById('workspacePresetSelect'),previous=select.value;
@@ -757,6 +772,17 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  }
 }
 window.addEventListener('message',e=>{
+ if(e.origin===location.origin&&e.source===document.getElementById('presetConfigureFrame')?.contentWindow){
+  if(e.data?.type==='docsystem-preset-template-saved'){
+   document.getElementById('presetConfigStatus').textContent='Saved new template: '+(e.data.name||'');
+   window.DocSystemCloud?.loadSavedPresetCopies();
+  }else if(e.data?.type==='docsystem-preset-status'){
+   document.getElementById('presetConfigStatus').textContent=e.data.status||'Ready';
+  }else if(e.data?.type==='docsystem-preset-height'&&Number.isFinite(Number(e.data.height))){
+   document.getElementById('presetConfigureFrame').style.height=Math.max(850,Math.min(6000,Number(e.data.height)+20))+'px';
+  }
+  return;
+ }
  if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
  if(e.data?.type==='docsystem-preset-ready'){
   const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
@@ -804,6 +830,11 @@ document.addEventListener('click',e=>{
  if(e.target.id==='workspaceOpenSaved'){showDocPage('documents');return}
  if(e.target.id==='newBtn'){workspaceAction('new');return}
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
+ if(e.target.id==='togglePresetConfigurator'){const panel=document.getElementById('presetConfigWorkspace');panel.hidden=!panel.hidden;if(!panel.hidden&&!document.getElementById('presetConfigureFrame').getAttribute('src'))loadPresetConfigurator();return}
+ if(e.target.id==='presetConfigLoad'){loadPresetConfigurator();return}
+ if(e.target.id==='presetConfigSave'){const name=document.getElementById('presetConfigureName').value.trim();if(!name)return alert('Enter a new template name');const frame=document.getElementById('presetConfigureFrame');if(!frame.getAttribute('src'))return alert('Load a preset first');frame.contentWindow.postMessage({type:'docsystem-preset-command',action:'save-template',name},location.origin);return}
+ const editCopy=e.target.closest('[data-edit-preset-copy]');
+ if(editCopy){const family=editCopy.dataset.copyFamily,base=editCopy.dataset.copyBase,id=editCopy.dataset.editPresetCopy;if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice'].includes(family))return;document.getElementById('presetConfigureFamily').value=family;presetConfiguratorTypes();document.getElementById('presetConfigureType').value=base;document.getElementById('presetConfigWorkspace').hidden=false;document.getElementById('presetConfigureName').value='';loadPresetConfigurator(id);return}
  const savedCopy=e.target.closest('[data-open-preset-copy]');
  if(savedCopy){const family=savedCopy.dataset.copyFamily,base=savedCopy.dataset.copyBase,copyId=savedCopy.dataset.openPresetCopy;
   if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice'].includes(family))return;
@@ -945,6 +976,7 @@ document.addEventListener('change',e=>{if(e.target.id==='presetHeaderProfileSele
  if(e.target.id==='workspaceTemplateSource'){setWorkspaceSource(e.target.value);return;}
  if(e.target.id==='workspacePresetFamily'){fillPresetTypes();setWorkspaceSource('preset',true);return;}
  if(e.target.id==='workspacePresetSelect'){setWorkspaceSource('preset',true);return;}
+ if(e.target.id==='presetConfigureFamily'){presetConfiguratorTypes();return;}
  if(e.target.dataset.layoutCount){
   const l=layoutConfig(e.target.dataset.layoutCount);l.columns=Number(e.target.value);
   while(l.panels.length<l.columns)l.panels.push({align:'left',blocks:[]});
