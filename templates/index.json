@@ -34,6 +34,14 @@
       "editor": "preset-return.html",
       "templateCount": 1,
       "status": "editor-integrated-pending-live-A4-and-Firebase-verification"
+    },
+    {
+      "id": "invoice",
+      "name": "Invoice",
+      "manifest": "invoice/index.json",
+      "editor": "preset-invoice.html",
+      "templateCount": 1,
+      "status": "integrated-pending-live-A4-and-Firebase-verification"
     }
   ],
   "isolation": {
@@ -52,5 +60,5 @@
     "branch": "restore/working-before-quotation-po-json-2026-10-31",
     "commit": "3b10bd8a866176b9775ba27e7e41214d10bbaf66"
   },
-  "note": "Quotation, PO, DO and Returning Ticket have separate Excel-faithful field definitions. DO and Returning share A4 layout and 700 KB image-storage behavior; Return has its own Comments field and destination default."
+  "note": "Quotation, PO, DO, Returning Ticket and Invoice have isolated template definitions. Invoice follows the uploaded rental invoice workbook with independent notes, SST, currency and signature fields."
 }
