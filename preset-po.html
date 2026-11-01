@@ -176,6 +176,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
@@ -418,7 +419,33 @@ async function chooseBusiness(id){
 }
 window.printDoc=()=>{document.body.classList.add('printing');render();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
+
+let presetCopyApplied=false;
+async function saveAsNewPresetTemplate(name){
+ if(!user||!state)return alert('Sign in and open a preset first');
+ if(!name||!name.trim())return;
+ try{
+  const saved=await savePresetCopy({user,family:'purchase-order',basePresetId:state.poType||template?.id||'purchase-credit',name,state,profileId:business().id});
+  notify('Template saved: '+saved.name);
+  posted('template-saved',{name:saved.name,id:saved.id});
+ }catch(error){alert('Could not save template copy: '+error.message)}
+}
+async function openSavedPresetCopy(){
+ const copyId=params.get('copyId');
+ if(presetCopyApplied||!copyId||docId||!user)return;
+ try{
+  const copy=await readPresetCopy({user,id:copyId,family:'purchase-order'});
+  presetCopyApplied=true;
+  docId=null;savedSnapshot=null;savedHeaderSnapshot=null;
+  const selected=profiles.find(p=>p.id===copy.profileId);
+  if(selected)profile=selected;
+  state=copy.defaults;
+  state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);await chooseTemplate(copy.basePresetId,false);
+  draw();notify('Template copy ready: '+copy.name+' · New document');ready();
+ }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
+}
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;
+ if(e.data.action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}
  if(e.data.action==='new'){newPo();return}
  if(e.data.action==='save'){save();return}
  if(e.data.action==='print'){window.printDoc();return}
@@ -453,7 +480,7 @@ onAuthStateChanged(auth,async u=>{
  try{const profileSnap=await getDoc(doc(db,'users',u.uid));role=profileSnap.data()?.role||'user'}catch{}
  try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};globalPlaceholders=settings.globalPlaceholders&&typeof settings.globalPlaceholders==='object'?settings.globalPlaceholders:{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;
  if(!loaded)await start();
- if(docId)await loadSaved(docId);else{state.fields.currency=business().defaultCurrency||'MYR';draw();notify('PO ready');ready()}
+ if(docId)await loadSaved(docId);else if(params.get('copyId'))await openSavedPresetCopy();else{state.fields.currency=business().defaultCurrency||'MYR';draw();notify('PO ready');ready()}
  }catch(e){notify('Business profile loading failed: '+e.message)}
 });
 if(typeof ResizeObserver!=='undefined'){
