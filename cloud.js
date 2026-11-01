@@ -1,3 +1,4 @@
+import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
@@ -39,9 +40,10 @@ export async function startCloud(authUser,profile){
   else if(canManage())await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedAt:serverTimestamp(),updatedBy:user.uid});
   loading=false;notify("Online · "+profile.role);
   await loadDocs();
+  await loadSavedPresetCopies();
   if(canManage())await loadUsers();
 }
-export function clearCloud(){user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";notify("Not signed in");}
+export function clearCloud(){user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
 export function settingsChanged(){
   if(!user||!canManage()||loading)return;
   clearTimeout(writeTimer);
@@ -189,6 +191,24 @@ export async function addUser(){
     notify("New user added: "+email);await loadUsers();
   }catch(error){alert("User creation failed: "+(error.code||error.message))}
   finally{button.disabled=false;if(secondary){try{await deleteApp(secondary)}catch(e){console.warn(e)}}}
+}
+
+
+export async function loadSavedPresetCopies(){
+ const containers=[el('workspacePresetCopiesList'),el('presetCopyLibraryList')].filter(Boolean);
+ if(!containers.length)return;
+ if(!user){containers.forEach(x=>x.innerHTML='');return}
+ try{
+  const copies=await listPresetCopies(user);
+  const label={'quotation':'Quotation','purchase-order':'Purchase Order','delivery-ticket':'Delivery Ticket','returning-ticket':'Returning Ticket','invoice':'Invoice'};
+  const markup=copies.length?copies.map(copy=>
+   '<div class="cloud-entry"><div><b>'+escape(copy.name)+'</b><div class="muted">'+escape(label[copy.family]||copy.family)+' · Based on '+escape(copy.basePresetId)+' · My Template</div></div>'+
+   '<button type="button" class="small" data-open-preset-copy="'+escape(copy.id)+'" data-copy-family="'+escape(copy.family)+'" data-copy-base="'+escape(copy.basePresetId)+'">Use / Edit</button></div>').join('')
+   :'<p class="muted">No saved preset copies yet. Open a preset, edit it, and choose Save as New Template.</p>';
+  containers.forEach(x=>x.innerHTML=markup);
+ }catch(error){
+  containers.forEach(x=>x.innerHTML='<p class="muted">Cannot load saved preset copies: '+escape(error.message)+'</p>');
+ }
 }
 
 document.addEventListener("click",e=>{
