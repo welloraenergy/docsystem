@@ -499,6 +499,7 @@ function choosePresetBusiness(profileId){
 
 let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
+ if(new URLSearchParams(location.search).get('configure')!=='1')return;
  if(!user||!state?.preset)return alert('Sign in and open a quotation preset first');
  if(!name||!name.trim())return;
  try{
