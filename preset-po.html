@@ -392,7 +392,7 @@ function fitPreview(){
  const available=Math.max(1,holder.clientWidth-10),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
-function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;chooseTemplate($('poTemplate').value,true)}
+function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim())return alert('Enter PO Reference Number before saving.');
@@ -422,7 +422,7 @@ async function chooseBusiness(id){
 window.printDoc=()=>{document.body.classList.add('printing');render();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
 
-let presetCopyApplied=false;
+let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
@@ -442,6 +442,7 @@ async function openSavedPresetCopy(){
   const selected=profiles.find(p=>p.id===copy.profileId);
   if(selected)profile=selected;
   state=copy.defaults;
+  activeCopyDefaults=structuredClone(copy.defaults);
   state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);await chooseTemplate(copy.basePresetId,false);
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
