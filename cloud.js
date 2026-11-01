@@ -123,10 +123,10 @@ export async function openDocument(id,duplicate=false){
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource==="preset"){
-      const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket';
-      const preset=encodeURIComponent(data.templateId||((isReturn||isDo)?'standard':isPo?'purchase-credit':'rental3'));
-      const family=isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
-      const saved=duplicate?'':(isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket',isInvoice=data.templateFamily==='invoice'||data.documentType==='Invoice';
+      const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo)?'standard':isPo?'purchase-credit':'rental3'));
+      const family=isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
+      const saved=duplicate?'':(isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
       window.location.href="./?preset="+preset+family+saved;
       return;
     }
