@@ -16,6 +16,7 @@ import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {getStorage,ref as storageRef,uploadBytes,getDownloadURL,deleteObject} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
+import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
@@ -176,7 +177,37 @@ async function loadSaved(id){
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){profile=selected;draw();ready()}}
 window.printDoc=()=>{render();window.print()};
-window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const {action}=e.data;if(action==='new')newDoc();else if(action==='save')save();else if(action==='print')window.printDoc();else if(action==='business')chooseBusiness(e.data.profileId);else if(action==='view')render()});
+
+let presetCopyApplied=false;
+async function saveAsNewPresetTemplate(name){
+ if(!user||!state)return alert('Sign in and open a preset first');
+ if(!name||!name.trim())return;
+ try{
+  const basePresetId='standard';
+  const saved=await savePresetCopy({user,family:'delivery-ticket',basePresetId,name,state,profileId:business().id});
+  notify('Template saved: '+saved.name);
+  posted('template-saved',{name:saved.name,id:saved.id});
+ }catch(error){alert('Could not save template copy: '+error.message)}
+}
+async function openSavedPresetCopy(){
+ const copyId=params.get('copyId');
+ if(presetCopyApplied||!copyId||docId||!user)return;
+ try{
+  const copy=await readPresetCopy({user,id:copyId,family:'delivery-ticket'});
+  presetCopyApplied=true;
+  docId=null;savedCompany=null;savedHeader=null;
+  const selected=profiles.find(p=>p.id===copy.profileId);
+  if(selected)profile=selected;
+  state=copy.defaults;
+  if(state.fields){
+   state.fields.reference='';
+  }
+  state.photos=Array(10).fill('');pendingPhotos.clear();
+  draw();notify('Template copy ready: '+copy.name+' · New document');ready();
+ }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
+}
+
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const {action}=e.data;if(action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(action==='new')newDoc();else if(action==='save')save();else if(action==='print')window.printDoc();else if(action==='business')chooseBusiness(e.data.profileId);else if(action==='view')render()});
 document.addEventListener('input',e=>{const d=e.target.dataset;if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj)obj[d.key]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;$('qtyTotal').textContent=qtyTotal();render()}});
 document.addEventListener('click',e=>{if(e.target.id==='newBtn')newDoc();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc();else if(e.target.id==='addRow'){state.items.push({no:String(state.items.length+1),description:'',serialNumber:'',unit:'',qty:''});drawItems();render()}else if(e.target.id==='removeRow'){if(state.items.length>1){state.items.pop();drawItems();render()}}else if(e.target.dataset.removeRow!==undefined){state.items.splice(Number(e.target.dataset.removeRow),1);if(!state.items.length)state.items.push({no:'1',description:'',serialNumber:'',unit:'',qty:''});drawItems();render()}else if(e.target.dataset.clearPhoto!==undefined){const idx=Number(e.target.dataset.clearPhoto);pendingPhotos.delete(idx);if(photoPreviews.has(idx)){URL.revokeObjectURL(photoPreviews.get(idx));photoPreviews.delete(idx)}state.photos[idx]='';draw()}});
 document.addEventListener('change',async e=>{
@@ -196,6 +227,6 @@ document.addEventListener('change',async e=>{
 async function start(){
  try{const response=await fetch('./templates/do/standard.json',{cache:'no-store'});if(!response.ok)throw Error('Delivery Ticket JSON not found');template=await response.json();state=empty();loaded=true;draw();if(docId)await loadSaved(docId);else{notify('Delivery Ticket ready');ready()}}catch(e){notify('Cannot load Delivery Ticket: '+e.message)}
 }
-onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDoc(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDoc(doc(db,'appSettings','main'));const st=snap.data()?.settings||{};globals=st.globalPlaceholders||{};profiles=Array.isArray(st.profiles)?st.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===st.activeProfileId)||profiles[0]||null;if(!loaded)await start();else{render();ready()}}catch(e){notify('Business Profiles failed: '+e.message)}});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDoc(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDoc(doc(db,'appSettings','main'));const st=snap.data()?.settings||{};globals=st.globalPlaceholders||{};profiles=Array.isArray(st.profiles)?st.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===st.activeProfileId)||profiles[0]||null;if(!loaded)await start();else{render();ready()}if(params.get('copyId'))await openSavedPresetCopy()}catch(e){notify('Business Profiles failed: '+e.message)}});
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{fitPreview();posted('height',{height:document.documentElement.scrollHeight+8})}).observe(document.querySelector('.workspace'));
 </script></body></html>
