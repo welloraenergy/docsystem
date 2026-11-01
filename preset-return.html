@@ -148,7 +148,7 @@ function render(){
  }finally{busy=false}
 }
 function fitPreview(){const h=document.querySelector('.preview-column');const available=h?.clientWidth||800;const zoom=Math.min(1,(available-12)/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
-function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=empty();draw();notify('New Returning Ticket');ready()}
+function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10);state.photos=Array(10).fill('')}draw();notify('New Returning Ticket');ready()}
 async function save(){
  if(saving)return;
  if(!user)return alert('Please sign in first');
@@ -200,7 +200,7 @@ function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.compa
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){profile=selected;draw();ready()}}
 window.printDoc=()=>{render();window.print()};
 
-let presetCopyApplied=false;
+let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
@@ -221,6 +221,7 @@ async function openSavedPresetCopy(){
   const selected=profiles.find(p=>p.id===copy.profileId);
   if(selected)profile=selected;
   state=copy.defaults;
+  activeCopyDefaults=structuredClone(copy.defaults);
   if(state.fields){
    state.fields.reference='';
   }
