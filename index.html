@@ -185,7 +185,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 @media screen and (max-width:999px){
  #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:12px!important}
 }
-</style><style id="personalPresetCopyUX20261101">#docMain:not(.preset-editor-mode) #saveAsTemplateBtn,#docMain:not(.preset-editor-mode) #myPresetCopiesBtn{display:none!important}#workspacePresetCopies{margin:0 0 12px;max-width:1200px}#workspacePresetCopies[hidden]{display:none!important}#presetCopyLibraryList{margin-bottom:20px}#presetCopyLibraryList .cloud-entry,#workspacePresetCopiesList .cloud-entry{gap:10px}</style></head>
+</style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
 <header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button></div></header>
@@ -208,11 +208,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <button type="button" id="newBtn">New</button>
 <button type="button" id="workspaceOpenSaved">Open Saved</button>
 <button type="button" id="saveBtn">Save Online</button>
-<button type="button" id="saveAsTemplateBtn" title="Save your edits as a separate reusable template. The built-in preset is not changed.">Save as New Template</button>
-<button type="button" id="myPresetCopiesBtn">My Templates</button>
 <button type="button" id="pdfBtn" class="primary">Print / PDF</button>
 </div><span id="workspaceStatus" class="muted" role="status">Ready</span>
-</div><div id="workspacePresetCopies" class="card" hidden><div class="between"><h3>My Saved Preset Templates</h3><button type="button" id="refreshPresetCopiesBtn" class="small">Refresh</button></div><p class="muted">Private reusable copies. Opening one creates a new document draft; built-in presets remain unchanged.</p><div id="workspacePresetCopiesList" class="stack"></div></div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-form">
+</div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-form">
 <div class="card"><div class="row3"><label>Document Title<input id="docTitle"></label></div><div class="row" style="margin-top:10px"><label>Document Currency<select id="docCurrency"></select></label><div class="muted" style="align-self:end">Currencies available for the selected business profile</div></div></div>
 <div class="card"><h2>Document Details</h2><div id="docFields" class="stack"></div></div>
 <div class="card"><div class="between"><h2>Items</h2><button id="addItem" class="small">+ Add Row</button></div><div class="tblwrap"><table id="items" class="editTable"></table></div></div>
@@ -227,7 +225,24 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="card"><h2>Footer Text</h2><textarea id="companyFooter" rows="3"></textarea></div>
 </section>
 <section id="global" class="panel"><div class="card"><h2>Reusable Placeholders</h2><p class="muted">Define a name and text once, then insert {name} in any header or footer panel. Changes apply across business profiles. Built-in: {logo}, {companyName}, {companyname}, {companyInfo}, {doctype}, {docno}, {docdate}, {page}. Other preset fields are editable.</p><div id="globalPlaceholders"></div><div class="row"><label>Placeholder name<input id="newPlaceholderKey" placeholder="tagline" pattern="[a-zA-Z][a-zA-Z0-9_]*"></label><label>Reusable text<textarea id="newPlaceholderValue" rows="3" placeholder="Delivering Reliability Beneath the Surface"></textarea></label></div><button type="button" id="addPlaceholder">+ Add Placeholder</button></div></section>
-<section id="library" class="panel"><div class="card"><h2>Template Library</h2><p class="muted">Ready-made presets use their own layouts and forms; custom templates keep the designs created in DocSystem.</p><div class="row"><button class="small active" data-library-kind="preset" aria-pressed="true">Preset Templates</button><button class="small" data-library-kind="custom" aria-pressed="false">Custom Templates</button></div><div id="presetLibrary"><h3>My Saved Preset Templates</h3><p class="muted">Copies of built-in templates are saved separately. You can edit their default fields and save further versions without changing the originals.</p><div id="presetCopyLibraryList" class="stack"></div><h3>Wellora — Quotation Presets</h3><div class="stack">
+<section id="library" class="panel"><div class="card"><h2>Template Library</h2><p class="muted">Ready-made presets use their own layouts and forms; custom templates keep the designs created in DocSystem.</p><div class="row"><button class="small active" data-library-kind="preset" aria-pressed="true">Preset Templates</button><button class="small" data-library-kind="custom" aria-pressed="false">Custom Templates</button></div><div id="presetLibrary">
+<div class="card" id="presetTemplateConfigurator">
+<div class="between"><h3>Configure Preset Templates</h3><button type="button" class="small cloud-admin-only" id="togglePresetConfigurator">Configure Preset Templates</button></div>
+<p class="muted">Duplicate and edit any original preset, including its available statements, then save a separate reusable template. Built-in presets stay protected.</p>
+<div id="presetConfigWorkspace" hidden>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0">
+<label>Document Family<select id="presetConfigureFamily"><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order</option><option value="delivery-ticket">Delivery Ticket</option><option value="returning-ticket">Returning Ticket</option><option value="invoice">Invoice</option></select></label>
+<label>Original Preset<select id="presetConfigureType"></select></label>
+<label>New Template Name<input id="presetConfigureName" placeholder="e.g. Offshore Rental Quotation" maxlength="100"></label>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+<button type="button" class="small" id="presetConfigLoad">Load Original</button>
+<button type="button" class="small primary" id="presetConfigSave">Save as New Template</button>
+</div>
+<p id="presetConfigStatus" class="muted">Select an original preset to customize.</p>
+<iframe id="presetConfigureFrame" title="Configure preset copy" loading="lazy" style="display:block;width:100%;min-height:900px;border:1px solid #e3e8ef;border-radius:10px;background:#fff"></iframe>
+</div></div>
+<h3>My Saved Preset Templates</h3><p class="muted">Copies of built-in templates are saved separately. You can edit their default fields and save further versions without changing the originals.</p><div id="presetCopyLibraryList" class="stack"></div><h3>Wellora — Quotation Presets</h3><div class="stack">
 <div class="cloud-entry"><div><b>Rental (Qty 3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental3">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental (Qty 10)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rental10">Use in Workspace</button></div>
 <div class="cloud-entry"><div><b>Rental + Consumables (Qty 5+3)</b><div class="muted">Quotation · Ready-Made Preset</div></div><button type="button" class="small" data-open-preset="rentcon53">Use in Workspace</button></div>
@@ -674,7 +689,6 @@ function workspaceAction(action){
  if(activeWorkspacePreset()){
   if(action==='new'){if(confirm('Start a new preset document? Unsaved changes will be lost.'))sendPresetCommand('new');return}
   if(action==='save')return sendPresetCommand('save');
-  if(action==='save-template'){const name=prompt('Name for this NEW reusable template (original preset stays unchanged):');if(name&&name.trim())return sendPresetCommand('save-template',{name:name.trim()});return;}
   if(action==='print'){
    const frame=document.getElementById('presetWorkspaceFrame');
    try{if(typeof frame.contentWindow?.printDoc==='function')return frame.contentWindow.printDoc();}
@@ -724,7 +738,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  document.getElementById('workspaceCustomChoice').hidden=preset;
  document.getElementById('workspacePresetSelect').disabled=!preset;
  document.getElementById('presetWorkspace').hidden=!preset;
- if(!preset)document.getElementById('workspacePresetCopies').hidden=true;
+
  main.classList.toggle('preset-editor-mode',preset);
  document.body.classList.toggle('preset-current',preset&&document.getElementById('create').classList.contains('active'));
  document.getElementById('workspaceStatus').textContent=preset?'Loading preset document…':'Custom document ready';
@@ -744,7 +758,6 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
 }
 window.addEventListener('message',e=>{
  if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
- if(e.data?.type==='docsystem-preset-template-saved'){document.getElementById('workspaceStatus').textContent='Saved new template: '+(e.data.name||'');document.getElementById('workspacePresetCopies').hidden=false;window.DocSystemCloud?.loadSavedPresetCopies();return;}
  if(e.data?.type==='docsystem-preset-ready'){
   const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
   const selection=document.getElementById('businessProfile');
@@ -791,15 +804,12 @@ document.addEventListener('click',e=>{
  if(e.target.id==='workspaceOpenSaved'){showDocPage('documents');return}
  if(e.target.id==='newBtn'){workspaceAction('new');return}
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
- if(e.target.id==='saveAsTemplateBtn'){workspaceAction('save-template');return}
- if(e.target.id==='myPresetCopiesBtn'){const panel=document.getElementById('workspacePresetCopies');panel.hidden=!panel.hidden;if(!panel.hidden)window.DocSystemCloud?.loadSavedPresetCopies();return}
- if(e.target.id==='refreshPresetCopiesBtn'){window.DocSystemCloud?.loadSavedPresetCopies();return}
  const savedCopy=e.target.closest('[data-open-preset-copy]');
  if(savedCopy){const family=savedCopy.dataset.copyFamily,base=savedCopy.dataset.copyBase,copyId=savedCopy.dataset.openPresetCopy;
   if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice'].includes(family))return;
   document.getElementById('workspacePresetFamily').value=family;fillPresetTypes();
   const options=document.getElementById('workspacePresetSelect');if(!Array.from(options.options).some(o=>o.value===base))return;
-  options.value=base;setWorkspaceSource('preset',true,null,copyId);document.getElementById('workspacePresetCopies').hidden=true;showDocPage('create');return;
+  options.value=base;setWorkspaceSource('preset',true,null,copyId);showDocPage('create');return;
  }
  if(e.target.id==='pdfBtn'){workspaceAction('print');return}
  const invoiceItem=e.target.closest('[data-open-invoice-preset]');
