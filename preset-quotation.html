@@ -497,7 +497,7 @@ function choosePresetBusiness(profileId){
  renderBusinessSelector();drawFieldsOnly();render();announcePresetReady();
 }
 
-let presetCopyApplied=false;
+let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
  if(!user||!state?.preset)return alert('Sign in and open a quotation preset first');
  if(!name||!name.trim())return;
@@ -517,6 +517,7 @@ async function openSavedPresetCopy(){
   savedCompanySnapshot=null;savedHeaderSnapshot=null;
   businessProfile=businessProfiles.find(p=>p.id===copy.profileId)||businessProfile;
   state=copy.defaults;
+  activeCopyDefaults=structuredClone(copy.defaults);
   state.preset=copy.basePresetId;
   state.reference='';
   state.date=new Date().toISOString().slice(0,10);
@@ -532,7 +533,7 @@ window.addEventListener('message',event=>{
  if(cmd==='save'){window.save();return}
  if(cmd==='save-template'){saveAsNewPresetTemplate(event.data.name);return}
  if(cmd==='print'){window.printDoc();return}
- if(cmd==='new'){fresh(state.preset);$('status').textContent='New quotation';announcePresetReady();informWorkspace('view',{preview:false});return}
+ if(cmd==='new'){if(activeCopyDefaults){id=null;savedCompanySnapshot=null;savedHeaderSnapshot=null;state=structuredClone(activeCopyDefaults);state.reference='';state.date=new Date().toISOString().slice(0,10);draw()}else fresh(state.preset);$('status').textContent='New quotation';announcePresetReady();informWorkspace('view',{preview:false});return}
  if(cmd==='business'){choosePresetBusiness(event.data.profileId);return}
 });
 function renderBusinessSelector(){
