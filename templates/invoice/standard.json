@@ -150,7 +150,7 @@
   },
   "calculations": {
     "duration": "Inclusive days: Hire To - Hire From + 1",
-    "lineAmount": "qty × duration × dailyRate",
+    "lineAmount": "duration × dailyRate (exact Excel formula M30 = K30*L30; Qty is not multiplied)",
     "subtotal": "SUM(line amounts)",
     "sst": "subtotal × SST% / 100",
     "grandTotal": "subtotal + SST"
