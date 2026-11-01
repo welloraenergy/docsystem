@@ -732,7 +732,8 @@ function loadPresetConfigurator(copyId=null){
  const family=document.getElementById('presetConfigureFamily').value,base=document.getElementById('presetConfigureType').value;
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html'}[family];
  if(!editor)return;
- document.getElementById('presetConfigureFrame').src=editor+'?version=20261101-config-mode3&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
+ frame.src=editor+'?version=20261101-config-mode4&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -832,7 +833,7 @@ document.addEventListener('click',e=>{
  if(e.target.id==='saveBtn'){workspaceAction('save');return}
  if(e.target.id==='togglePresetConfigurator'){const panel=document.getElementById('presetConfigWorkspace');panel.hidden=!panel.hidden;if(!panel.hidden&&!document.getElementById('presetConfigureFrame').getAttribute('src'))loadPresetConfigurator();return}
  if(e.target.id==='presetConfigLoad'){loadPresetConfigurator();return}
- if(e.target.id==='presetConfigSave'){const name=document.getElementById('presetConfigureName').value.trim();if(!name)return alert('Enter a new template name');const frame=document.getElementById('presetConfigureFrame');if(!frame.getAttribute('src'))return alert('Load a preset first');frame.contentWindow.postMessage({type:'docsystem-preset-command',action:'save-template',name},location.origin);return}
+ if(e.target.id==='presetConfigSave'){const name=document.getElementById('presetConfigureName').value.trim();if(!name)return alert('Enter a new template name');const frame=document.getElementById('presetConfigureFrame');if(!frame.getAttribute('src')||frame.dataset.family!==document.getElementById('presetConfigureFamily').value||frame.dataset.base!==document.getElementById('presetConfigureType').value)return alert('Click Load Original to load the selected preset before saving');frame.contentWindow.postMessage({type:'docsystem-preset-command',action:'save-template',name},location.origin);return}
  const editCopy=e.target.closest('[data-edit-preset-copy]');
  if(editCopy){const family=editCopy.dataset.copyFamily,base=editCopy.dataset.copyBase,id=editCopy.dataset.editPresetCopy;if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice'].includes(family))return;document.getElementById('presetConfigureFamily').value=family;presetConfiguratorTypes();document.getElementById('presetConfigureType').value=base;document.getElementById('presetConfigWorkspace').hidden=false;document.getElementById('presetConfigureName').value='';loadPresetConfigurator(id);return}
  const savedCopy=e.target.closest('[data-open-preset-copy]');
@@ -976,7 +977,8 @@ document.addEventListener('change',e=>{if(e.target.id==='presetHeaderProfileSele
  if(e.target.id==='workspaceTemplateSource'){setWorkspaceSource(e.target.value);return;}
  if(e.target.id==='workspacePresetFamily'){fillPresetTypes();setWorkspaceSource('preset',true);return;}
  if(e.target.id==='workspacePresetSelect'){setWorkspaceSource('preset',true);return;}
- if(e.target.id==='presetConfigureFamily'){presetConfiguratorTypes();return;}
+ if(e.target.id==='presetConfigureFamily'){presetConfiguratorTypes();document.getElementById('presetConfigStatus').textContent='Selection changed. Click Load Original before editing or saving.';return;}
+ if(e.target.id==='presetConfigureType'){document.getElementById('presetConfigStatus').textContent='Selection changed. Click Load Original before editing or saving.';return;}
  if(e.target.dataset.layoutCount){
   const l=layoutConfig(e.target.dataset.layoutCount);l.columns=Number(e.target.value);
   while(l.panels.length<l.columns)l.panels.push({align:'left',blocks:[]});
