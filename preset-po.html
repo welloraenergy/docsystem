@@ -167,7 +167,6 @@
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
 <section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
-<section class="card"><h3>Delivery / Collection &amp; Contact Details</h3><div class="fields" id="poTermsFields"></div></section>
 <section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><p id="termsFitStatus" class="muted" role="status" aria-live="polite">Checking how the terms fit on A4…</p><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
@@ -275,8 +274,7 @@ function draw(){
  const groups={
   poReferenceFields:['poDate','poNumber'],
   poVendorFields:['vendorName','vendorAddress','vendorContact','vendorPhone','vendorEmail'],
-  poQuotationFields:['vendorQuotationNo','vendorQuotationDate','currency','sstRate'],
-  poTermsFields:['fulfillmentMode','fulfillmentAddress','fulfillmentDate']
+  poQuotationFields:['vendorQuotationNo','vendorQuotationDate','currency','sstRate']
  };
  for(const [target,keys] of Object.entries(groups)){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
@@ -285,11 +283,16 @@ function draw(){
  $('termsEditor').innerHTML=template.terms.map(t=>{
   const hidden=Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number));
   const toggle='<label style="display:flex;flex-direction:row;gap:8px;align-items:center;margin:10px 0 3px"><input type="checkbox" data-po-term-toggle="'+t.number+'" style="width:auto;flex:none" '+(hidden?'':'checked')+'><strong>Show · '+t.number+'. '+esc(t.title)+'</strong></label>';
+  // The source field remains unchanged; only its editor moves under the clause it drives.
+  const linkedKeys=t.number===2?['fulfillmentAddress']:t.number===3?['fulfillmentDate']:t.number===4?['fulfillmentMode']:[];
+  const linkedControls=linkedKeys.map(key=>template.fields.find(f=>f.key===key)).filter(Boolean).map(htmlField).join('');
+  const linkedBox=linkedControls?'<div class="po-clause-inline-fields" style="border-top:1px solid #e2e8f0;padding-top:9px;margin-top:9px;display:grid;gap:9px">'+linkedControls+'</div>':'';
+
   if(t.number===6){
    const contacts=[['a) Contact Name','welloraContactName','text'],['b) Contact Number','welloraContactPhone','tel'],['c) Contact Email','welloraContactEmail','email']];
    return toggle+'<div class="po-terms-contact-editor"><strong>6. '+esc(t.title)+'</strong><div class="po-contact-edit-fields">'+contacts.map(([label,key,type])=>'<label>'+esc(label)+'<input type="'+type+'" data-po-field="'+key+'" value="'+esc(state.fields[key]||'')+'"></label>').join('')+'</div><label class="po-contact-notes">Additional notes (optional)<textarea data-term="6" rows="2" placeholder="Optional notes below a), b), c)">'+esc(state.termsOverrides?.[6]??'')+'</textarea></label></div>';
   }
-  return toggle+'<div class="preset-locked-statement" style="border:1px solid #d9e2eb;border-radius:6px;padding:10px;margin-bottom:10px"><p class="muted" style="white-space:pre-wrap">'+esc(t.sourceText||'Original formula/field-linked clause')+'</p>'+(new URLSearchParams(location.search).get('configure')==='1'?'<label>Optional replacement clause text<textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea></label>':'')+'</div>';
+  return toggle+'<div class="preset-locked-statement" style="border:1px solid #d9e2eb;border-radius:6px;padding:10px;margin-bottom:10px"><p class="muted" style="white-space:pre-wrap">'+esc(t.sourceText||'Original formula/field-linked clause')+'</p>'+linkedBox+(new URLSearchParams(location.search).get('configure')==='1'?'<label>Optional replacement clause text<textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea></label>':'')+'</div>';
  }).join('')+('<h4>Additional statements</h4>'+(state.extraTerms||[]).map((t,i)=>'<div style="border:1px solid #d9e2eb;padding:10px;border-radius:6px;margin:8px 0"><label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-po-extra-show="'+i+'" '+(t.enabled===false?'':'checked')+'>Show statement '+(i+1)+'</label><label>Heading<input data-po-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Text<textarea data-po-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-po-extra-remove="'+i+'">Remove added statement</button></div>').join('')+'<button type="button" class="small" id="poAddStatement">+ Add Statement</button>');
  $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'"></label>').join('')+'</fieldset>').join('');
  render();
