@@ -80,7 +80,7 @@ function render(){
  }finally{rendering=false}
 }
 function fitPreview(){const h=document.querySelector('.preview-column');const z=Math.min(1,((h?.clientWidth||800)-12)/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(z*1000)/1000))}
-function newDoc(){if(saving)return;docId=null;savedCompany=null;savedHeader=null;state=blank();draw();notify('New Invoice');ready()}
+function newDoc(){if(saving)return;docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):blank();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10)}draw();notify('New Invoice');ready()}
 async function save(){
  if(saving)return;if(!user)return alert('Sign in first');if(!String(state.fields.reference||'').trim())return alert('Enter Reference No.');if(!business().id)return alert('Select Business Profile');saving=true;
  try{
@@ -95,7 +95,7 @@ function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.compa
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()}
 window.printDoc=()=>{render();window.print()};
 
-let presetCopyApplied=false;
+let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
@@ -115,6 +115,7 @@ async function openSavedPresetCopy(){
   const selected=profiles.find(p=>p.id===copy.profileId);
   if(selected)profile=selected;
   state=copy.defaults;
+  activeCopyDefaults=structuredClone(copy.defaults);
   state.fields.reference='';state.items=Array.isArray(state.items)?state.items:[];
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
