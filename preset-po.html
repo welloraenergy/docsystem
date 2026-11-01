@@ -425,6 +425,7 @@ window.addEventListener('afterprint',()=>document.body.classList.remove('printin
 
 let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
+ if(new URLSearchParams(location.search).get('configure')!=='1')return;
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
  try{
