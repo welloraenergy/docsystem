@@ -732,7 +732,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261101-invoice-amount-words2':family==='returning-ticket'?'preset-return.html?version=20261101-wellora-one-line-less1':family==='delivery-ticket'?'preset-do.html?version=20261101-shared-ticket-layout-1':family==='purchase-order'?'preset-po.html?version=20261101-one-preset-pagefit-controller1':'preset-quotation.html?version=20261101-one-preset-pagefit-controller1';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261101-save-preset-copies2':family==='returning-ticket'?'preset-return.html?version=20261101-save-preset-copies2':family==='delivery-ticket'?'preset-do.html?version=20261101-save-preset-copies2':family==='purchase-order'?'preset-po.html?version=20261101-save-preset-copies2':'preset-quotation.html?version=20261101-save-preset-copies2';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
