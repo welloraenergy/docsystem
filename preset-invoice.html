@@ -33,6 +33,27 @@ function rowTotal(r){const days=dates(r);return days===null?0:days*count(r.daily
 function subtotal(){return state.items.reduce((v,r)=>v+rowTotal(r),0)}
 function tax(){return subtotal()*Math.max(0,count(state.fields.sstRate))/100}
 function total(){return subtotal()+tax()}
+function amountWords(amount){
+ const singles=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+ const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+ function under1000(n){
+  let out=[];if(n>=100){out.push(singles[Math.floor(n/100)]+' hundred');n%=100}
+  if(n>=20){out.push(tens[Math.floor(n/10)]+(n%10?'-'+singles[n%10]:''))}
+  else if(n>0)out.push(singles[n]);
+  return out.join(' ');
+ }
+ function integer(n){
+  if(!n)return 'zero';
+  let out=[];for(const [v,label] of [[1000000000,'billion'],[1000000,'million'],[1000,'thousand'],[1,'']]){
+   const group=Math.floor(n/v);if(group){out.push(under1000(group)+(label?' '+label:''));n%=v}
+  }return out.join(' ');
+ }
+ const currency=currencySymbol()==='USD'?'US dollars':'Malaysian ringgit',minor=currencySymbol()==='USD'?'cents':'sen';
+ const centsTotal=Math.round(Math.max(0,Number(amount)||0)*100);
+ const major=Math.floor(centsTotal/100),cents=centsTotal%100;
+ if(major>999999999999)return money(amount)+' '+currency;
+ return integer(major)+' '+currency+(cents?' and '+integer(cents)+' '+minor:' only');
+}
 function dateText(v){if(!v)return '';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?v:d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 function control(label,key,val,group,type='text'){const t=type==='multiline'?'textarea':'input';let inner=t==='textarea'?'<textarea data-group="'+group+'" data-key="'+key+'">'+esc(val)+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" type="'+(type==='date'?'date':type==='email'?'email':type==='number'?'number':'text')+'" '+(type==='number'?'step="any"':'')+' value="'+esc(val)+'">';if(type==='currency')inner='<select data-group="'+group+'" data-key="'+key+'"><option value="MYR" '+(val==='MYR'?'selected':'')+'>MYR</option><option value="USD" '+(val==='USD'?'selected':'')+'>USD</option></select>';return '<label class="'+(type==='multiline'?'wide':'')+'">'+esc(label)+inner+'</label>'}
 function draw(){if(!state||!template)return;$('invoiceFields').innerHTML=template.fields.map(f=>control(f.label,f.key,state.fields[f.key], 'fields',f.type)).join('');$('clientFields').innerHTML=template.clientFields.map(f=>control(f.label,f.key,state.client[f.key],'client',f.type)).join('');drawRows();drawNotes();drawSignatures();render()}
@@ -51,9 +72,9 @@ function render(){
   const c=template.items.columns,headings=c.map(x=>x.key==='dailyRate'?'Daily Rental Rate ('+currencySymbol()+'/Unit/Day)':x.key==='amount'?'Total Amount ('+currencySymbol()+')':x.label);
   const table='<table class="inv-table excel-table"><colgroup><col style="width:4%"><col style="width:27%"><col style="width:6%"><col style="width:5%"><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:14%"><col style="width:15%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+c.map(x=>'<td class="'+(['qty','dailyRate','amount','duration'].includes(x.key)?'number':'')+'">'+esc(x.key==='duration'?(dates(r)??''):x.key==='amount'?money(rowTotal(r)):x.key==='dailyRate'&&r[x.key]?money(r[x.key]):x.key==='hireFrom'||x.key==='hireTo'?(r[x.key]||''):r[x.key])+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const totals='<table class="inv-totals"><colgroup><col style="width:75%"><col style="width:12%"><col style="width:13%"></colgroup><tbody>'+[['Sub-Total',subtotal()],['SST ('+Number(state.fields.sstRate||0)+'%)',tax()],['Grand Total',total()]].map(([l,v])=>'<tr><td></td><td class="lbl">'+esc(l)+'</td><td class="num">'+esc(money(v))+'</td></tr>').join('')+'</tbody></table>';
-  const notes='<section class="inv-notes"><div class="inv-band">Notes</div>'+state.notes.map((note,i)=>{let content=note||'';if(i===0)content=content.replace(/(Account No:\\s*)([^\\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</section>';
+  const notes='<section class="inv-notes"><div class="inv-band">Notes</div>'+state.notes.map((note,i)=>{let content=note||'';if(i===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</section>';
   const sign='<table class="inv-sign"><colgroup><col style="width:13%"><col style="width:31%"><col style="width:22%"><col style="width:15%"><col style="width:19%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td>'+esc(expanded(d.name||''))+'</td><td>'+esc(expanded(d.position||''))+'</td><td>'+esc(dateText(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
-  $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(currencySymbol())+' '+esc(money(total()))+'</div>'+notes+sign+'</article>';
+  $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(amountWords(total()).replace(/^./,c=>c.toUpperCase()))+'</div>'+notes+sign+'</article>';
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{rendering=false}
 }
