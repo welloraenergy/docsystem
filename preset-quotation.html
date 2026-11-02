@@ -756,13 +756,18 @@ function render(){
 }
 
 // Fit the visible preview to its column without changing the A4 print dimensions.
+function mobileA4AvailableWidth(holder){
+ const viewport=document.documentElement.clientWidth||window.innerWidth;
+ const container=holder?.clientWidth||viewport;
+ return Math.max(1,Math.min(container,viewport)-24);
+}
 function fitEmbeddedPresetPreview(){
  if(!document.body.classList.contains('embedded-preset'))return;
  const holder=document.querySelector('.wrap>.preview-only');
  const paper=document.getElementById('paper');
  if(!holder||!paper)return;
  if(window.matchMedia('print').matches)return;
- const available=holder.clientWidth-16;
+ const available=mobileA4AvailableWidth(holder);
  const a4Width=210*96/25.4;
  const factor=Math.min(1,Math.max(.1,available/a4Width));
  const next=String(Math.round(factor*1000)/1000);
