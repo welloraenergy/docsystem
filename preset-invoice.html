@@ -98,7 +98,17 @@ function render(){
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{rendering=false}
 }
-function fitPreview(){const h=document.querySelector('.preview-column');const available=Math.max(1,Math.min(h?.clientWidth||window.innerWidth,window.innerWidth)-24);const z=Math.min(1,available/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(z*1000)/1000))}
+function mobileA4AvailableWidth(holder){
+ const viewport=document.documentElement.clientWidth||window.innerWidth;
+ const container=holder?.clientWidth||viewport;
+ return Math.max(1,Math.min(container,viewport)-24);
+}
+function fitPreview(){
+ const holder=document.querySelector('.preview-column');
+ const available=mobileA4AvailableWidth(holder);
+ const scale=Math.min(1,available/(210*96/25.4));
+ $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
+}
 function newDoc(){if(saving)return;docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):blank();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10)}draw();notify('New Invoice');ready()}
 async function save(){
  if(saving)return;if(!user)return alert('Sign in first');if(!String(state.fields.reference||'').trim())return alert('Enter Reference No.');if(!business().id)return alert('Select Business Profile');saving=true;
