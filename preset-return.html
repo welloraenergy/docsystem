@@ -44,7 +44,7 @@ import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serv
 import {getStorage,ref as storageRef,uploadBytes,getDownloadURL,deleteObject} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
 import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
-import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
+import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
@@ -136,7 +136,7 @@ function render(){
  const font=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(h.titleFont)?h.titleFont:'Arial';
   const titleAlign=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
   const titleText=String(h.titleText??'{documentTitle}').replace(/\{documentTitle\}/gi,"RETURN TICKET");
-  const renderedTitle=esc(text(titleText));
+  const renderedTitle=richPresetText(text(titleText));
  const title='<div class="dt-title" style="font-family:'+font+';font-size:'+size+'pt;color:'+color+';text-align:'+titleAlign+';white-space:pre-wrap">'+renderedTitle+'</div>';
  const headerHtml='<div class="dt-head"><div class="dt-ident">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="dt-right">'+title+'<div class="dt-meta">'+meta.map(([k,v])=>'<div class="dt-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
  const information=section=>{
