@@ -113,7 +113,10 @@ function render(){
  const color=/^#[0-9a-fA-F]{6}$/.test(h.titleColor||'')?h.titleColor:'#d6a900';
  const size=Math.max(8,Math.min(36,Number(h.titleSize)||16));
  const font=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(h.titleFont)?h.titleFont:'Arial';
- const title='<div class="dt-title" style="font-family:'+font+';font-size:'+size+'pt;color:'+color+'">DELIVERY TICKET</div>';
+  const titleAlign=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
+  const titleText=String(h.titleText??'{documentTitle}').replace(/\{documentTitle\}/gi,"DELIVERY TICKET");
+  const renderedTitle=esc(text(titleText));
+ const title='<div class="dt-title" style="font-family:'+font+';font-size:'+size+'pt;color:'+color+';text-align:'+titleAlign+';white-space:pre-wrap">'+renderedTitle+'</div>';
  const headerHtml='<div class="dt-head"><div class="dt-ident">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="dt-right">'+title+'<div class="dt-meta">'+meta.map(([k,v])=>'<div class="dt-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
  const information=section=>{
   const f=state[section.id];
