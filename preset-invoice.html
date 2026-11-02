@@ -9,7 +9,7 @@
  .paper{max-width:none!important;transform:none!important}
  .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
 }
-</style></head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+</style><style id="invoiceMobilePreviewGuard20261102">@media screen and (max-width:1099px){.preview-column,#paper{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}.preview-column .paper{max-width:none!important}}</style></head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
 <section class="card"><h3>Client Information</h3><div id="clientFields" class="fields"></div></section>
 <section class="card"><h3>Rental / Invoice Items</h3><div class="table-wrap"><table class="items-editor" id="itemsEditor"></table></div><p><button id="addRow">+ Add Row</button> <button id="removeRow">Remove Last</button></p><div id="totalSummary" class="muted"></div></section>
@@ -98,7 +98,7 @@ function render(){
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{rendering=false}
 }
-function fitPreview(){const h=document.querySelector('.preview-column');const z=Math.min(1,Math.max(1,(h?.clientWidth||window.innerWidth)-16)/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(z*1000)/1000))}
+function fitPreview(){const h=document.querySelector('.preview-column');const available=Math.max(1,Math.min(h?.clientWidth||window.innerWidth,window.innerWidth)-24);const z=Math.min(1,available/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(z*1000)/1000))}
 function newDoc(){if(saving)return;docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):blank();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10)}draw();notify('New Invoice');ready()}
 async function save(){
  if(saving)return;if(!user)return alert('Sign in first');if(!String(state.fields.reference||'').trim())return alert('Enter Reference No.');if(!business().id)return alert('Select Business Profile');saving=true;
