@@ -160,6 +160,12 @@
 .po-contact-notes{margin-top:3px}
 .po-contact-notes textarea{width:100%}
 @media(max-width:700px){.po-contact-edit-fields{grid-template-columns:1fr}}
+</style><style id="mobileA4Fit20261102">
+/* Shared mobile A4 preview: fit available width without changing print geometry. */
+@media screen and (max-width:1099px){
+ .paper{max-width:none!important;transform:none!important}
+ .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
+}
 </style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
@@ -393,7 +399,7 @@ function render(){
 function fitPreview(){
  const holder=document.querySelector('.preview-container'),paper=$('paper');
  if(!holder||!paper)return;
- const available=Math.max(1,holder.clientWidth-10),a4=210*96/25.4,scale=Math.min(1,available/a4);
+ const available=Math.max(1,holder.clientWidth-16),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
 function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
