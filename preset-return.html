@@ -22,6 +22,12 @@
  .paper .dt-section.ticket-wellora-destination .dt-info{min-height:17.5mm!important}
  .paper .dt-section.ticket-wellora-destination .dt-row.address{min-height:7.5mm!important}
 }
+</style><style id="mobileA4Fit20261102">
+/* Shared mobile A4 preview: fit available width without changing print geometry. */
+@media screen and (max-width:1099px){
+ .paper{max-width:none!important;transform:none!important}
+ .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
+}
 </style></head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
@@ -147,7 +153,7 @@ function render(){
  fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{busy=false}
 }
-function fitPreview(){const h=document.querySelector('.preview-column');const available=h?.clientWidth||800;const zoom=Math.min(1,(available-12)/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
+function fitPreview(){const h=document.querySelector('.preview-column');const available=Math.max(1,(h?.clientWidth||window.innerWidth)-16);const zoom=Math.min(1,available/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
 function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10);state.photos=Array(10).fill('')}draw();notify('New Returning Ticket');ready()}
 async function save(){
  if(saving)return;
