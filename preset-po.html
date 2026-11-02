@@ -396,10 +396,15 @@ function render(){
  posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{renderBusy=false}
 }
+function mobileA4AvailableWidth(holder){
+ const viewport=document.documentElement.clientWidth||window.innerWidth;
+ const container=holder?.clientWidth||viewport;
+ return Math.max(1,Math.min(container,viewport)-24);
+}
 function fitPreview(){
  const holder=document.querySelector('.preview-container'),paper=$('paper');
  if(!holder||!paper)return;
- const available=Math.max(1,holder.clientWidth-16),a4=210*96/25.4,scale=Math.min(1,available/a4);
+ const available=mobileA4AvailableWidth(holder),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
 function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
