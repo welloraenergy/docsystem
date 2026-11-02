@@ -131,7 +131,17 @@ function render(){
  fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{busy=false}
 }
-function fitPreview(){const h=document.querySelector('.preview-column');const available=Math.max(1,(h?.clientWidth||window.innerWidth)-16);const zoom=Math.min(1,available/(210*96/25.4));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
+function mobileA4AvailableWidth(holder){
+ const viewport=document.documentElement.clientWidth||window.innerWidth;
+ const container=holder?.clientWidth||viewport;
+ return Math.max(1,Math.min(container,viewport)-24);
+}
+function fitPreview(){
+ const holder=document.querySelector('.preview-column');
+ const available=mobileA4AvailableWidth(holder);
+ const scale=Math.min(1,available/(210*96/25.4));
+ $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
+}
 function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10);state.photos=Array(10).fill('')}draw();notify('New Delivery Ticket');ready()}
 async function save(){
  if(saving)return;
