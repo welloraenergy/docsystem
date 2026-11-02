@@ -22,7 +22,7 @@ import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller2';
-import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
+import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
 const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search);
@@ -88,7 +88,7 @@ function render(){
    const titleFont=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(h.titleFont)?h.titleFont:'Arial';
    const titleAlign=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
    const titleText=String(h.titleText??'{documentTitle}').replace(/\{documentTitle\}/gi,"INVOICE");
-   const renderedTitle=esc(expandPresetText(titleText,head,globals));
+   const renderedTitle=richPresetText(expandPresetText(titleText,head,globals));
   const headHtml='<div class="inv-head"><div class="inv-ident">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="inv-right"><div class="inv-title" style="color:'+color+';font-size:'+titleSize+'pt;font-family:'+titleFont+';text-align:'+titleAlign+';white-space:pre-wrap">'+renderedTitle+'</div><div class="inv-meta">'+[['Date',dateText(state.fields.date)],['Reference No',state.fields.reference],['Currency',currencySymbol()],['SST (%)',String(state.fields.sstRate||'0')]].map(([label,val])=>'<div class="inv-meta-line"><b>'+esc(label)+':</b><span>'+esc(val)+'</span></div>').join('')+'</div></div></div>';
   const client=state.client,line=(lab,val)=>'<div class="line'+(lab==='Address'?' address':'')+'"><b>'+esc(lab)+':</b><span>'+esc(expanded(val||'').replace(/\r\n?/g,'\n'))+'</span></div>';
   const clientHtml='<section class="inv-section"><div class="inv-band">Client Information</div><div class="inv-client"><div>'+line('Company',client.company)+line('Address',client.address)+line('Contact Person',client.contact)+line('Tel',client.tel)+line('Email',client.email)+'</div><div>'+line('Purchase Order No',client.poNumber)+line('Date',dateText(client.poDate))+line('Operator',client.operator)+line('Rig',client.rig)+line('Well',client.well)+line('Load Out',client.loadOut)+'</div></div></section>';
