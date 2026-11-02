@@ -28,6 +28,13 @@
  .paper{max-width:none!important;transform:none!important}
  .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
 }
+</style><style id="presetMobilePageFit20261102">
+@media screen and (max-width:1099px){
+ html,body,.workspace,.preview-container,.preview-column,#paper{max-width:100%!important;min-width:0!important;box-sizing:border-box}
+ .workspace>.editor,.workspace>.preview-container,.workspace>.preview-column{min-width:0!important}
+ #paper{width:100%!important;overflow:visible!important}
+ #paper>.paper{width:210mm!important;max-width:none!important;transform:none!important}
+}
 </style></head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
@@ -158,8 +165,8 @@ function render(){
  }finally{busy=false}
 }
 function mobileA4AvailableWidth(holder){
- const viewport=document.documentElement.clientWidth||window.innerWidth;
- const container=holder?.clientWidth||viewport;
+ const viewport=window.visualViewport?.width||document.documentElement.clientWidth||window.innerWidth;
+ const container=holder?.getBoundingClientRect().width||viewport;
  return Math.max(1,Math.min(container,viewport)-24);
 }
 function fitPreview(){
