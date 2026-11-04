@@ -404,6 +404,7 @@ function makeProfile(copyCurrent){
   name=name.trim()||'Untitled Business';
   let p=copyCurrent?clone(profile()):{company:clone(defaults.company),fonts:clone(defaults.fonts),templates:clone(defaults.templates)};
   p.id=nextProfileId();p.company.name=name;
+  normalizeCurrencies(p.company);
   Object.values(p.templates).forEach(t=>normalizeTemplateFields(t));
   settings.profiles.push(p);settings.activeProfileId=p.id;
   newDoc(Object.keys(p.templates)[0]);refresh()
