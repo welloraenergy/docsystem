@@ -380,6 +380,10 @@ function normalizeProfiles(){
 }
 normalizeProfiles();
 function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n=1;n<1000;n++){let k='extra_'+String(n).padStart(3,'0');if(!used.has(k))return k}return 'extra_'+Date.now()}window.addEventListener('docsystem-settings-sync',event=>{
+ if(event.detail?.ok&&activeWorkspacePreset()){
+  const frame=document.getElementById('presetWorkspaceFrame');
+  if(frame&&!frame.getAttribute('src'))setWorkspaceSource('preset',true);
+ }
  const note=document.getElementById('customLayoutSaveStatus');
  if(!note)return;
  note.textContent=event.detail?.ok?'Saved online in Firebase':'Online save failed: '+(event.detail?.message||'Unknown error');
@@ -407,7 +411,10 @@ function makeProfile(copyCurrent){
   normalizeCurrencies(p.company);
   Object.values(p.templates).forEach(t=>normalizeTemplateFields(t));
   settings.profiles.push(p);settings.activeProfileId=p.id;
-  newDoc(Object.keys(p.templates)[0]);refresh()
+  newDoc(Object.keys(p.templates)[0]);
+  const frame=document.getElementById('presetWorkspaceFrame');
+  if(frame)frame.removeAttribute('src');
+  refresh()
 }
 function newDoc(type){
   let t=profile().templates[type],fv={};
@@ -789,7 +796,13 @@ window.addEventListener('message',e=>{
  if(e.data?.type==='docsystem-preset-ready'){
   const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
   const selection=document.getElementById('businessProfile');
-  if(profileList.length){selection.innerHTML=profileList.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');selection.value=e.data.selected||profileList[0].id}
+  if(profileList.length){
+   const expected=settings.activeProfileId,found=profileList.some(p=>p.id===expected);
+   selection.innerHTML=profileList.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+   if(!e.data.locked&&!found){selection.disabled=true;document.getElementById('workspaceStatus').textContent='Business settings not synchronized yet. Do not save this preset.';return}
+   selection.value=e.data.locked?(e.data.selected||profileList[0].id):expected;
+   if(!e.data.locked&&e.data.selected!==expected)sendPresetCommand('business',{profileId:expected});
+  }
   selection.disabled=!!e.data.locked;
   document.getElementById('workspaceStatus').textContent=e.data.status||'Preset ready';
   return;
