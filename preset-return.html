@@ -63,6 +63,59 @@
  .paper table th{background:transparent;color:#111}
  .paper input,.paper textarea,.paper select{background:#fff;color:#111}
 }
+</style><style id="welloraWorkspaceReadability20261106">
+/* Contrast pass for nested editors. Only the application UI, never paper/PDF. */
+@media screen {
+  body{color:#f5f5f5}
+  .form-only,.form-only .card,.workspace .card,#docMain .workspace{color:#f5f5f5}
+  .form-only .preset-terms-list,.form-only .preset-terms-fitting,
+  .form-only .po-terms-contact-editor,.form-only .notice,
+  .form-only .note-editor,.form-only .preset-locked-statement,
+  .form-only .quote-clause-inputs,
+  .workspace .preset-terms-list,.workspace .preset-terms-fitting,
+  .workspace .po-terms-contact-editor,.workspace .notice,
+  .workspace .note-editor,.workspace .preset-locked-statement{
+    background:#171717!important;color:#f5f5f5!important;
+    border:1px solid #505050!important;border-radius:9px
+  }
+  .preset-terms-list,.preset-terms-fitting,.po-terms-contact-editor,
+  .notice,.note-editor,.preset-locked-statement{
+    background:#171717!important;color:#f5f5f5!important;border-color:#505050!important
+  }
+  /* Quotation clause cards have dynamically generated inline borders. */
+  .preset-terms-list > div,.preset-terms-list .excel-term,
+  .po-terms-contact-editor > div,.note-editor > div,
+  .preset-locked-statement > div{
+    color:#f5f5f5!important;border-color:#505050!important
+  }
+  .preset-terms-list strong,.preset-terms-list label,.preset-terms-list div,
+  .preset-terms-fitting label,.po-terms-contact-editor label,
+  .po-terms-contact-editor strong,.note-editor label,
+  .preset-locked-statement label{color:#f5f5f5!important}
+  .form-only .preset-terms-list input:not([type=checkbox]):not([type=radio]):not([type=color]),
+  .form-only .preset-terms-list textarea,
+  .form-only .po-terms-contact-editor input,.form-only .po-terms-contact-editor textarea,
+  .form-only .note-editor input,.form-only .note-editor textarea{
+    background:#fff!important;color:#111!important;border-color:#64748b!important
+  }
+  input[type=checkbox],input[type=radio]{accent-color:#d3af36}
+  .form-only input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),
+  .form-only select,.form-only textarea,
+  .workspace .card input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),
+  .workspace .card select,.workspace .card textarea{
+    background:#fff;color:#111;border-color:#8996a8
+  }
+  .form-only input::placeholder,.form-only textarea::placeholder,
+  .workspace .card input::placeholder,.workspace .card textarea::placeholder{color:#64748b}
+  .form-only input:focus,.form-only textarea:focus,.form-only select:focus,
+  .workspace .card input:focus,.workspace .card textarea:focus,.workspace .card select:focus{
+    border-color:#d3af36!important;outline:2px solid #d3af36!important;outline-offset:1px
+  }
+  .form-only label,.workspace .card label{color:#f5f5f5}
+  .form-only .muted,.workspace .card .muted{color:#cbd5e1}
+  .form-only button:disabled,.workspace .card button:disabled{opacity:.65}
+  /* Explicitly keep all document-preview text and colors governed by its template. */
+}
 </style></head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>

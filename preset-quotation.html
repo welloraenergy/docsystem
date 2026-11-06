@@ -419,6 +419,59 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .paper table th{background:transparent;color:#111}
  .paper input,.paper textarea,.paper select{background:#fff;color:#111}
 }
+</style><style id="welloraWorkspaceReadability20261106">
+/* Contrast pass for nested editors. Only the application UI, never paper/PDF. */
+@media screen {
+  body{color:#f5f5f5}
+  .form-only,.form-only .card,.workspace .card,#docMain .workspace{color:#f5f5f5}
+  .form-only .preset-terms-list,.form-only .preset-terms-fitting,
+  .form-only .po-terms-contact-editor,.form-only .notice,
+  .form-only .note-editor,.form-only .preset-locked-statement,
+  .form-only .quote-clause-inputs,
+  .workspace .preset-terms-list,.workspace .preset-terms-fitting,
+  .workspace .po-terms-contact-editor,.workspace .notice,
+  .workspace .note-editor,.workspace .preset-locked-statement{
+    background:#171717!important;color:#f5f5f5!important;
+    border:1px solid #505050!important;border-radius:9px
+  }
+  .preset-terms-list,.preset-terms-fitting,.po-terms-contact-editor,
+  .notice,.note-editor,.preset-locked-statement{
+    background:#171717!important;color:#f5f5f5!important;border-color:#505050!important
+  }
+  /* Quotation clause cards have dynamically generated inline borders. */
+  .preset-terms-list > div,.preset-terms-list .excel-term,
+  .po-terms-contact-editor > div,.note-editor > div,
+  .preset-locked-statement > div{
+    color:#f5f5f5!important;border-color:#505050!important
+  }
+  .preset-terms-list strong,.preset-terms-list label,.preset-terms-list div,
+  .preset-terms-fitting label,.po-terms-contact-editor label,
+  .po-terms-contact-editor strong,.note-editor label,
+  .preset-locked-statement label{color:#f5f5f5!important}
+  .form-only .preset-terms-list input:not([type=checkbox]):not([type=radio]):not([type=color]),
+  .form-only .preset-terms-list textarea,
+  .form-only .po-terms-contact-editor input,.form-only .po-terms-contact-editor textarea,
+  .form-only .note-editor input,.form-only .note-editor textarea{
+    background:#fff!important;color:#111!important;border-color:#64748b!important
+  }
+  input[type=checkbox],input[type=radio]{accent-color:#d3af36}
+  .form-only input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),
+  .form-only select,.form-only textarea,
+  .workspace .card input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),
+  .workspace .card select,.workspace .card textarea{
+    background:#fff;color:#111;border-color:#8996a8
+  }
+  .form-only input::placeholder,.form-only textarea::placeholder,
+  .workspace .card input::placeholder,.workspace .card textarea::placeholder{color:#64748b}
+  .form-only input:focus,.form-only textarea:focus,.form-only select:focus,
+  .workspace .card input:focus,.workspace .card textarea:focus,.workspace .card select:focus{
+    border-color:#d3af36!important;outline:2px solid #d3af36!important;outline-offset:1px
+  }
+  .form-only label,.workspace .card label{color:#f5f5f5}
+  .form-only .muted,.workspace .card .muted{color:#cbd5e1}
+  .form-only button:disabled,.workspace .card button:disabled{opacity:.65}
+  /* Explicitly keep all document-preview text and colors governed by its template. */
+}
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Details</h3><div class="grid" id="fields"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div class="grid preset-term-settings" id="presetTermSettings"></div><div class="preset-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><div id="rental3TermsControls" hidden><p class="muted">Original clauses remain protected. Use Show/Hide and enter any clause-specific values directly beneath the relevant statement; the wording updates automatically.</p><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
