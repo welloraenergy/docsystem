@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DocSystem</title>
-<link rel="icon" href="favicon-32x32.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>DocSystem · Wellora Energy</title>
+<meta name="theme-color" content="#000000"><link rel="icon" href="favicon-32x32.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style id="printPaperRule">@page{size:A4 portrait;margin:0}.layout-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}.layout-panel{min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f8fafc;border:1px solid #ddd;border-radius:8px}.layout-block{background:white;border:1px solid #ddd;border-radius:6px;padding:8px;min-width:0}.layout-block textarea{margin:6px 0}.flex-layout{display:grid;width:100%;align-items:start;gap:4mm}.flex-layout.cHead{min-height:0;grid-template-columns:unset}.flex-layout>div{overflow-wrap:anywhere}.layout-preserve{white-space:pre-wrap;overflow-wrap:anywhere}.footer-layout{font-size:9px}
 .panel-editor{min-height:135px;font-family:'Courier New',monospace;white-space:pre-wrap;resize:vertical;tab-size:4} .layout-panel{min-width:0} .layout-preserve{white-space:pre-wrap;overflow-wrap:anywhere}
 .shortcode-line{display:block;min-height:1em;white-space:pre-wrap;overflow-wrap:anywhere}.shortcode-line .logo{vertical-align:middle}
@@ -185,10 +185,32 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 @media screen and (max-width:999px){
  #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:12px!important}
 }
+</style><style id="welloraLoginTheme">
+/* Wellora Energy login identity, consistent with IMS / SCS / JMS. */
+:root{--wellora-gold:#d3af36;--wellora-gold-hover:#e0c15a}
+@media screen {
+  #authGate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow-y:auto;padding:20px 16px;background:#000;color:#fff;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  #authCard{box-sizing:border-box;width:100%;max-width:448px;margin:auto;padding:24px 28px 28px;background:#000;color:#fff;border:1px solid #374151;border-radius:16px;box-shadow:0 20px 25px -5px #0002}
+  #authBrand{display:flex;flex-direction:column;align-items:center;text-align:center;margin:0 0 22px}
+  #authBrand img{display:block;width:96px;height:96px;max-width:100%;object-fit:contain;margin:0 0 12px}
+  #authCard #authBrand h2{margin:0;color:#fff;font-size:26px;font-weight:900;line-height:1.25;letter-spacing:-.025em}
+  #authBrand p{margin:4px 0 0;color:var(--wellora-gold);font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+  #authCard form{display:grid;gap:16px;margin-top:20px}
+  #authCard form label{display:flex;flex-direction:column;gap:5px;color:#fff;font-size:14px;font-weight:500}
+  #authCard input{display:block;box-sizing:border-box;width:100%;min-height:42px;padding:10px 12px;border:1px solid #4b5563;border-radius:8px;background:#000;color:#fff;font-size:14px}
+  #authCard input:focus{outline:none;border-color:var(--wellora-gold);box-shadow:0 0 0 2px #d3af3633}
+  #authCard #authSubmit{width:100%;min-height:42px;padding:10px 16px;border:1px solid var(--wellora-gold);border-radius:8px;background:var(--wellora-gold);color:#000;font-size:14px;font-weight:700;cursor:pointer}
+  #authCard #authSubmit:hover{background:var(--wellora-gold-hover);border-color:var(--wellora-gold-hover)}
+  #authCard #authSubmit:disabled{opacity:.6;cursor:wait}
+  #authCard #authMessage{margin:0;color:#d1d5db;font-size:13px;line-height:1.5;text-align:center;overflow-wrap:anywhere}
+  #authCard #authMessage:empty{display:none}
+  @media(min-width:640px){#authCard{padding:32px}#authBrand img{width:112px;height:112px}#authCard #authBrand h2{font-size:30px}#authBrand p{font-size:14px}}
+  @media(max-width:400px){#authCard{padding:22px 20px}}
+}
 </style></head>
 <body>
-<div id="authGate" role="dialog" aria-modal="true" aria-label="DocSystem sign in"><div id="authCard"><h2>DocSystem</h2><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign in</button></form></div></div>
-<header><div><h1>DocSystem</h1><div class="sub">Flexible business document generator</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button></div></header>
+<div id="authGate" role="dialog" aria-modal="true" aria-label="Wellora Energy DocSystem sign in"><div id="authCard"><div id="authBrand"><img src="./icon-192.png" alt="Wellora Energy" width="192" height="192" draggable="false"><h2>DocSystem</h2><p>Portal Login</p></div><p id="authMessage" aria-live="polite">Checking sign-in...</p><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign In</button></form></div></div>
+<header><div><h1>Wellora Energy · DocSystem</h1><div class="sub">Document Management System</div></div><div class="actions"><span id="authAccount" hidden></span><button id="authLogout" type="button">Sign out</button></div></header>
 <nav class="tabs" aria-label="Main navigation"><button class="tab active" data-tab="create">Workspace</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="library">Templates</button><button id="settingsNavTab" class="tab cloud-admin-only" data-tab="settings">Settings</button></nav>
 <div id="settingsSubnav" class="clean-subnav" hidden>
 <button type="button" data-subpage="company">Business Profiles</button>
