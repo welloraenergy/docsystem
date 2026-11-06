@@ -1,6 +1,6 @@
 import * as cloud from "./cloud.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -52,6 +52,26 @@ form.addEventListener("submit", async event => {
     submit.disabled = false;
   }
 });
+const googleButton = document.getElementById("authGoogleSignIn");
+if (googleButton) {
+  googleButton.addEventListener("click", async () => {
+    googleButton.disabled = true;
+    message.textContent = "Signing in with Google...";
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await signInWithPopup(auth, provider);
+      // Existing onAuthStateChanged verifies approved Firestore profile and role.
+    } catch (error) {
+      console.error("DocSystem Google sign-in failed:", error);
+      message.textContent = error.code === "auth/popup-closed-by-user"
+        ? "Google sign-in was cancelled."
+        : "Google sign-in failed: " + (error.code || error.message);
+    } finally {
+      googleButton.disabled = false;
+    }
+  });
+}
 logout.addEventListener("click", async () => {
   lock("Signing out...");
   await signOut(auth);
