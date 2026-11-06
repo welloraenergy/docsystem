@@ -217,6 +217,72 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 #authDivider span:first-child,#authDivider span:last-child{height:1px;flex:1;background:#374151}
 #authCard form{margin-top:0}
 }
+</style><style id="welloraWorkspaceTheme20261106">
+/* Shared Wellora UI palette. Screen-only: A4 pages and printed/PDF documents retain their own styling. */
+@media screen {
+  :root{--we-gold:#d3af36;--we-gold-hover:#e0c15a;--we-green:#16a34a;--we-green-hover:#15803d;--we-red:#dc2626;--we-red-hover:#b91c1c;--we-edge:#343434;--we-muted:#b9c1cc}
+  html,body{background:#000;color:#fff}
+  body>header{background:#050505;color:#fff;border-bottom:1px solid #333}
+  body>header .sub{color:var(--we-gold)}
+  body>header #authAccount{color:#ddd}
+  body>nav.tabs{background:#090909;border-bottom:1px solid var(--we-edge)}
+  body>nav.tabs .tab{color:#e5e7eb;border:1px solid transparent}
+  body>nav.tabs .tab:hover{background:#1b1b1b;color:var(--we-gold)}
+  body>nav.tabs .tab.active{background:var(--we-gold);border-color:var(--we-gold);color:#000}
+  .clean-subnav{background:#000}
+  .clean-subnav button{background:#101010;border-color:#444;color:#e5e7eb}
+  .clean-subnav button.active,.clean-subnav button:hover{background:var(--we-gold);border-color:var(--we-gold);color:#000}
+  #docMain .card,#docMain .unified-workspace-toolbar,#docMain .workspace-picker,
+  #docMain .panel>.card,#docMain .notice{background:#0c0c0c;border-color:var(--we-edge);color:#fff}
+  #docMain .card h2,#docMain .card h3,#docMain .card h4{color:#fff}
+  #docMain .muted,#docMain .workspace-business-label .muted,#docMain #workspaceStatus{color:var(--we-muted)}
+  #docMain label,#docMain .workspace-form label{color:#e5e7eb}
+  #docMain .workspace input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  #docMain .workspace select,#docMain .workspace textarea,
+  #docMain .panel input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  #docMain .panel select,#docMain .panel textarea{
+    background:#080808;color:#fff;border-color:#4b5563
+  }
+  #docMain input:focus,#docMain select:focus,#docMain textarea:focus{outline:1px solid var(--we-gold);border-color:var(--we-gold)}
+  #docMain input::placeholder,#docMain textarea::placeholder{color:#a8a8a8}
+  #docMain input:disabled,#docMain select:disabled,#docMain textarea:disabled{background:#171717;color:#9ca3af;opacity:.8}
+  #docMain .cfg,#docMain .detailcfg,#docMain .totalcfg,#docMain .dragcol,
+  #docMain .layout-panel,#docMain .layout-block,#docMain .cloud-entry,
+  #docMain .preset-heading-configuration{background:#111;border-color:#3d3d3d;color:#f3f4f6}
+  #docMain .cloud-entry{border-bottom-color:#393939}
+  #docMain .editTable th,#docMain table:not(.paper table) th{background:#1b1b1b;color:#fff;border-color:#444}
+  #docMain .editTable td{border-color:#444}
+  #docMain .workspace-view,#docMain [data-library-kind]{background:#161616;color:#e5e7eb;border-color:#444}
+  #docMain .workspace-view.active,#docMain [data-library-kind].active{background:var(--we-gold);color:#000;border-color:var(--we-gold)}
+  #docMain button:not(.danger):not(.primary):not(.tab),
+  #docMain .filebtn,body>header button:not(.danger):not(.primary){
+    background:var(--we-gold);color:#000;border-color:var(--we-gold)
+  }
+  #docMain button:not(.danger):not(.primary):not(.tab):hover,
+  #docMain .filebtn:hover,body>header button:not(.danger):not(.primary):hover{background:var(--we-gold-hover);border-color:var(--we-gold-hover)}
+  #docMain button.primary{background:var(--we-gold);color:#000;border-color:var(--we-gold)}
+  #docMain button.primary:hover{background:var(--we-gold-hover);border-color:var(--we-gold-hover)}
+  /* Explicit semantic actions override generic gold. */
+  #docMain #saveBtn,#docMain #presetConfigSave,#docMain #cloudUserAdd,
+  #docMain button[data-action="save"],#docMain button[data-action="confirm"]{
+    background:var(--we-green);border-color:var(--we-green);color:#fff
+  }
+  #docMain #saveBtn:hover,#docMain #presetConfigSave:hover,#docMain #cloudUserAdd:hover{background:var(--we-green-hover);border-color:var(--we-green-hover)}
+  #docMain button.danger,#docMain #deleteProfile,#docMain #removeLogo,
+  #docMain button[data-remove-currency],#docMain button[data-placeholder-remove],
+  #docMain button[data-action="delete"],#docMain button[data-action="remove"]{
+    background:var(--we-red);border-color:var(--we-red);color:#fff
+  }
+  #docMain button.danger:hover,#docMain #deleteProfile:hover,#docMain #removeLogo:hover{background:var(--we-red-hover);border-color:var(--we-red-hover)}
+  #docMain button:disabled{opacity:.5;cursor:not-allowed}
+  /* Preview is a document, never a dark-mode UI surface. */
+  #docMain .paper,#docMain #preview .paper{background:#fff;color:#111}
+  #docMain .paper label,#docMain .paper h2,#docMain .paper h3,#docMain .paper h4{color:inherit}
+  #docMain .paper .docTable th{background:transparent;color:#111}
+  #docMain .paper .docTable td,#docMain .paper .docTable th{border-color:#555}
+  #docMain .previewTitle{color:#fff}
+  #presetWorkspaceFrame{background:#000}
+}
 </style></head>
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-label="Wellora Energy DocSystem sign in"><div id="authCard"><div id="authBrand"><img src="./icon-192.png" alt="Wellora Energy" width="192" height="192" draggable="false"><h2>DocSystem</h2><p>Portal Login</p></div><p id="authMessage" aria-live="polite">Checking sign-in...</p><button id="authGoogleSignIn" type="button" class="wellora-google-login"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.703-1.568 2.684-3.878 2.684-6.614z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.584-5.037-3.712H.956v2.332A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.963 10.708A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.281-1.708V4.96H.956A9 9 0 0 0 0 9c0 1.45.347 2.823.956 4.04l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.507.454 3.44 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .956 4.96l3.007 2.332z"/></svg>Sign in with Google</button><div id="authDivider"><span></span><span>OR</span><span></span></div><form id="authForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button id="authSubmit" type="submit" class="primary">Sign In</button></form></div></div>

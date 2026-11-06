@@ -28,6 +28,41 @@
  .paper{max-width:none!important;transform:none!important}
  .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
 }
+</style><style id="welloraPresetWorkspaceTheme20261106">
+@media screen {
+ :root{--we-gold:#d3af36;--we-gold-hover:#e0c15a;--we-green:#16a34a;--we-red:#dc2626}
+ html,body{background:#000;color:#fff}
+ body>header,header{background:#050505;color:#fff;border-bottom:1px solid #333}
+ header small{color:var(--we-gold)}
+ .bar,.toolbar{background:#0e0e0e;color:#fff;border-color:#393939}
+ .bar small,.toolbar span,.muted{color:#bfc4cb}
+ .card,.form-only .card,.workspace .card{background:#0d0d0d;color:#fff;border-color:#393939}
+ .card h2,.card h3,.card h4,.preview-header{color:#fff}
+ label{color:#e5e7eb}
+ .card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+ .card select,.card textarea,.bar input,.bar select,.toolbar input,.toolbar select,
+ .form-only input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+ .form-only select,.form-only textarea{
+    background:#080808;color:#fff;border-color:#4b5563
+ }
+ input:focus,select:focus,textarea:focus{outline:1px solid var(--we-gold);border-color:var(--we-gold)}
+ input::placeholder,textarea::placeholder{color:#a8a8a8}
+ button,.bar button,.toolbar button{background:var(--we-gold);border-color:var(--we-gold);color:#000}
+ button:hover,.bar button:hover,.toolbar button:hover{filter:brightness(1.08)}
+ button.active,button.primary,.primary{background:var(--we-gold);border-color:var(--we-gold);color:#000}
+ #saveBtn,button[onclick="save()"]{background:var(--we-green);border-color:var(--we-green);color:#fff}
+ #removeRow,button.remove,button.danger,
+ button[data-remove],button[data-remove-row],button[data-clear-photo],
+ button[data-invoice-remove-note],button[data-quote-extra-remove],button[data-po-extra-remove]{background:var(--we-red);border-color:var(--we-red);color:#fff}
+ button:disabled{opacity:.5;cursor:not-allowed}
+ table:not(.paper table) th{background:#181818;color:#fff;border-color:#444}
+ .card table td,.card table th{border-color:#454545}
+ .card table td input,.card table td textarea{background:#090909;color:#fff}
+ /* Keep printable pages white, irrespective of the editor palette. */
+ .paper{background:#fff;color:#111}
+ .paper table th{background:transparent;color:#111}
+ .paper input,.paper textarea,.paper select{background:#fff;color:#111}
+}
 </style></head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
