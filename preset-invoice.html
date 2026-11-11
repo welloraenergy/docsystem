@@ -125,7 +125,7 @@
 <section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
 <section class="card"><h3>Client Information</h3><div id="clientFields" class="fields"></div></section>
 <section class="card"><h3>Rental / Invoice Items</h3><div class="table-wrap"><table class="items-editor" id="itemsEditor"></table></div><p><button id="addRow">+ Add Row</button> <button id="removeRow">Remove Last</button></p><div id="totalSummary" class="muted"></div></section>
-<section class="card"><h3>Notes / Payment Details</h3><p class="muted">Original workbook's 4 notes and bank details; edit the note text as needed.</p><div id="notesEditor" class="note-editor"></div></section>
+<section class="card"><h3>Terms &amp; Conditions</h3><div id="notesEditor" class="note-editor"></div></section>
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Invoice Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
@@ -181,14 +181,14 @@ function drawNotes(){
  const hidden=Array.isArray(state.noteVisibility)?state.noteVisibility:[];
  const extras=Array.isArray(state.extraNotes)?state.extraNotes:[];
  const originals=state.notes.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
- '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input style="width:auto" type="checkbox" data-note-visible="'+i+'" '+(hidden[i]===false?'':'checked')+'>Show Note '+(i+1)+' (original, locked)</label>'+
+ '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input style="width:auto" type="checkbox" data-note-visible="'+i+'" '+(hidden[i]===false?'':'checked')+'>Show Clause '+(i+1)+' (default, locked)</label>'+
  '<div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:8px;background:#f6f8fa;border-radius:5px">'+esc(n)+'</div></div>').join('');
  const additions=extras.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-invoice-extra-visible="'+i+'" '+(n.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
- '<label>Custom statement<textarea data-invoice-extra-note="'+i+'" rows="3">'+esc(n.text||'')+'</textarea></label>'+
+ '<label>Additional term<textarea data-invoice-extra-note="'+i+'" rows="3">'+esc(n.text||'')+'</textarea></label>'+
  '<button type="button" data-invoice-remove-note="'+i+'">Remove added statement</button></div>').join('');
- $('notesEditor').innerHTML='<p class="muted">The original notes cannot be deleted or edited here. Show or hide each note and add your own. Your selections and new statements are saved online with this Invoice.</p>'+
- originals+'<h4>Additional statements</h4>'+additions+'<button type="button" id="invoiceAddNote">+ Add Statement</button>';
+ $('notesEditor').innerHTML='<p class="muted">Default terms are locked. Show or hide individual clauses and add your own terms. Selections are saved with this Invoice.</p>'+
+ originals+'<h4>Additional Terms</h4>'+additions+'<button type="button" id="invoiceAddNote">+ Add Term</button>';
 }
 function drawSignatures(){$('signatureFields').innerHTML=template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<fieldset><legend>'+esc(role)+'</legend>'+[['Name','name'],['Position','position'],['Date','date']].map(([label,key])=>control(label,key,d[key],'sign:'+role,key==='date'?'date':'text')).join('')+'</fieldset>'}).join('')}
 function render(){
@@ -208,7 +208,7 @@ function render(){
   const table='<table class="inv-table excel-table"><colgroup><col style="width:4%"><col style="width:27%"><col style="width:6%"><col style="width:5%"><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:14%"><col style="width:15%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+c.map(x=>'<td class="'+(['qty','dailyRate','amount','duration'].includes(x.key)?'number':'')+'">'+esc(x.key==='duration'?(dates(r)??''):x.key==='amount'?money(rowTotal(r)):x.key==='dailyRate'&&r[x.key]?money(r[x.key]):x.key==='hireFrom'||x.key==='hireTo'?(r[x.key]||''):r[x.key])+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const totals='<table class="inv-totals"><colgroup><col style="width:75%"><col style="width:12%"><col style="width:13%"></colgroup><tbody>'+[['Sub-Total',subtotal()],['SST ('+Number(state.fields.sstRate||0)+'%)',tax()],['Grand Total',total()]].map(([l,v])=>'<tr><td></td><td class="lbl">'+esc(l)+'</td><td class="num">'+esc(money(v))+'</td></tr>').join('')+'</tbody></table>';
   const allNotes=[...state.notes.map((note,i)=>({text:note,originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
-  const notes='<section class="inv-notes"><div class="inv-band">Notes</div>'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</section>';
+  const notes=allNotes.length?'<section class="inv-notes"><div class="inv-band">Terms &amp; Conditions</div>'+allNotes.map((note,i)=>'<div class="inv-note"><span>'+(i+1)+')</span><span>'+esc(note.text||'')+'</span></div>').join('')+'</section>':'';
   const sign='<table class="inv-sign"><colgroup><col style="width:13%"><col style="width:31%"><col style="width:22%"><col style="width:15%"><col style="width:19%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td>'+esc(expanded(d.name||''))+'</td><td>'+esc(expanded(d.position||''))+'</td><td>'+esc(dateText(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
   $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(amountWords(total()).replace(/^./,c=>c.toUpperCase()).replace(/\.*$/,'.'))+'</div>'+notes+sign+'</article>';
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
