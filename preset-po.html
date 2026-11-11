@@ -266,6 +266,15 @@
 .paper .po-items tbody tr:nth-child(odd) td{background:#f3f3f3!important}
 .paper .po-items tbody tr:nth-child(even) td{background:#fff!important}
 @media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+/* Preset typography defaults v20261111: configurable title/header styles remain untouched. */
+.paper .po-vendor-title,.paper .po-terms-header,.paper .po-section-title{font-size:9pt!important}
+.paper .po-items thead th{font-size:8pt!important}
+.paper .po-items tbody td{font-size:8pt}
+.paper .po-vendor-row{font-size:8pt}
+.paper .po-words{font-size:8pt}
+.paper .po-totals{font-size:8.5pt}
+.paper .po-signatures tbody td{font-size:8pt}
 </style>
 </head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
@@ -356,7 +365,7 @@ async function chooseTemplate(id,clear=true){
  if(!response.ok)throw Error('Cannot load '+entry.path);
  template=await response.json();
  if(clear||!state){
-  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],termsFontSize:8,termsPageFit:"flow"};
+  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],termsFontSize:7.5,termsPageFit:"flow"};
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
   state.fields.currency=business().defaultCurrency||'MYR';
@@ -369,7 +378,7 @@ async function chooseTemplate(id,clear=true){
 function draw(){
  if(!state||!template)return;
  $('poTemplate').value=state.poType;
- $('termsFontSize').value=String(state.termsFontSize||8);
+ $('termsFontSize').value=String(state.termsFontSize||7.5);
  $('termsPageFit').value=['flow','auto','normal'].includes(state.termsPageFit)?state.termsPageFit:'flow';
  const htmlField=f=>{
   const value=state.fields[f.key]??'';
@@ -473,7 +482,7 @@ function render(){
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
  // Page fitting is evaluated on unscaled, physical A4 pages.
  const paperRoot=$('paper');
- const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||8,fit:state.termsPageFit||'flow'});
+ const totalPages=paginatePresetDocument(paperRoot,{size:state.termsFontSize||7.5,fit:state.termsPageFit||'flow'});
  $('pageCount').textContent=totalPages+' page(s)';
  const termPages=Number(paperRoot.dataset.pageFitTermsPages)||0;
  const termsStartPage=Number(paperRoot.dataset.pageFitTermsStartPage)||1;
@@ -482,7 +491,7 @@ function render(){
  const signaturePage=pages.findIndex(p=>p.querySelector('table.po-signatures'))+1;
  const fitMode=paperRoot.dataset.pageFitMode||'flow';
  const effectivePx=Number(paperRoot.dataset.pageFitActualSizePx)||0;
- const effectivePt=effectivePx ? Math.round(effectivePx*72/96*10)/10 : (state.termsFontSize||8);
+ const effectivePt=effectivePx ? Math.round(effectivePx*72/96*10)/10 : (state.termsFontSize||7.5);
  const explanation=termPages<=1
   ? (termsStartPage===1?'Terms fit on page 1; fitting modes may look identical until the terms overflow.':'Terms start on page '+termsStartPage+' and fit there without splitting.')
   : 'Terms start on page '+termsStartPage+' and continue across '+termPages+' A4 pages.';
@@ -578,7 +587,7 @@ $('poTemplate').addEventListener('change',e=>{if(confirm('Switch PO type and cle
 $('addRow').addEventListener('click',()=>{state.items.push(Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));drawRows();render()});
 $('removeRow').addEventListener('click',()=>{if(state.items.length>1){state.items.pop();drawRows();render()}});
 $('itemsEditor').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(!b)return;state.items.splice(Number(b.dataset.remove),1);if(!state.items.length)state.items=[{}];drawRows();render()});
-$('termsFontSize').addEventListener('change',e=>{state.termsFontSize=Number(e.target.value)||8;render()});
+$('termsFontSize').addEventListener('change',e=>{state.termsFontSize=Number(e.target.value)||7.5;render()});
 $('termsPageFit').addEventListener('change',e=>{state.termsPageFit=e.target.value;render()});
 document.addEventListener('input',e=>{
  const d=e.target.dataset;
