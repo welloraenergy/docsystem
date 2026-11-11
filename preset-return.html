@@ -116,7 +116,20 @@
   .form-only button:disabled,.workspace .card button:disabled{opacity:.65}
   /* Explicitly keep all document-preview text and colors governed by its template. */
 }
-</style></head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+</style>
+<style id="presetA4HeaderGridParity20261111">
+/* Same A4 section typography, table fills, and visible rules in screen preview and print. */
+.paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper table{border-collapse:collapse}
+.paper table th,.paper table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .dt-section-title,.paper .dt-table-title,.paper .ticket-comments-title{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
+.paper .dt-items thead th{font-size:7pt!important;font-family:Arial,sans-serif!important}
+.paper .dt-items th,.paper .dt-items td,.paper .dt-sign th,.paper .dt-sign td,.paper .dt-photos th,.paper .dt-photos td{border:1px solid #666!important}
+.paper .dt-items tbody tr:nth-child(odd) td{background:#f3f3f3!important}
+.paper .dt-items tbody tr:nth-child(even) td{background:#fff!important}
+@media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style>
+</head><body><header><h2>Returning Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
 <section class="card"><h3>Delivery Address &amp; Contact Person</h3><div class="section-fields" id="deliverToFields"></div></section>
