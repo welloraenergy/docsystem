@@ -484,7 +484,19 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .heading-settings-card #quotationHeadingFields button{background:#d3af36;border-color:#d3af36;color:#000}
  @media(max-width:700px){.heading-settings-card .heading-settings-hint{display:block;margin:6px 0 0 0}.heading-settings-card #quotationHeadingFields{grid-template-columns:1fr}}
 }
-</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
+</style>
+<style id="presetA4HeaderGridParity20261111">
+/* Same A4 section typography, table fills, and visible rules in screen preview and print. */
+.paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper table{border-collapse:collapse}
+.paper table th,.paper table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .excel-client-title,.paper .excel-terms-header{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
+.paper .excel-table thead th{font-size:7pt!important;font-family:Arial,sans-serif!important;font-weight:700!important}
+.paper .excel-table th,.paper .excel-table td{border:1px solid #777!important}
+.paper .excel-table td{border-color:#777!important}
+@media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style>
+</head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card"><h3>Quotation Information</h3><div class="grid" id="quotationInfoFields"></div></div><div class="card"><h3>Client Information</h3><div class="grid" id="clientInfoFields"></div><div class="grid" id="operationalInfoFields" style="margin-top:12px"></div></div><div class="card"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div></div><div class="card"><h3>Terms and Conditions</h3><div class="grid preset-term-settings" id="presetTermSettings"></div><div class="preset-terms-fitting"><label>Terms font size<select id="termsFontSize"><option value="6.5">6.5 pt</option><option value="7">7 pt</option><option value="7.5">7.5 pt</option><option value="8">8 pt</option><option value="8.5">8.5 pt</option><option value="9">9 pt</option></select></label><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="auto">Auto Fit (minimum 6.5pt)</option><option value="normal">Normal size / add page</option></select></label></div><div id="rental3TermsControls" hidden><p class="muted">Original clauses remain protected. Use Show/Hide and enter any clause-specific values directly beneath the relevant statement; the wording updates automatically.</p><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
