@@ -254,7 +254,20 @@
   .form-only button:disabled,.workspace .card button:disabled{opacity:.65}
   /* Explicitly keep all document-preview text and colors governed by its template. */
 }
-</style></head><body>
+</style>
+<style id="presetA4HeaderGridParity20261111">
+/* Same A4 section typography, table fills, and visible rules in screen preview and print. */
+.paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper table{border-collapse:collapse}
+.paper table th,.paper table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .po-vendor-title,.paper .po-terms-header,.paper .po-section-title{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
+.paper .po-items thead th{font-size:7pt!important;font-family:Arial,sans-serif!important;background:#080808!important;color:#fff!important}
+.paper .po-items th,.paper .po-items td{border:1px solid #666!important}
+.paper .po-items tbody tr:nth-child(odd) td{background:#f3f3f3!important}
+.paper .po-items tbody tr:nth-child(even) td{background:#fff!important}
+@media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style>
+</head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
