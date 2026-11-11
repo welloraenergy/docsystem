@@ -109,6 +109,17 @@
 .paper .inv-table tbody tr:nth-child(odd) td{background:#f3f3f3!important}
 .paper .inv-table tbody tr:nth-child(even) td{background:#fff!important}
 @media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+/* Preset typography defaults v20261111: configurable title/header styles remain untouched. */
+.paper .inv-band{font-size:9pt!important}
+.paper .inv-table thead th{font-size:8pt!important}
+.paper .inv-table tbody td{font-size:8pt}
+.paper .inv-client .line{font-size:8pt}
+.paper .inv-meta{font-size:8pt}
+.paper .inv-notes{font-size:8pt}
+.paper .inv-note{font-size:7.5pt}
+.paper .inv-sign tbody td{font-size:8pt}
+.paper .inv-totals{font-size:8.5pt}
 </style>
 </head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
