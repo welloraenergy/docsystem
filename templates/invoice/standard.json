@@ -158,23 +158,26 @@
   "notes": [
     {
       "no": "1",
-      "text": "GOODS SOLD ARE NOT REFUNDABLE/RETURNABLE."
+      "title": "Please remit to:",
+      "lines": [
+        "Account Name: WELLORA ENERGY SDN. BHD.",
+        "Account No: 3-2509132-14 (MYR Account)",
+        "Name of Bank: Public Bank Berhad",
+        "SWIFT Code: PBBEMYKL",
+        "Bank Address: Ground Floor Bangunan Public Bank, No.5 Jalan Merdeka, 87000 W.P. Labuan."
+      ]
     },
     {
       "no": "2",
-      "text": "INTEREST RATE OF 1.5% PER MONTH WILL BE CHARGED ON OVERDUE ACCOUNT."
+      "text": "Any query to this Invoice must be made within seven (7) days."
     },
     {
       "no": "3",
-      "text": "THIS INVOICE IS TO BE CONSIDERED ACCEPTABLE IN FULL IF NO COMPLAINT MADE WITHIN SEVEN (7) DAYS FROM THE DATE HEREOF."
+      "text": "Late Payment: Payment for this Invoice is due in full within thirty (30) days from the invoice date. A late payment interest rate of 2% per month will be applied to any unpaid remaining balance after the due date."
     },
     {
       "no": "4",
-      "text": "ALL CHEQUES SHOULD BE CROSSED BY \"A/C PAYEE ONLY\" AND MADE PAYABLE TO \"PLATINUM OMEGA SDN. BHD.\""
-    },
-    {
-      "no": "5",
-      "text": "PAYMENT MAY ALSO BE MADE VIA ONLINE BANKING TO OUR BANK ACCOUNT:\n  - BANK: MAYBANK BANKING BERHAD\n  - ACC NO.: 5-15120-00022-5\n  - ACC CURRENCY: MYR"
+      "text": "Please send us your payment transfer slip to our email at liang.ss@welloraenergy.com once the payment is made."
     }
   ],
   "bankAccounts": {
