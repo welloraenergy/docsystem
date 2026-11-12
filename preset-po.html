@@ -66,40 +66,50 @@
 .paper .po-signatures thead th,.paper .po-signatures tbody th{border-color:#111!important}
 @media print{.paper .po-vendor-row strong{border-right:1px solid #aaa!important}.paper .po-items th,.paper .po-items td,.paper .po-signatures tr>td{border:1px solid #777!important}}
 </style><style id="poExcelContinuousLinesAndTermsBox20261101">
-/* Vendor labels determine the two dividers independently, no fixed widths. */
+/* Matches the established Quotation client table: continuous rules across
+   each full-height information column, instead of fragmented row borders. */
 .paper .po-vendor-section{width:100%;margin:2.5mm 0 4mm;box-sizing:border-box}
 .paper .po-vendor-title{
  background:#000!important;color:#fff!important;
- text-align:center;font-weight:700;margin:0!important;padding:1.2mm 0!important;
- border:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact
+ text-align:center;font-weight:700;margin:0!important;
+ padding:1.2mm 0!important;border:0!important;
+ -webkit-print-color-adjust:exact;print-color-adjust:exact
 }
 .paper .po-vendor{
  display:grid!important;grid-template-columns:58% 42%!important;
  gap:0!important;margin:0!important;padding:0!important;
  min-height:39mm!important;align-items:stretch!important;
- border:1px solid #444!important;border-top:0!important;box-sizing:border-box!important
+ border:1px solid #444!important;border-top:0!important;
+ box-sizing:border-box!important
 }
 .paper .po-vendor>div{
- display:grid!important;grid-template-columns:max-content minmax(0,1fr)!important;
- grid-auto-rows:minmax(5.3mm,auto)!important;align-content:stretch!important;
- position:relative!important;min-width:0!important;min-height:39mm!important;padding:0!important
+ display:flex!important;flex-direction:column!important;
+ position:relative!important;min-width:0!important;
+ min-height:39mm!important;padding:0!important
 }
-.paper .po-vendor-left{border-right:1px solid #444!important}
-.paper .po-vendor-right{border-left:0!important}
-.paper .po-vendor>div::before{content:none!important;border:0!important}
-.paper .po-vendor .po-vendor-row{display:contents!important}
+.paper .po-vendor-left{--po-label-width:24mm;border-right:1px solid #444!important}
+.paper .po-vendor-right{--po-label-width:19mm;border-left:0!important}
+.paper .po-vendor>div::before{
+ content:"";position:absolute;left:var(--po-label-width);top:0;bottom:0;
+ border-left:1px solid #999!important;pointer-events:none;z-index:1
+}
+.paper .po-vendor .po-vendor-row{
+ display:grid!important;grid-template-columns:var(--po-label-width) minmax(0,1fr)!important;
+ gap:0!important;margin:0!important;min-height:5.3mm!important;
+ line-height:1.35;align-items:start!important
+}
 .paper .po-vendor .po-vendor-row strong{
- display:block!important;box-sizing:border-box!important;text-align:right!important;
- padding:1.1mm 2.5mm 1mm .7mm!important;border:0!important;
- border-right:1px solid #999!important;white-space:nowrap!important;
- min-height:0!important;align-self:stretch!important;line-height:1.35!important
+ border:0!important;display:block!important;text-align:right!important;
+ padding:1.1mm 2.5mm 1mm .7mm!important;white-space:normal;
+ min-height:0!important
 }
 .paper .po-vendor .po-vendor-row span{
- display:block!important;box-sizing:border-box!important;
  padding:1.1mm 1.7mm 1mm 1.5mm!important;min-width:0!important;
- white-space:pre-wrap!important;overflow-wrap:anywhere!important;align-self:stretch!important;line-height:1.35!important
+ white-space:pre-wrap!important;overflow-wrap:break-word
 }
-.paper .po-vendor-left .po-address-row strong,.paper .po-vendor-left .po-address-row span{min-height:19mm!important}
+.paper .po-vendor-left .po-address-row{flex:1!important;min-height:19mm!important}
+.paper .po-vendor-left .po-address-row span{min-height:18mm!important}
+.paper .po-vendor-right .po-vendor-row{min-height:5.3mm!important}
 /* Quotation's Terms & Conditions uses one box around heading and clauses,
    with a continuous vertical separator after the number column. */
 .paper .po-terms-section.excel-terms-section{
@@ -138,7 +148,7 @@
 }
 @media print{
  .paper .po-vendor{border:1px solid #444!important;border-top:0!important}
- .paper .po-vendor .po-vendor-row strong{border-right:1px solid #999!important}
+ .paper .po-vendor>div::before{border-left:1px solid #999!important}
  .paper .po-terms-section.excel-terms-section{border:1px solid #444!important}
  .paper .po-terms-section .po-terms::before{border-left:1px solid #999!important}
 }
