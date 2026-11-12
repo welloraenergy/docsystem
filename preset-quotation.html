@@ -471,7 +471,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .paper .excel-sig>div{font-size:8pt}
 .paper .excel-company-details:not([style]){font-size:7.5pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261112-invoice-line-clean32">
+<link rel="stylesheet" href="./preset-typography.css?v=20261112-meta-contained35">
 
 <style id="welloraPresetRhythm20261112">
 /* Harmonized vertical rhythm for all five original preset document families. */
@@ -490,32 +490,21 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 </style>
 <style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style>
 <style id="welloraQuotationMetaValueAlignment20261112">
-/* Single shared two-column grid: labels move with their values.
-   Its longest reference (including revision suffix) sets the overall width. */
+/* Document metadata stays together at the right edge; reserve full revision suffix (0001-R1). */
 @media screen,print {
- .paper .excel-right{align-items:flex-end!important;min-width:0!important}
+ .paper .excel-right{align-items:flex-end!important;min-width:0!important;justify-content:space-between!important}
  .paper .excel-ref{
-   position:relative!important;top:-2mm!important;left:auto!important;right:auto!important;
-   display:grid!important;
-   grid-template-columns:23mm max-content!important;
-   grid-auto-rows:minmax(4.3mm,auto)!important;
-   column-gap:1.5mm!important;
-   width:max-content!important;max-width:100%!important;min-width:0!important;
+   position:relative!important;top:-2mm!important;right:auto!important;left:auto!important;
+   display:grid!important;grid-template-columns:max-content max-content!important;
+   width:max-content!important;min-width:0!important;max-width:100%!important;
+   column-gap:1.5mm!important;grid-auto-rows:minmax(4.2mm,auto)!important;
+   margin:0 2mm 4mm auto!important;padding:0!important;
+   align-self:flex-end!important;font-size:7.1pt!important;line-height:1.3!important;
    box-sizing:border-box!important;
-   align-self:flex-end!important;
-   margin-left:auto!important;margin-right:0!important;
-   padding:0 2mm 0 0!important;
  }
  .paper .excel-ref .ref-line{display:contents!important}
- .paper .excel-ref .ref-line span:first-child{
-   text-align:right!important;align-self:baseline!important;
-   padding:0!important;border:0!important;white-space:nowrap!important
- }
- .paper .excel-ref .ref-line span:last-child{
-   display:block!important;text-align:left!important;align-self:baseline!important;
-   padding:0!important;min-width:0!important;
-   white-space:nowrap!important;overflow-wrap:normal!important;background:transparent!important
- }
+ .paper .excel-ref .ref-line span:first-child{text-align:right!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;font-weight:600!important}
+ .paper .excel-ref .ref-line span:last-child{text-align:left!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;overflow:visible!important;overflow-wrap:normal!important;background:transparent!important}
 }
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
