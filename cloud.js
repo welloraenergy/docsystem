@@ -139,6 +139,12 @@ export async function openDocument(id,duplicate=false){
       const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo)?'standard':isPo?'purchase-credit':'rental3'));
       const family=isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
       const saved=duplicate?'':(isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      if(!duplicate && typeof window.DocSystemOpenPreset==='function'){
+        window.DocSystemOpenPreset(data,id);
+        notify("Opening saved document: "+(data.number||id));
+        return;
+      }
+      // Legacy fallback for duplication or an older workspace without the in-place handler.
       window.location.href="./?preset="+preset+family+saved;
       return;
     }
