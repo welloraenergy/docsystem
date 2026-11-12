@@ -321,7 +321,7 @@ import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261112-preserve-lettered-42';
 import {sharedPresetSlot,expandPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
