@@ -121,7 +121,7 @@
 .paper .inv-sign tbody td{font-size:8pt}
 .paper .inv-totals{font-size:8.5pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261112-online-table8">
+<link rel="stylesheet" href="./preset-typography.css?v=20261112-invoice-qty-border9">
 </head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
 <section class="card"><h3>Client Information</h3><div id="clientFields" class="fields"></div></section>
@@ -153,7 +153,7 @@ function expanded(v){return expandPresetText(v,business(),globals)}
 function blank(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('INV',new Date().toISOString().slice(0,10)),currency:business().defaultCurrency||'MYR',sstRate:'0'},client:Object.fromEntries(template.clientFields.map(f=>[f.key,''])),items:Array.from({length:7},(_,i)=>({no:String(i+1),description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''})),notes:template.notes.map(n=>n.no==='1'?n.lines.join('\n'):n.text),noteVisibility:[],extraNotes:[],signatures:Object.fromEntries(template.signatures.roles.map(x=>[x,{name:'',position:'',date:''}]))}}
 const currencySymbol=()=>state.fields.currency==='USD'?'USD':'MYR',money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}),count=n=>Number(n)||0;
 function dates(r){if(!r.hireFrom||!r.hireTo)return null;const a=new Date(r.hireFrom+'T12:00:00'),b=new Date(r.hireTo+'T12:00:00');if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime()))return null;return Math.max(0,Math.round((b-a)/86400000)+1)}
-function rowTotal(r){const days=dates(r);return days===null?0:days*count(r.dailyRate)}
+function rowTotal(r){const days=dates(r);return days===null?0:count(r.qty)*days*count(r.dailyRate)}
 function subtotal(){return state.items.reduce((v,r)=>v+rowTotal(r),0)}
 function tax(){return subtotal()*Math.max(0,count(state.fields.sstRate))/100}
 function total(){return subtotal()+tax()}
@@ -214,7 +214,7 @@ function render(){
   const table='<table class="inv-table excel-table"><colgroup><col style="width:5%"><col style="width:31%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:12%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+c.map(x=>'<td class="'+(['qty','dailyRate','amount','duration'].includes(x.key)?'number':'')+'">'+esc(x.key==='duration'?(dates(r)??''):x.key==='amount'?money(rowTotal(r)):x.key==='dailyRate'&&r[x.key]?money(r[x.key]):x.key==='hireFrom'||x.key==='hireTo'?(r[x.key]||''):r[x.key])+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const totals='<table class="inv-totals"><colgroup><col style="width:75%"><col style="width:12%"><col style="width:13%"></colgroup><tbody>'+[['Sub-Total',subtotal()],['SST ('+Number(state.fields.sstRate||0)+'%)',tax()],['Grand Total',total()]].map(([l,v])=>'<tr><td></td><td class="lbl">'+esc(l)+'</td><td class="num">'+esc(money(v))+'</td></tr>').join('')+'</tbody></table>';
   const allNotes=[...state.notes.map((note,i)=>({text:note,originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
-  const notes='<section class="inv-notes"><div class="inv-band">Notes</div>'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</section>';
+  const notes='<section class="inv-notes"><div class="inv-band">Notes</div><div class="inv-notes-body">'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</div></section>';
   const sign='<table class="inv-sign"><colgroup><col style="width:13%"><col style="width:31%"><col style="width:22%"><col style="width:15%"><col style="width:19%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td>'+esc(expanded(d.name||''))+'</td><td>'+esc(expanded(d.position||''))+'</td><td>'+esc(dateText(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
   $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(amountWords(total()).replace(/^./,c=>c.toUpperCase()).replace(/\.*$/,'.'))+'</div>'+notes+sign+'</article>';
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
