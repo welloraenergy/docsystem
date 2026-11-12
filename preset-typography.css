@@ -316,3 +316,47 @@
  font-weight:700;
  text-align:right;
 }
+
+/* 2026-11-12: constrain the quotation header to the A4 content width.
+   Two percentage columns plus a gap previously exceeded 100%. */
+.paper .excel-company{
+ grid-template-columns:minmax(0,52%) minmax(0,48%)!important;
+ column-gap:0!important;
+ box-sizing:border-box!important;
+ width:100%!important;
+}
+.paper .excel-company>div,.paper .excel-right,.paper .excel-identity{
+ min-width:0!important;max-width:100%!important;
+}
+.paper .excel-right .excel-ref{max-width:100%!important;min-width:0!important;width:100%!important}
+/* Keep Invoice client info as one complete bordered section in preview AND print. */
+.paper .inv-section{
+ border:1px solid #777!important;
+ box-sizing:border-box!important;
+}
+.paper .inv-section .inv-client{
+ border-top:1px solid #777!important;
+ grid-template-columns:minmax(0,56%) minmax(0,44%)!important;
+ gap:0!important;
+ width:100%!important;
+ box-sizing:border-box!important;
+}
+.paper .inv-section .inv-client>div{
+ min-width:0!important;box-sizing:border-box!important;
+}
+.paper .inv-section .inv-client>div+div{
+ border-left:1px solid #777!important;
+}
+/* Invoice totals: reserve space for currency-labelled totals, not just digits. */
+.paper .inv-totals .lbl{
+ width:32%!important;min-width:0!important;
+ white-space:normal!important;overflow-wrap:normal!important;
+ text-align:right!important;
+ padding:1mm!important;
+}
+.paper .inv-totals .num{
+ width:16%!important;
+ white-space:nowrap!important;
+ text-align:right!important;
+ padding:1mm!important;
+}
