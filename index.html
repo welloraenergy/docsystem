@@ -903,6 +903,26 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
   document.querySelectorAll('[data-workspace-view]').forEach(b=>{const active=b.dataset.workspaceView==='working';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  }
 }
+// Open an existing Firebase preset inside the active workspace, without
+// navigating/reloading the login/authentication page.
+window.DocSystemOpenPreset=(record,id)=>{
+ const family=record.templateFamily||
+  (record.documentType==='Purchase Order'?'purchase-order':
+   record.documentType==='Delivery Ticket'?'delivery-ticket':
+   record.documentType==='Returning Ticket'?'returning-ticket':
+   record.documentType==='Invoice'?'invoice':'quotation');
+ const allowed=['quotation','purchase-order','delivery-ticket','returning-ticket','invoice'];
+ if(!allowed.includes(family))throw Error('Unsupported saved document family');
+ const families=document.getElementById('workspacePresetFamily');
+ families.value=family;
+ fillPresetTypes();
+ const selector=document.getElementById('workspacePresetSelect');
+ const preferred=record.templateId||(family==='quotation'?'rental3':family==='purchase-order'?'rental':'standard');
+ if(Array.from(selector.options).some(o=>o.value===preferred))selector.value=preferred;
+ setWorkspaceSource('preset',true,id);
+ showDocPage('create');
+ window.scrollTo({top:0,behavior:'instant'});
+};
 window.addEventListener('message',e=>{
  if(e.origin===location.origin&&e.source===document.getElementById('presetConfigureFrame')?.contentWindow){
   if(e.data?.type==='docsystem-preset-template-saved'){
