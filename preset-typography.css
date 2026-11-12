@@ -81,3 +81,24 @@
 #itemsEditor th,#itemsEditor td{overflow-wrap:anywhere}
 #itemsEditor input,#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
 #itemsEditor td:has(textarea) textarea{min-height:50px;resize:vertical}
+
+/* Invoice: the notes number column has a continuous printed vertical separator. */
+.paper .inv-notes .inv-note{padding:0!important;grid-template-columns:7mm minmax(0,1fr)!important}
+.paper .inv-notes .inv-note>span:first-child{
+ border-right:1px solid #777!important;display:block;text-align:center!important;
+ padding:.5mm .7mm!important;box-sizing:border-box
+}
+.paper .inv-notes .inv-note>span:nth-child(2){
+ padding:.5mm 1mm!important;white-space:pre-wrap;overflow-wrap:anywhere
+}
+/* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
+.po-fulfillment-choice{
+ display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px;padding:10px;
+ border:1px solid #555;border-radius:7px;min-width:0
+}
+.po-fulfillment-choice legend{font-weight:700;padding:0 5px}
+.po-fulfillment-choice label{display:flex!important;flex-direction:row!important;
+ align-items:center;gap:8px;cursor:pointer;flex:1 1 180px}
+.po-fulfillment-choice input[type=radio]{width:auto!important;flex:none}
+.po-fulfillment-address-wrap[hidden]{display:none!important}
+.po-fulfillment-address-wrap textarea{width:100%;min-height:90px;resize:vertical}
