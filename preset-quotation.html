@@ -113,8 +113,15 @@ body.preview .preview-only{display:block}
 .paper .excel-client-title{margin-bottom:0!important;border-bottom:0!important}
 .paper .excel-client{display:grid!important;grid-template-columns:58% 42%!important;align-items:stretch;margin-top:0!important;row-gap:0!important;border-top:1px solid #444!important}
 
-.paper .excel-client>div{display:block!important;padding:0!important;min-width:0!important;min-height:39mm!important;height:100%!important}
+.paper .excel-client>div{display:block!important;position:relative!important;padding:0!important;min-width:0!important;min-height:39mm!important;height:100%!important}
 .paper .excel-client>div::before{content:none!important;display:none!important}
+/* One continuous divider, attached to the existing information-column box.
+   Position is measured from its widest label after browser layout. */
+.paper .excel-client>div::after{
+ content:"";position:absolute;top:0;bottom:0;
+ left:var(--quote-divider-x,24mm);width:0;border-left:1px solid #999;
+ pointer-events:none;z-index:1
+}
 
 /* First information section: content-sized labels, continuous divider, no absolute lines. */
 .paper .excel-info-table {width:100%;height:100%!important;min-height:39mm!important;table-layout:auto;border-collapse:collapse!important;font:inherit;background:#fff}
@@ -125,10 +132,10 @@ body.preview .preview-only{display:block}
 .paper .excel-info-table td{width:auto;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;min-width:0}
 .paper .excel-info-table tr.info-address th,.paper .excel-info-table tr.info-address td{height:16mm}
 /* One divider per label column, painted by the table column itself from top to bottom. */
-.paper .excel-info-table col:first-child{border-right:1px solid #999!important}
+.paper .excel-info-table col:first-child{border-right:0!important}
 .paper .excel-info-table tr.info-filler{height:auto!important}
 .paper .excel-info-table tr.info-filler th,.paper .excel-info-table tr.info-filler td{padding:0!important}
-@media print{.paper .excel-info-table col:first-child{border-right:1px solid #999!important}}
+@media print{.paper .excel-info-table col:first-child{border-right:0!important}}
 
 </style><style id="headerNoVerticalDivider">
 /* Excel reference header uses aligned labels and values without separator rules. */
@@ -518,7 +525,7 @@ import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from 
 
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
-import {paginatePresetDocument} from "./preset-pagination.js?v=20261101-single-controller1";
+import {paginatePresetDocument} from "./preset-pagination.js?v=20261112-preserve-lettered-42";
 import {sharedPresetSlot,expandPresetText} from "./preset-shared.js?v=20261101-common2";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
@@ -904,6 +911,14 @@ function render(){
  const headingHtml=resolveHeading(headerSettings.titleText,heading,'documentTitle');
  const extraHtml=resolveHeading(headerSettings.extraText,headingExtra,'headingLines');
  $('paper').innerHTML='<article class="paper"><div class="excel-company"><div class="excel-identity">'+renderPresetHeaderSlot('logo',company)+'<div class="excel-company-name">'+renderPresetHeaderSlot('name',company)+'</div><div class="excel-company-details">'+renderPresetHeaderSlot('details',company)+'</div></div><div class="excel-right"><div class="excel-heading-block"><div class="excel-title" style="--preset-title-color:'+titleColor+';--preset-title-size:'+titleSize+'pt;--preset-title-font:'+titleFont+';--preset-title-align:'+titleAlign+'">'+headingHtml+'</div>'+(extraHtml.trim()||headingExtra.length?'<div class="excel-heading-extra" style="--preset-extra-color:'+extraColor+';--preset-extra-size:'+extraSize+'pt;--preset-extra-font:'+extraFont+';--preset-extra-align:'+extraAlign+'">'+extraHtml+'</div>':'')+'</div><div class="excel-ref"><div class="ref-line"><span>Date:</span><span>'+esc(formatExcelDate(state.date))+'</span></div><div class="ref-line"><span>Reference No:</span><span>'+esc(state.reference||'')+'</span></div></div></div></div><div class="excel-client-title">Client Information</div><div class="excel-client"><div><table class="excel-info-table"><colgroup><col><col></colgroup><tbody>'+row('Company',state.client)+row('Address',state.address)+row('Contact Person',state.contact)+row('Tel',state.telephone)+row('Email',state.email)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div><div><table class="excel-info-table"><colgroup><col><col></colgroup><tbody>'+row('RFQ No',state.rfq)+row('Date',formatExcelDate(state.rfqDate))+row('Operator',state.operator)+row('Rig',state.rig)+row('Well',state.well)+row('Load Out',state.loadout)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div></div>'+(intro?'<p class="excel-rfq">'+intro+'</p>':'')+qrows('rental','Rental',state.rental)+(state.rental.length?'<div class="excel-notes">*LIH = Lost In Hole<br>*DBR = Damage Beyond Repair</div>':'')+qrows('consumables','Consumables',state.consumables)+(state.consumables.length?'<p style="text-align:right;font-weight:700">Consumables Total ('+esc(state.currency)+'): '+fmt(state.consumables.reduce((sum,r)=>sum+(Number(r.qty)||0)*(Number(r.rate)||0),0))+'</p>':'')+(terms.trim()?'<section class="excel-terms-section"><div class="excel-terms-header">Terms &amp; Conditions</div><div class="excel-terms" style="font-size:'+7+'pt">'+terms+'</div></section>':'')+'<p style="font-size:8pt">Please do not hesitate to contact us if you have any questions.</p><table class="excel-sign-table"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+['Prepared By','Reviewed By','Approved By'].map((s,i)=>{const v=state.signatures[i],d=typeof v==='object'?v:{name:v||'',position:'',date:''};return '<tr><th scope="row">'+s+'</th><td>'+esc(d.name||'')+'</td><td>'+esc(d.position||'')+'</td><td>'+esc(tableDate(d.date))+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table></article>';
+ // Measure the browser-sized longest label column and draw only ONE full-height
+ // divider in each half of Client Information. No filler rows or added height.
+ $('paper').querySelectorAll('.excel-client>div').forEach(half=>{
+  const label=half.querySelector('.excel-info-table th');
+  if(!label)return;
+  const x=label.getBoundingClientRect().right-half.getBoundingClientRect().left;
+  half.style.setProperty('--quote-divider-x',x+'px');
+ });
  paginatePresetDocument($('paper'),{size:7,fit:state.termsPageFit==='normal'?'normal':'flow'});
  fitEmbeddedPresetPreview();
 }
