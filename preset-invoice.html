@@ -138,7 +138,31 @@
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
 </style>
-<style id="welloraInvoiceRhythm20261112">@media screen,print{.paper .inv-head{min-height:43mm!important}.paper .inv-meta{width:58mm!important;max-width:100%;margin-top:5mm!important;margin-left:auto!important}.paper .inv-totals{width:76mm!important;max-width:100%;margin:3mm 0 3mm auto!important;table-layout:auto!important;border-collapse:collapse}.paper .inv-totals td{border:0!important;padding:1.3mm 2mm!important;font-weight:400;text-align:left}.paper .inv-totals td.num{text-align:right!important;white-space:nowrap}.paper .inv-totals td.lbl{text-align:left!important;white-space:normal!important}.paper .inv-totals tr:last-child{border-top:1px solid #333;font-weight:bold}.paper .inv-totals tr:last-child td{font-weight:700!important}}</style></head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+<style id="welloraInvoiceRhythm20261112">@media screen,print{.paper .inv-head{min-height:43mm!important}.paper .inv-meta{width:58mm!important;max-width:100%;margin-top:5mm!important;margin-left:auto!important}.paper .inv-totals{width:76mm!important;max-width:100%;margin:3mm 0 3mm auto!important;table-layout:auto!important;border-collapse:collapse}.paper .inv-totals td{border:0!important;padding:1.3mm 2mm!important;font-weight:400;text-align:left}.paper .inv-totals td.num{text-align:right!important;white-space:nowrap}.paper .inv-totals td.lbl{text-align:left!important;white-space:normal!important}.paper .inv-totals tr:last-child{border-top:1px solid #333;font-weight:bold}.paper .inv-totals tr:last-child td{font-weight:700!important}}</style><style id="welloraInvoicePOTotals20261112">
+/* Invoice totals use the same bordered two-column summary as the PO. */
+@media screen,print {
+ .paper .inv-totals{
+   width:76mm!important;max-width:100%!important;table-layout:fixed!important;
+   border-collapse:collapse!important;margin:3mm 0 3mm auto!important;
+   font-size:8.5pt!important;
+ }
+ .paper .inv-totals td{
+   border:1px solid #cbd5e1!important;padding:1.3mm 2mm!important;
+   background:#fff!important;vertical-align:middle!important;
+ }
+ .paper .inv-totals td.lbl{
+   width:75%!important;text-align:left!important;
+   font-weight:400!important;white-space:normal!important;
+ }
+ .paper .inv-totals td.num{
+   width:25%!important;text-align:right!important;
+   font-weight:400!important;white-space:nowrap!important;
+ }
+ .paper .inv-totals tr:last-child{border-top:0!important}
+ .paper .inv-totals tr:last-child td{font-weight:700!important}
+}
+</style>
+</head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card preset-settings-card"><h3>Document Settings</h3><div id="invoiceCurrencyFields" class="preset-settings-fields"></div></section><section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
 <section class="card"><h3>Client Information</h3><div id="clientFields" class="fields"></div></section>
 <section class="card"><h3>Rental / Invoice Items</h3><div class="table-wrap"><table class="items-editor" id="itemsEditor"></table></div><p><button id="addRow" class="preset-add-item">+ Add Item</button> <button id="removeRow" class="preset-remove-last">Remove Last</button></p><div id="totalSummary" class="muted"></div></section>
