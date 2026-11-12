@@ -277,7 +277,23 @@
 .paper .po-signatures tbody td{font-size:8pt}
 </style>
 <link rel="stylesheet" href="./preset-typography.css?v=20261112-balanced-info16">
-</head><body>
+
+<style id="welloraPresetRhythm20261112">
+/* Harmonized vertical rhythm for all five original preset document families. */
+@media screen,print {
+ .paper{--preset-section-gap:3mm}
+ .paper .excel-client-title,.paper .excel-terms-header,
+ .paper .po-vendor-section,.paper .po-section-title,
+ .paper .dt-section,.paper .inv-section,.paper .inv-notes {margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .excel-table,.paper .po-items,.paper .dt-items,.paper .inv-table{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .po-totals,.paper .inv-totals{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .po-signatures,.paper .dt-sign,.paper .inv-sign,.paper .excel-sig{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ /* All document identifiers sit close to the right paper edge and above the first detail band. */
+ .paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{position:relative;top:-2mm;margin-right:0!important}
+ .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
+}
+</style>
+<style id="welloraPORhythm20261112">@media screen,print{.paper .po-head,.paper .po-right{min-height:44mm!important}.paper .po-meta{width:58mm;max-width:100%;margin-top:7mm!important}.paper .po-vendor{margin-bottom:3mm!important}.paper .po-totals{width:76mm!important;border-collapse:collapse}.paper .po-totals td{padding:1.3mm 2mm!important}.paper .po-totals td:last-child{text-align:right}.paper .po-totals tr:last-child{border-top:1px solid #333;font-weight:700}}</style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
@@ -391,7 +407,7 @@ function draw(){
  const htmlField=f=>{
   const value=state.fields[f.key]??'';
   const options=f.key==='currency'?Array.from(new Set([...(business().currencies||[]).map(x=>x.code),'MYR','USD'])):f.options;
-  const control=f.type==='multiline'?'<textarea rows="'+(f.key==='vendorAddress'||f.key==='fulfillmentAddress'?4:3)+'" placeholder="'+(f.key==='vendorAddress'?'Address line 1&#10;Address line 2&#10;Address line 3':'')+'" data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='date'?'date':f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
+  const control=f.type==='multiline'?'<textarea rows="'+3+'" placeholder="'+(f.key==='vendorAddress'?'Address line 1&#10;Address line 2&#10;Address line 3':'')+'" data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='date'?'date':f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
   const label=({poDate:'Date',poNumber:'Reference No.',vendorName:'Company',vendorAddress:'Address',vendorContact:'Contact Person',vendorPhone:'Tel',vendorEmail:'Email',vendorQuotationNo:'Quotation No.',vendorQuotationDate:'Quotation Date',currency:'Currency',sstRate:'SST (%)'})[f.key]||f.label;
   return '<label class="'+(f.type==='multiline'?'wide':'')+'">'+esc(label)+control+'</label>';
  };
