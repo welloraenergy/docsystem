@@ -173,3 +173,39 @@
  flex:1;min-width:0!important;width:100%;max-width:100%!important;
  border:0!important;border-radius:0!important;outline-offset:-2px!important;
 }
+
+/* A4 rhythm: modest separation between document sections, without enlarging
+   table rows, changing fonts or forcing sections onto another page. */
+.paper .excel-client-title{margin-top:2.5mm!important;margin-bottom:0!important}
+.paper .excel-client{margin-top:1.5mm!important;margin-bottom:2.5mm!important}
+.paper .excel-table{margin-top:1.5mm!important;margin-bottom:1.5mm!important}
+.paper .excel-notes{margin-top:1mm!important;margin-bottom:2mm!important}
+.paper .excel-terms-section{margin-top:2.5mm!important;margin-bottom:2mm!important}
+.paper .excel-sign-table{margin-top:2.5mm!important}
+
+.paper .po-vendor-section{margin-top:2.5mm!important;margin-bottom:2.5mm!important}
+.paper .po-items{margin-top:0!important;margin-bottom:2mm!important}
+.paper .po-totals{margin-top:2.5mm!important;margin-bottom:1.5mm!important}
+.paper .po-words{margin-top:1mm!important;margin-bottom:2mm!important}
+.paper .po-terms-section{margin-top:2.5mm!important;margin-bottom:2mm!important}
+.paper .po-signatures{margin-top:2.5mm!important}
+
+.paper .dt-section{margin-top:2mm!important;margin-bottom:2mm!important}
+.paper .dt-section + .dt-section{margin-top:2.5mm!important}
+.paper .dt-items{margin-top:2.5mm!important;margin-bottom:0!important}
+.paper .dt-total{margin-top:0!important;margin-bottom:2mm!important}
+.paper .ticket-comments{margin-top:2mm!important;margin-bottom:2mm!important}
+.paper .dt-sign{margin-top:2mm!important;margin-bottom:2mm!important}
+
+.paper .inv-section{margin-top:2.5mm!important;margin-bottom:2.5mm!important}
+.paper .inv-table{margin-top:2mm!important;margin-bottom:0!important}
+.paper .inv-totals{margin-top:0!important;margin-bottom:1.5mm!important}
+.paper .inv-words{margin-top:1mm!important;margin-bottom:2mm!important}
+.paper .inv-notes{margin-top:2mm!important;margin-bottom:2mm!important}
+.paper .inv-sign{margin-top:2mm!important}
+
+/* Prevent a header bar from becoming an orphan at a page boundary. */
+.paper .excel-client-title,.paper .po-vendor-title,.paper .dt-section-title,
+.paper .inv-band,.paper .quote-item-section-title{
+ break-after:avoid!important;page-break-after:avoid!important
+}
