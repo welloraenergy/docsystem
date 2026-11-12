@@ -152,7 +152,7 @@
 .paper .dt-meta{font-size:8pt}
 .paper .ticket-comments-body{font-size:8pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261112-balanced-info16">
+<link rel="stylesheet" href="./preset-typography.css?v=20261112-meta-contained35">
 
 <style id="welloraPresetRhythm20261112">
 /* Harmonized vertical rhythm for all five original preset document families. */
@@ -169,7 +169,24 @@
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
 </style>
-<style id="welloraTicketRhythm20261112">@media screen,print{.paper .dt-head{min-height:44mm!important}.paper .dt-meta{margin-top:6mm!important;margin-left:auto!important;width:57mm}.paper .dt-section{margin-top:3mm!important;margin-bottom:3mm!important}.paper .dt-total{margin-top:3mm!important;margin-bottom:3mm!important}}.section-fields .address textarea{min-height:76px!important}</style>
+<style id="welloraTicketRhythm20261112">@media screen,print{.paper .dt-head{min-height:44mm!important}.paper .dt-section{margin-top:3mm!important;margin-bottom:3mm!important}.paper .dt-total{margin-top:3mm!important;margin-bottom:3mm!important}}.section-fields .address textarea{min-height:76px!important}
+/* Document metadata stays together at the right edge; reserve full revision suffix (0001-R1). */
+@media screen,print {
+ .paper .dt-right{align-items:flex-end!important;min-width:0!important;justify-content:space-between!important}
+ .paper .dt-meta{
+   position:relative!important;top:-2mm!important;right:auto!important;left:auto!important;
+   display:grid!important;grid-template-columns:max-content max-content!important;
+   width:max-content!important;min-width:0!important;max-width:100%!important;
+   column-gap:1.5mm!important;grid-auto-rows:minmax(4.2mm,auto)!important;
+   margin:0 2mm 4mm auto!important;padding:0!important;
+   align-self:flex-end!important;font-size:7.1pt!important;line-height:1.3!important;
+   box-sizing:border-box!important;
+ }
+ .paper .dt-meta .dt-meta-line{display:contents!important}
+ .paper .dt-meta .dt-meta-line b{text-align:right!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;font-weight:600!important}
+ .paper .dt-meta .dt-meta-line span{text-align:left!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;overflow:visible!important;overflow-wrap:normal!important;background:transparent!important}
+}
+</style>
 </head><body><header><h2>Return Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Return Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
