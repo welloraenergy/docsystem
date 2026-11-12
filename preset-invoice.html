@@ -151,7 +151,7 @@ function business(){const c=profile?.company||{};return savedCompany||{id:profil
 function header(){return savedHeader||profile?.presetHeader||{}}
 function expanded(v){return expandPresetText(v,business(),globals)}
 function blank(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('INV',new Date().toISOString().slice(0,10)),currency:business().defaultCurrency||'MYR',sstRate:'0'},client:Object.fromEntries(template.clientFields.map(f=>[f.key,''])),items:Array.from({length:7},(_,i)=>({no:String(i+1),description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''})),notes:template.notes.map(n=>n.no==='1'?n.lines.join('\n'):n.text),noteVisibility:[],extraNotes:[],signatures:Object.fromEntries(template.signatures.roles.map(x=>[x,{name:'',position:'',date:''}]))}}
-const currencySymbol=()=>state.fields.currency==='USD'?'USD':'MYR',money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}),count=n=>Number(n)||0;
+const currencySymbol=()=>state.fields.currency==='USD'?'USD':'MYR',money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}),count=n=>Number(String(n??'').replace(/,/g,''))||0;
 function dates(r){if(!r.hireFrom||!r.hireTo)return null;const a=new Date(r.hireFrom+'T12:00:00'),b=new Date(r.hireTo+'T12:00:00');if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime()))return null;return Math.max(0,Math.round((b-a)/86400000)+1)}
 function rowTotal(r){const days=dates(r);return days===null?0:count(r.qty)*days*count(r.dailyRate)}
 function subtotal(){return state.items.reduce((v,r)=>v+rowTotal(r),0)}
