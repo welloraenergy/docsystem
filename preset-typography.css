@@ -53,3 +53,31 @@
  .preset-item-editor input{min-width:68px}
  .line-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
 }
+
+/* Consistent widths, alignment and borders for all five preset item tables. */
+.paper .excel-table,.paper .po-items,.paper .dt-items,.paper .inv-table{
+ width:100%!important;table-layout:fixed!important;border-collapse:collapse!important
+}
+.paper .excel-table thead th,.paper .po-items thead th,
+.paper .dt-items thead th,.paper .inv-table thead th{
+ text-align:center!important;vertical-align:middle!important;
+ font-size:8pt!important;white-space:normal!important;overflow-wrap:anywhere!important;
+ background:#080808!important;color:#fff!important;border:1px solid #666!important
+}
+.paper .excel-table tbody td,.paper .po-items tbody td,
+.paper .dt-items tbody td,.paper .inv-table tbody td{
+ text-align:center!important;vertical-align:middle!important;
+ white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #777!important
+}
+/* Monetary summary tables retain their original right-aligned amounts. */
+.paper .dt-total .dt-total-value{text-align:center!important}
+.paper .dt-photos{width:100%;table-layout:fixed;border-collapse:collapse;border:1px solid #666}
+.paper .dt-photos th,.paper .dt-photos td{border:1px solid #666!important}
+.paper .dt-photos td{height:auto;min-height:50mm;text-align:center!important;vertical-align:middle!important;padding:2mm}
+.paper .dt-photos img{display:block;object-fit:contain;max-width:100%;max-height:110mm;margin:0 auto}
+.paper .dt-photos td[colspan="2"] img{max-height:225mm}
+/* PO editor: compact number/quantity and larger description input without cropping. */
+#itemsEditor{table-layout:fixed;min-width:640px}
+#itemsEditor th,#itemsEditor td{overflow-wrap:anywhere}
+#itemsEditor input,#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
+#itemsEditor td:has(textarea) textarea{min-height:50px;resize:vertical}
