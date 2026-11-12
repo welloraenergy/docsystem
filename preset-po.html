@@ -284,7 +284,7 @@
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
 <section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
-<section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div></section>
+<section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow" class="preset-add-item">+ Add Item</button><button id="removeRow" class="preset-remove-last">Remove Last</button></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="normal">Normal size / add page</option></select></label></div><p id="termsFitStatus" class="muted" role="status" aria-live="polite">Checking how the terms fit on A4…</p><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
@@ -417,7 +417,7 @@ function draw(){
 function drawRows(){
  const cols=template.items.columns;
  $('itemsEditor').innerHTML='<thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+
- state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'||c.type==='money'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button class="danger" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
+ state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'||c.type==='money'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
 }
 function lineTotal(row){return num(row.quantity)*num(row.unitPrice)*(template.id==='rental'?num(row.rentalDays):1)}
 function moneyWords(amount){
