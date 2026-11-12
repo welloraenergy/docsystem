@@ -104,10 +104,10 @@ export function paginatePresetDocument(root, options = {}) {
       part = makeSection();
     }
     for (const clause of clauses) {
-      // Preserve structured lines (e.g. PO Clause 6 a/b/c contacts) as
-      // real elements. Moving the whole clause prevents labels and values
-      // from being collapsed by the word-splitting algorithm.
-      if (clause.querySelector('.po-clause6-lines, .po-clause6-line')) {
+      // Preserve real lettered sub-item blocks from Quotation and PO.
+      // Flattening .term-text to textContent destroys the (a)/(b)/(c)
+      // row structure; move these clauses whole instead of word-splitting.
+      if (clause.querySelector('.quote-lettered-items, .po-lettered-lines, .po-clause6-lines, .po-clause6-line')) {
         part.body.appendChild(clause);
         if (!fits(part.section)) {
           clause.remove();
