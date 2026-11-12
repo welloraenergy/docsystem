@@ -284,7 +284,7 @@
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
 <section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
-<section class="card"><h3>PO Items</h3><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow" class="preset-add-item">+ Add Item</button><button id="removeRow" class="preset-remove-last">Remove Last</button></div></section>
+<section class="card"><h3>PO Items</h3><div class="fields" id="poFinancialFields"></div><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow" class="preset-add-item">+ Add Item</button><button id="removeRow" class="preset-remove-last">Remove Last</button></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="normal">Normal size / add page</option></select></label></div><p id="termsFitStatus" class="muted" role="status" aria-live="polite">Checking how the terms fit on A4…</p><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
@@ -396,7 +396,8 @@ function draw(){
  const groups={
   poReferenceFields:['poDate','poNumber'],
   poVendorFields:['vendorName','vendorAddress','vendorContact','vendorPhone','vendorEmail'],
-  poQuotationFields:['vendorQuotationNo','vendorQuotationDate','currency','sstRate']
+  poQuotationFields:['vendorQuotationNo','vendorQuotationDate'],
+  poFinancialFields:['currency','sstRate']
  };
  for(const [target,keys] of Object.entries(groups)){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
@@ -469,14 +470,15 @@ function render(){
  const headerCompany={...co,documentTitle:'PURCHASE ORDER',documentNumber:f.poNumber||'',documentDate:f.poDate||''};
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
- const companyMarkup='<div class="po-head"><div class="po-company-ident">'+sharedPresetSlot('logo',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('name',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('details',headerCompany,headerCfg,globalPlaceholders)+'</div><div class="po-right"><div class="po-title">'+poHeaderTitle()+'</div><div class="po-meta">'+metaRow('Date',formatPresetDate(f.poDate))+metaRow('Reference No',f.poNumber)+metaRow('Currency',f.currency||'MYR')+'</div></div></div>';
+ const companyMarkup='<div class="po-head"><div class="po-company-ident">'+sharedPresetSlot('logo',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('name',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('details',headerCompany,headerCfg,globalPlaceholders)+'</div><div class="po-right"><div class="po-title">'+poHeaderTitle()+'</div><div class="po-meta">'+metaRow('Date',formatPresetDate(f.poDate))+metaRow('Reference No',f.poNumber)+'</div></div></div>';
  const vendorRow=(label,value,address=false)=>'<div class="po-vendor-row'+(address?' po-address-row':'')+'"><strong>'+esc(label)+':</strong><span>'+esc(poPresetValue(value||''))+'</span></div>';
  const vendorMarkup='<section class="po-vendor-section"><div class="po-vendor-title">Vendor &amp; Quotation Information</div><div class="po-vendor">'+
   '<div class="po-vendor-left">'+vendorRow('Company',f.vendorName)+vendorRow('Address',f.vendorAddress,true)+vendorRow('Contact Person',f.vendorContact)+vendorRow('Tel',f.vendorPhone)+vendorRow('Email',f.vendorEmail)+'</div>'+
-  '<div class="po-vendor-right">'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+vendorRow('Currency',f.currency||'MYR')+vendorRow('SST (%)',f.sstRate??0)+'</div></div></section>';
+  '<div class="po-vendor-right">'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+'</div></div></section>';
+ const dynamicLabels=cols.map(c=>c.key==='unitPrice'?(template.id==='rental'?'Daily Rental Rate ('+esc(f.currency||'MYR')+'/Day)':'Unit Price ('+esc(f.currency||'MYR')+')'):c.key==='lineTotal'?'Total Amount ('+esc(f.currency||'MYR')+')':esc(c.label));
  const colWidths=template.id==='rental'?{number:5,description:39,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:14}:{number:5,description:52,unit:9,quantity:8,unitPrice:12,lineTotal:14};
- const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
- const totalTable='<table class="po-totals"><tr><td>Subtotal</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
+ const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+dynamicLabels.map(label=>'<th>'+label+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
+ const totalTable='<table class="po-totals"><tr><td>Subtotal ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
  const amountWords='<div class="po-words"><strong>Total Amount in Words: </strong>'+esc(f.currency||'MYR')+' '+esc(moneyWords(grand))+'</div>';
  const clauseMarkup=t=>{
   const override=state.termsOverrides?.[t.number];
