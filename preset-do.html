@@ -128,6 +128,8 @@
 <section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Original images up to 12 MB each are uploaded to Firebase Storage on Save Online, without compression. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
@@ -273,7 +275,7 @@ async function save(){
    nextPhotos[idx]=path;
   }
   const snapshot=business();
-  const payload={templateSource:'preset',templateFamily:'delivery-ticket',templateId:'standard',templateVersion:1,documentType:'Delivery Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:{...state,photos:nextPhotos},profileId:snapshot.id,companySnapshot:snapshot,presetHeaderSnapshot:savedHeader||structuredClone(profile?.presetHeader||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const payload={templateSource:'preset',templateFamily:'delivery-ticket',templateId:'standard',templateVersion:1,documentType:'Delivery Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,payload,{merge:true});
   docId=ref.id;savedCompany=snapshot;state.photos=nextPhotos;
   pendingPhotos.clear();
@@ -288,15 +290,15 @@ async function save(){
     deleteObject(storageRef(storage,path)).catch(e=>console.warn('Old photo cleanup pending:',e));
    }
   }
-  draw();notify('Saved Delivery Ticket '+state.fields.reference);ready();
+  draw();notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
   for(const path of uploaded)deleteObject(storageRef(storage,path)).catch(()=>{});
-  notify('Delivery Ticket save failed');alert('Delivery Ticket save failed: '+e.message);
+  notify('Delivery Ticket save failed: '+(e.code||e.message));reportPresetSaveError(e);alert('Delivery Ticket save failed: '+(e.code||e.message));
  }finally{saving=false}
 }
 async function loadSaved(id){
- try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;state=d.presetData;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=d.companySnapshot||null;savedHeader=d.presetHeaderSnapshot||null;profile=profiles.find(x=>x.id===d.profileId)||profile;draw();notify('Opened Delivery Ticket '+d.number);ready()}catch(e){notify('Open failed: '+e.message)}
+ try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;state=decodePreset(d.presetData);state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;draw();notify('Opened Delivery Ticket '+d.number);ready()}catch(e){notify('Open failed: '+e.message)}
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){profile=selected;draw();ready()}}
