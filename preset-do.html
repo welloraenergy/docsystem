@@ -119,7 +119,23 @@
 .paper .dt-meta{font-size:8pt}
 </style>
 <link rel="stylesheet" href="./preset-typography.css?v=20261112-balanced-info16">
-</head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+
+<style id="welloraPresetRhythm20261112">
+/* Harmonized vertical rhythm for all five original preset document families. */
+@media screen,print {
+ .paper{--preset-section-gap:3mm}
+ .paper .excel-client-title,.paper .excel-terms-header,
+ .paper .po-vendor-section,.paper .po-section-title,
+ .paper .dt-section,.paper .inv-section,.paper .inv-notes {margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .excel-table,.paper .po-items,.paper .dt-items,.paper .inv-table{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .po-totals,.paper .inv-totals{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ .paper .po-signatures,.paper .dt-sign,.paper .inv-sign,.paper .excel-sig{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
+ /* All document identifiers sit close to the right paper edge and above the first detail band. */
+ .paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{position:relative;top:-2mm;margin-right:0!important}
+ .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
+}
+</style>
+<style id="welloraTicketRhythm20261112">@media screen,print{.paper .dt-head{min-height:44mm!important}.paper .dt-meta{margin-top:6mm!important;margin-left:auto!important;width:57mm}.paper .dt-section{margin-top:3mm!important;margin-bottom:3mm!important}.paper .dt-total{margin-top:3mm!important;margin-bottom:3mm!important}}.section-fields .address textarea{min-height:76px!important}</style></head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Delivery Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collection Address &amp; Contact Person</h3><div class="section-fields" id="collectionFields"></div></section>
 <section class="card"><h3>Deliver To</h3><div class="section-fields" id="deliverToFields"></div></section>
@@ -156,7 +172,7 @@ function text(v){return expandPresetText(v,{...business(),documentTitle:'DELIVER
 function empty(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('DT',new Date().toISOString().slice(0,10)),poDate:'',poNumber:''},collection:{company:'{companyName}',address:'',contact:'',tel:'',email:''},deliverTo:{company:'',address:'',contact:'',tel:'',email:''},items:Array.from({length:3},(_,i)=>({no:String(i+1),description:'',serialNumber:'',unit:'',qty:''})),signatures:Object.fromEntries(['Prepared By','Transported By','Received By'].map(x=>[x,{name:'',position:'',contactNumber:'',companyName:x==='Prepared By'?'{companyName}':'',date:''}])),photos:Array(10).fill('')}}
 function field(label,key,value,type='text',group='fields'){
  const isArea=type==='multiline';
- return '<label class="'+(isArea?'address':'')+'">'+esc(label)+(isArea?'<textarea data-group="'+group+'" data-key="'+key+'" rows="4" placeholder="Address line 1&#10;Address line 2&#10;Address line 3">'+esc(value||'')+'</textarea>':'<input type="'+(type==='date'?'date':type==='email'?'email':type==='tel'?'tel':'text')+'" data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>';
+ return '<label class="'+(isArea?'address':'')+'">'+esc(label)+(isArea?'<textarea data-group="'+group+'" data-key="'+key+'" rows="3" placeholder="Address line 1&#10;Address line 2&#10;Address line 3">'+esc(value||'')+'</textarea>':'<input type="'+(type==='date'?'date':type==='email'?'email':type==='tel'?'tel':'text')+'" data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>';
 }
 function photoSrc(idx){
  const item=state?.photos?.[idx]||'';
