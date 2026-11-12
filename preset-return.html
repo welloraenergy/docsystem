@@ -155,7 +155,55 @@
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
 </style>
-<style id="welloraTicketRhythm20261112">@media screen,print{.paper .dt-head{min-height:44mm!important}.paper .dt-meta{margin-top:6mm!important;margin-left:auto!important;width:57mm}.paper .dt-section{margin-top:3mm!important;margin-bottom:3mm!important}.paper .dt-total{margin-top:3mm!important;margin-bottom:3mm!important}}.section-fields .address textarea{min-height:76px!important}</style></head><body><header><h2>Return Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+<style id="welloraTicketRhythm20261112">@media screen,print{.paper .dt-head{min-height:44mm!important}.paper .dt-meta{margin-top:6mm!important;margin-left:auto!important;width:57mm}.paper .dt-section{margin-top:3mm!important;margin-bottom:3mm!important}.paper .dt-total{margin-top:3mm!important;margin-bottom:3mm!important}}.section-fields .address textarea{min-height:76px!important}</style><style id="welloraFirstInfoPORhythm20261112">
+/* Match PO's Vendor & Quotation Information cell rhythm in every preset. */
+@media screen,print {
+ .paper .excel-client .item,
+ .paper .dt-info .dt-row,
+ .paper .inv-client .line {
+   min-height:5mm!important;
+   line-height:1.35!important;
+   align-items:start!important;
+   column-gap:0!important;
+ }
+ .paper .excel-client .item > b,
+ .paper .excel-client .item > strong,
+ .paper .dt-info .dt-row > b,
+ .paper .inv-client .line > b {
+   box-sizing:border-box!important;
+   padding:1mm 1.5mm .7mm .6mm!important;
+   text-align:right!important;
+   align-self:start!important;
+   white-space:normal!important;
+   line-height:1.35!important;
+ }
+ .paper .excel-client .item > span,
+ .paper .dt-info .dt-row > span,
+ .paper .inv-client .line > span {
+   box-sizing:border-box!important;
+   padding:1mm 1.7mm .7mm 1.5mm!important;
+   text-align:left!important;
+   align-self:start!important;
+   min-width:0!important;
+   line-height:1.35!important;
+   white-space:pre-wrap!important;
+   overflow-wrap:anywhere!important;
+ }
+ .paper .excel-client .item.address-row,
+ .paper .dt-info .dt-row.address,
+ .paper .inv-client .line.address {
+   min-height:16mm!important;
+ }
+ .paper .excel-client .item.address-row > span,
+ .paper .dt-info .dt-row.address > span,
+ .paper .inv-client .line.address > span {
+   min-height:15mm!important;
+ }
+ .paper .excel-client > div{min-width:0!important}
+ .paper .dt-info > div,.paper .inv-client > div{min-width:0!important}
+}
+</style>
+</head><body><header><h2>Return Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Return Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
 <section class="card"><h3>Delivery Address &amp; Contact Person</h3><div class="section-fields" id="deliverToFields"></div></section>
