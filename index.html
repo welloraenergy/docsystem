@@ -864,7 +864,7 @@ function loadPresetConfigurator(copyId=null){
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version=20261112-editor-row3-zebra12&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ frame.src=editor+'?version=20261112-geometry-words13&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -893,7 +893,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261112-editor-row3-zebra12':family==='returning-ticket'?'preset-return.html?version=20261112-editor-row3-zebra12':family==='delivery-ticket'?'preset-do.html?version=20261112-editor-row3-zebra12':family==='purchase-order'?'preset-po.html?version=20261112-editor-row3-zebra12':'preset-quotation.html?version=20261112-editor-row3-zebra12';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261112-geometry-words13':family==='returning-ticket'?'preset-return.html?version=20261112-geometry-words13':family==='delivery-ticket'?'preset-do.html?version=20261112-geometry-words13':family==='purchase-order'?'preset-po.html?version=20261112-geometry-words13':'preset-quotation.html?version=20261112-geometry-words13';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
