@@ -588,7 +588,7 @@ async function openSavedPresetCopy(){
   if(selected)profile=selected;
   state=copy.defaults;
   activeCopyDefaults=structuredClone(copy.defaults);
-  state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);await chooseTemplate(copy.basePresetId,false);
+  state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);await chooseTemplate(copy.basePresetId,false);
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
 }
