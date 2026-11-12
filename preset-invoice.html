@@ -130,6 +130,7 @@
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Invoice Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
+import {currencyAmountWords} from './preset-amount-words.js?v=20261112-1';
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
 
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
@@ -216,7 +217,7 @@ function render(){
   const allNotes=[...state.notes.map((note,i)=>({text:note,originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
   const notes='<section class="inv-notes"><div class="inv-band">Notes</div><div class="inv-notes-body">'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+esc(content)+'</span></div>'}).join('')+'</div></section>';
   const sign='<table class="inv-sign"><colgroup><col style="width:13%"><col style="width:31%"><col style="width:22%"><col style="width:15%"><col style="width:19%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td>'+esc(expanded(d.name||''))+'</td><td>'+esc(expanded(d.position||''))+'</td><td>'+esc(dateText(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
-  $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(amountWords(total()).replace(/^./,c=>c.toUpperCase()).replace(/\.*$/,'.'))+'</div>'+notes+sign+'</article>';
+  $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(currencyAmountWords(total(),currencySymbol()))+'</div>'+notes+sign+'</article>';
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
  }finally{rendering=false}
 }
