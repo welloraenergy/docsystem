@@ -789,18 +789,21 @@ function specialTkrTerms(){
 }
 function quoteClauseHtml(body){
  const raw=String(body??'');
- // Only format real alphabetical sublists that start with (a) and contain (b).
- // Keep wording unchanged; use block elements instead of relying on a CSS newline.
- const isList=/^\s*\(a\)\s/i.test(raw)&&/\s\(b\)\s/i.test(raw);
- if(!isList)return esc(raw);
- const items=raw.trim().split(/\s+(?=\([a-z]\)\s)/gi);
- return items.map(item=>'<div class="quote-lettered-item">'+esc(item.trim())+'</div>').join('');
+ const markers=[...raw.matchAll(/(?:^|\s)\(?([a-z])\)\s/gi)];
+ const lettered=markers.some(m=>m[1].toLowerCase()==='a')&&markers.some(m=>m[1].toLowerCase()==='b');
+ if(!lettered)return {html:esc(raw),lettered:false};
+ const parts=raw.split(/\s+(?=\(?[a-z]\)\s)/gi);
+ const first=parts.shift()||'';
+ const items=parts.length?parts:[];
+ let intro=first.trim();
+ if(/^\s*\(?a\)\s/i.test(first)){items.unshift(first);intro=''}
+ const blocks=items.map(item=>'<div class="quote-lettered-item">'+esc(item.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') '))+'</div>').join('');
+ return {html:(intro?'<span>'+esc(intro)+'</span>':'')+blocks,lettered:true};
 }
 function renderClauses(clauses){
  return clauses.map(x=>{
-  const body=String(x.body??'');
-  const lettered=/^\s*\(a\)\s/i.test(body)&&/\s\(b\)\s/i.test(body);
-  return '<div class="excel-term"><span class="term-num">'+x.num+'</span><div class="term-text"><strong>'+esc(x.title)+':</strong>'+(lettered?'':' ')+quoteClauseHtml(body)+'</div></div>';
+  const formatted=quoteClauseHtml(x.body);
+  return '<div class="excel-term"><span class="term-num">'+x.num+'</span><div class="term-text"><strong>'+esc(x.title)+':</strong>'+(formatted.lettered?'':' ')+formatted.html+'</div></div>';
  }).join('');
 }
 const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
@@ -877,7 +880,7 @@ function render(){
   return (state.preset==='rentcon53'||state.preset==='rentcon105'?'<h4 class="quote-item-section-title">'+(rental?'A) Rental':'B) Consumable')+'</h4>':'')+'<table class="excel-table"><colgroup><col style="width:5%"><col style="width:49%"><col style="width:9%"><col style="width:7%"><col style="width:17%"><col style="width:13%"></colgroup><thead><tr>'+columns.map(t=>'<th>'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+esc(r.no||'')+'</td><td>'+esc(r.description||'')+'</td><td>'+esc(r.unit||'')+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(String(r.rate??'').trim()?fmt(Number(String(r.rate).replace(/,/g,''))):'')+'</td><td>'+(rental?(String(r.lih??'').trim()?fmt(Number(String(r.lih).replace(/,/g,''))):''):(filled(r)?fmt((Number(String(r.qty).replace(/,/g,''))||0)*(Number(String(r.rate).replace(/,/g,''))||0)):'') )+'</td></tr>').join('')+'</tbody></table>';
  };
  const intro=state.rfqDate?'With reference to your Request for Quotation (RFQ), dated '+esc(formatExcelDate(state.rfqDate))+', we are pleased to quote you the following item(s), subject to our terms and conditions:':'';
- const terms=usesStandardRentalTerms()?activePresetClausesHtml():String(state.terms||'').trim()?String(state.terms||'').split(/\n(?=\d+[.)]\s)/).map((x,i)=>'<div class="excel-term"><span class="term-num">'+(i+1)+'.</span><div class="term-text">'+quoteClauseHtml(x.replace(/^\d+[.)]\s*/,''))+'</div></div>').join(''):'';
+ const terms=usesStandardRentalTerms()?activePresetClausesHtml():String(state.terms||'').trim()?String(state.terms||'').split(/\n(?=\d+[.)]\s)/).map((x,i)=>'<div class="excel-term"><span class="term-num">'+(i+1)+'.</span><div class="term-text">'+quoteClauseHtml(x.replace(/^\d+[.)]\s*/,'' )).html+'</div></div>').join(''):'';
  const company=shownCompany();
  const headerSettings=activePresetHeader();
  const titleSize=Math.max(8,Math.min(36,Number(headerSettings.titleSize)||16));
