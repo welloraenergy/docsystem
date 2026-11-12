@@ -128,6 +128,8 @@
 <section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Original images up to 12 MB each are uploaded to Firebase Storage on Save Online, without compression. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
+import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-1';
+
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
@@ -148,7 +150,7 @@ function notify(message){$('status').textContent=message;posted('status',{status
 function business(){const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:(typeof c.headerText==='string'&&c.headerText.trim())?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals}}
 function header(){return savedHeader||profile?.presetHeader||{}}
 function text(v){return expandPresetText(v,{...business(),documentTitle:'DELIVERY TICKET',documentNumber:state?.fields?.reference,documentDate:state?.fields?.date},globals)}
-function empty(){return {fields:{date:new Date().toISOString().slice(0,10),reference:'',poDate:'',poNumber:''},collection:{company:'{companyName}',address:'',contact:'',tel:'',email:''},deliverTo:{company:'',address:'',contact:'',tel:'',email:''},items:Array.from({length:10},(_,i)=>({no:String(i+1),description:'',serialNumber:'',unit:'',qty:''})),signatures:Object.fromEntries(['Prepared By','Transported By','Received By'].map(x=>[x,{name:'',position:'',contactNumber:'',companyName:x==='Prepared By'?'{companyName}':'',date:''}])),photos:Array(10).fill('')}}
+function empty(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('DT',new Date().toISOString().slice(0,10)),poDate:'',poNumber:''},collection:{company:'{companyName}',address:'',contact:'',tel:'',email:''},deliverTo:{company:'',address:'',contact:'',tel:'',email:''},items:Array.from({length:10},(_,i)=>({no:String(i+1),description:'',serialNumber:'',unit:'',qty:''})),signatures:Object.fromEntries(['Prepared By','Transported By','Received By'].map(x=>[x,{name:'',position:'',contactNumber:'',companyName:x==='Prepared By'?'{companyName}':'',date:''}])),photos:Array(10).fill('')}}
 function field(label,key,value,type='text',group='fields'){
  const isArea=type==='multiline';
  return '<label class="'+(isArea?'address':'')+'">'+esc(label)+(isArea?'<textarea data-group="'+group+'" data-key="'+key+'" rows="4" placeholder="Address line 1&#10;Address line 2&#10;Address line 3">'+esc(value||'')+'</textarea>':'<input type="'+(type==='date'?'date':type==='email'?'email':type==='tel'?'tel':'text')+'" data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>';
@@ -186,6 +188,7 @@ async function preparePhoto(file){
 function draw(){
  if(!state)return;
  $('documentFields').innerHTML=template.fields.map(f=>field(f.label,f.key,state.fields[f.key],f.type,'fields')).join('');
+ mountReferenceField($('documentFields').querySelector('[data-group="fields"][data-key="reference"]'),'DT',state.fields.date,state.fields.reference);
  for(const section of template.sections)$(section.id==='collection'?'collectionFields':'deliverToFields').innerHTML=section.fields.map(f=>field(f.label,f.key,state[section.id][f.key],f.type,section.id)).join('');
  drawItems();
  $('signatureFields').innerHTML=template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<fieldset><legend>'+esc(role)+'</legend>'+[['Name','name'],['Position','position'],['Contact Number','contactNumber'],['Company Name','companyName'],['Date','date']].map(([title,key])=>field(title,key,d[key],key==='date'?'date':'text','sign:'+role)).join('')+'</fieldset>'}).join('');
@@ -198,7 +201,7 @@ function drawItems(){
  $('qtyTotal').textContent=qtyTotal();
 }
 function qtyTotal(){return state.items.reduce((n,row)=>n+(Number(row.qty)||0),0).toLocaleString('en-MY',{maximumFractionDigits:3})}
-function formatDate(v){if(!v)return '';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?v:d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+function formatDate(v){if(!v)return '';const d=new Date(v+'T12:00:00');return shortDate(v)}
 function render(){
  if(!state||!template||busy)return;busy=true;
  try{
@@ -247,11 +250,11 @@ function fitPreview(){
  const scale=Math.min(1,available/(210*96/25.4));
  $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
 }
-function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.reference='';state.fields.date=new Date().toISOString().slice(0,10);state.photos=Array(10).fill('')}draw();notify('New Delivery Ticket');ready()}
+function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('')}draw();notify('New Delivery Ticket');ready()}
 async function save(){
  if(saving)return;
  if(!user)return alert('Please sign in first');
- if(!String(state.fields.reference||'').trim())return alert('Enter Reference No. before saving');
+ if(!String(state.fields.reference||'').trim()||state.fields.reference===refPrefix('DT',state.fields.date))return alert('Enter Reference No. before saving');
  if(!business().id)return alert('Choose a Business Profile');
  saving=true;
  const uploaded=[];
@@ -331,7 +334,9 @@ async function openSavedPresetCopy(){
 }
 
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const {action}=e.data;if(action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(action==='new')newDoc();else if(action==='save')save();else if(action==='print')window.printDoc();else if(action==='business')chooseBusiness(e.data.profileId);else if(action==='view')render()});
-document.addEventListener('input',e=>{const d=e.target.dataset;if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj)obj[d.key]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;$('qtyTotal').textContent=qtyTotal();render()}});
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj){if(d.group==='fields'&&d.key==='reference'&&e.target.dataset.referenceSuffix)obj[d.key]=fullReference(refPrefix('DT',state.fields.date),e.target.value);
+ else if(d.group==='fields'&&d.key==='date'){obj.date=e.target.value;obj.reference=updateReferenceYear(obj.reference,'DT',obj.date);syncReferenceField($('documentFields'),'DT',obj.date,obj.reference)}
+ else obj[d.key]=e.target.value;}render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;$('qtyTotal').textContent=qtyTotal();render()}});
 document.addEventListener('click',e=>{if(e.target.id==='newBtn')newDoc();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc();else if(e.target.id==='addRow'){state.items.push({no:String(state.items.length+1),description:'',serialNumber:'',unit:'',qty:''});drawItems();render()}else if(e.target.id==='removeRow'){if(state.items.length>1){state.items.pop();drawItems();render()}}else if(e.target.dataset.removeRow!==undefined){state.items.splice(Number(e.target.dataset.removeRow),1);if(!state.items.length)state.items.push({no:'1',description:'',serialNumber:'',unit:'',qty:''});drawItems();render()}else if(e.target.dataset.clearPhoto!==undefined){const idx=Number(e.target.dataset.clearPhoto);pendingPhotos.delete(idx);if(photoPreviews.has(idx)){URL.revokeObjectURL(photoPreviews.get(idx));photoPreviews.delete(idx)}state.photos[idx]='';draw()}});
 document.addEventListener('change',async e=>{
  if(e.target.dataset.photo===undefined)return;const file=e.target.files?.[0];if(!file)return;
