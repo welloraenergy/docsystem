@@ -109,20 +109,33 @@ body.preview .preview-only{display:block}
 .paper .excel-sign-table .sign-blank{background:#fff!important}
 @media print{.paper .excel-sign-table{break-inside:avoid;page-break-inside:avoid}}
 </style><style id="fullClientColumnSeparators">
-/* Client Information: canonical label/value geometry for Quotation preview and print. */
+/* The widest label in EACH half determines its own divider position. */
 .paper .excel-client-title{margin-bottom:0!important;border-bottom:0!important}
 .paper .excel-client{display:grid!important;grid-template-columns:58% 42%!important;align-items:stretch;margin-top:0!important;row-gap:0!important;border-top:1px solid #444!important}
-.paper .excel-client>div{display:flex!important;flex-direction:column!important;padding:0!important;min-width:0!important;min-height:39mm!important;position:relative}
-.paper .excel-client>div:first-child{--label-col:24mm}
-.paper .excel-client>div:last-child{--label-col:19mm}
-.paper .excel-client>div::before{content:"";position:absolute;top:0;bottom:0;left:var(--label-col);border-left:1px solid #999;pointer-events:none;z-index:1}
-.paper .excel-client .item,.paper .excel-client>div:last-child .item{display:grid!important;grid-template-columns:var(--label-col) minmax(0,1fr)!important;gap:0!important;min-height:5.3mm!important;line-height:1.35!important;align-items:start!important}
-.paper .excel-client .item b{box-sizing:border-box!important;border:0!important;margin:0!important;padding:1.1mm 2.5mm 1.0mm .7mm!important;min-height:0!important;display:block!important;text-align:right!important;white-space:normal!important;align-self:start!important;line-height:1.35!important}
-.paper .excel-client .item span{box-sizing:border-box!important;display:block!important;padding:1.1mm 1.7mm 1.0mm 1.5mm!important;min-width:0!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;align-self:start!important;line-height:1.35!important}
-.paper .excel-client .address-row{flex:1!important;min-height:17mm!important}
-.paper .excel-client .address-row .client-address-value{min-height:16mm!important;white-space:pre-wrap!important}
-.paper .excel-client>div:last-child .item{min-height:5.3mm!important}
-@media print{.paper .excel-client>div::before{border-left:1px solid #999!important}}
+.paper .excel-client>div{
+ display:grid!important;grid-template-columns:max-content minmax(0,1fr)!important;
+ grid-auto-rows:minmax(5.3mm,auto)!important;align-content:stretch!important;
+ padding:0!important;min-width:0!important;min-height:39mm!important;
+}
+.paper .excel-client>div::before{content:none!important}
+.paper .excel-client .item,.paper .excel-client>div:last-child .item{
+ display:contents!important;
+}
+.paper .excel-client .item b{
+ box-sizing:border-box!important;border:0!important;border-right:1px solid #999!important;
+ margin:0!important;padding:1.1mm 2.5mm 1mm .7mm!important;
+ display:block!important;text-align:right!important;white-space:nowrap!important;
+ align-self:stretch!important;line-height:1.35!important;font-weight:600;
+}
+.paper .excel-client .item span{
+ box-sizing:border-box!important;display:block!important;
+ padding:1.1mm 1.7mm 1mm 1.5mm!important;min-width:0!important;
+ white-space:pre-wrap!important;overflow-wrap:anywhere!important;
+ align-self:stretch!important;line-height:1.35!important;
+}
+.paper .excel-client .address-row b,.paper .excel-client .address-row span{min-height:17mm!important}
+.paper .excel-client .address-row .client-address-value{min-height:17mm!important}
+@media print{.paper .excel-client .item b{border-right:1px solid #999!important}}
 </style><style id="headerNoVerticalDivider">
 /* Excel reference header uses aligned labels and values without separator rules. */
 .paper .excel-ref .ref-line span:first-child{border-right:0!important;padding-right:1.5mm!important}
