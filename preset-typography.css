@@ -542,3 +542,102 @@
  .paper .excel-client .item,.paper .po-vendor .po-vendor-row,
  .paper .inv-client .line{min-width:0!important}
 }
+
+/* 2026-11-12 — Shared, predictable editable item tables across all presets.
+   A wide table scrolls INSIDE its card on narrow screens; the delete action stays
+   visible at the right. Never squeeze date, quantity or action inputs to slivers. */
+@media screen{
+ .form-only .card .table-wrap,
+ .workspace .editor .card .table-wrap{
+  display:block!important;width:100%!important;max-width:100%!important;
+  min-width:0!important;overflow-x:auto!important;overflow-y:hidden;
+  box-sizing:border-box!important;overscroll-behavior-x:contain;
+ }
+ .preset-item-editor,#itemsEditor,#itemEditor{
+  box-sizing:border-box!important;border-collapse:collapse!important;
+  table-layout:fixed!important;width:100%!important;max-width:none!important;
+  border-spacing:0!important;
+ }
+ .preset-item-editor{min-width:850px!important}
+ #itemsEditor{min-width:920px!important}
+ #itemEditor{min-width:850px!important}
+ /* Invoice needs two complete date controls plus amount and action columns. */
+ #itemsEditor.items-editor{min-width:1160px!important}
+ .preset-item-editor th,.preset-item-editor td,
+ #itemsEditor th,#itemsEditor td,#itemEditor th,#itemEditor td{
+  box-sizing:border-box!important;min-width:0!important;
+  padding:7px 6px!important;vertical-align:middle!important;
+  overflow:visible!important;
+ }
+ .preset-item-editor th,#itemsEditor th,#itemEditor th{
+  white-space:normal!important;overflow-wrap:normal!important;
+  word-break:normal!important;font-size:13px!important;line-height:1.25!important;
+ }
+ .preset-item-editor td input,.preset-item-editor td textarea,
+ #itemsEditor td input,#itemsEditor td textarea,
+ #itemEditor td input,#itemEditor td textarea{
+  display:block!important;width:100%!important;max-width:100%!important;
+  min-width:0!important;box-sizing:border-box!important;
+  color:#111827!important;background:#fff!important;
+  border:1px solid #b4bfcb!important;border-radius:6px!important;
+  font:14px/1.4 Arial,sans-serif!important;
+  padding:7px 5px!important;text-align:center;
+ }
+ .preset-item-editor td textarea,
+ #itemsEditor td textarea,#itemEditor td textarea{
+  text-align:left!important;white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;word-break:normal!important;
+  min-height:80px!important;resize:vertical!important;
+  padding:9px 10px!important;
+ }
+ .preset-item-editor td input[type=date],
+ #itemsEditor td input[type=date],#itemEditor td input[type=date]{
+  font-size:12px!important;padding:7px 3px!important;
+  min-width:0!important;
+ }
+ .preset-item-editor td span,
+ #itemsEditor td .line-total,
+ #itemsEditor td span,#itemEditor td span{
+  display:block;min-width:0!important;box-sizing:border-box!important;
+  color:#111827!important;background:#fff!important;
+  text-align:center!important;white-space:normal!important;
+  overflow-wrap:anywhere!important;padding:7px 4px!important
+ }
+ .preset-item-editor th:last-child,.preset-item-editor td:last-child,
+ #itemsEditor th:last-child,#itemsEditor td:last-child,
+ #itemEditor th:last-child,#itemEditor td:last-child{
+  position:sticky!important;right:0!important;z-index:3!important;
+  width:62px!important;min-width:62px!important;
+  background:#151515!important;text-align:center!important;
+  border-left:1px solid #555!important;
+  padding:6px!important;
+ }
+ .preset-item-editor td:last-child button,
+ #itemsEditor td:last-child button,#itemEditor td:last-child button{
+  display:inline-flex!important;align-items:center!important;
+  justify-content:center!important;box-sizing:border-box!important;
+  width:40px!important;min-width:40px!important;max-width:40px!important;
+  height:40px!important;min-height:40px!important;
+  margin:0 auto!important;padding:0!important;
+  background:#dc2626!important;color:#fff!important;
+  border:0!important;border-radius:7px!important;
+  font-size:19px!important;line-height:1!important;cursor:pointer!important;
+ }
+ /* All preset forms use white controls and one visual language. */
+ .preset-settings-card .preset-settings-fields{
+  display:grid!important;grid-template-columns:minmax(0,340px)!important;
+  max-width:100%!important;gap:12px!important;
+ }
+ .preset-settings-card label{width:100%!important;min-width:0!important}
+ .form-only .card input:not([type=checkbox]):not([type=radio]):not([type=color]),
+ .form-only .card select,.form-only .card textarea,
+ .workspace .editor .card input:not([type=checkbox]):not([type=radio]):not([type=color]),
+ .workspace .editor .card select,.workspace .editor .card textarea{
+  color:#111827!important;background:#fff!important;
+  border:1px solid #b4bfcb!important;
+ }
+ .form-only .card input::placeholder,.form-only .card textarea::placeholder,
+ .workspace .editor .card input::placeholder,.workspace .editor .card textarea::placeholder{
+  color:#64748b!important
+ }
+}
