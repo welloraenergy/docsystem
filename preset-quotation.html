@@ -485,43 +485,31 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 </style>
 <style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style>
 <style id="welloraQuotationMetaValueAlignment20261112">
-/* Keep the complete Date and Reference No. group anchored to the right page edge.
-   Content width grows naturally for suffixes such as 0001-R1. */
+/* Single shared two-column grid: labels move with their values.
+   Its longest reference (including revision suffix) sets the overall width. */
 @media screen,print {
  .paper .excel-right{align-items:flex-end!important;min-width:0!important}
  .paper .excel-ref{
-   position:relative!important;
-   top:-2mm!important;right:auto!important;left:auto!important;
+   position:relative!important;top:-2mm!important;left:auto!important;right:auto!important;
+   display:grid!important;
+   grid-template-columns:23mm max-content!important;
+   grid-auto-rows:minmax(4.3mm,auto)!important;
+   column-gap:1.5mm!important;
+   width:max-content!important;max-width:100%!important;min-width:0!important;
    box-sizing:border-box!important;
-   width:max-content!important;max-width:100%!important;
-   min-width:0!important;
    align-self:flex-end!important;
    margin-left:auto!important;margin-right:0!important;
    padding:0 2mm 0 0!important;
  }
- .paper .excel-ref .ref-line{
-   display:grid!important;
-   grid-template-columns:23mm max-content!important;
-   gap:1.5mm!important;
-   width:max-content!important;max-width:100%!important;
-   min-height:4.3mm!important;
-   align-items:baseline!important;
-   justify-content:end!important;
- }
+ .paper .excel-ref .ref-line{display:contents!important}
  .paper .excel-ref .ref-line span:first-child{
-   text-align:right!important;
-   padding:0!important;
-   border:0!important;
-   white-space:nowrap!important;
+   text-align:right!important;align-self:baseline!important;
+   padding:0!important;border:0!important;white-space:nowrap!important
  }
  .paper .excel-ref .ref-line span:last-child{
-   display:block!important;
-   text-align:left!important;
-   padding:0!important;
-   min-width:0!important;
-   white-space:nowrap!important;
-   overflow-wrap:normal!important;
-   background:transparent!important;
+   display:block!important;text-align:left!important;align-self:baseline!important;
+   padding:0!important;min-width:0!important;
+   white-space:nowrap!important;overflow-wrap:normal!important;background:transparent!important
  }
 }
 </style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
