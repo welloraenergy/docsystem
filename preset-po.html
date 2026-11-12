@@ -289,6 +289,8 @@
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
 <script type="module">
+import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-1';
+
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
@@ -349,7 +351,7 @@ function poHeaderSlot(slot,co){
  });
  return '<div style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+';color:'+color+';white-space:pre-wrap">'+html+'</div>';
 }
-function formatPresetDate(value){if(!value)return '';const d=new Date(String(value).slice(0,10)+'T12:00:00');return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
+function formatPresetDate(value){if(!value)return '';const d=new Date(String(value).slice(0,10)+'T12:00:00');return shortDate(value)}
 function poHeaderTitle(){
  const cfg=poHeaderSettings(),font=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(cfg.titleFont)?cfg.titleFont:'Arial';
  const size=Math.max(8,Math.min(36,Number(cfg.titleSize)||16));
@@ -369,6 +371,7 @@ async function chooseTemplate(id,clear=true){
   state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],termsFontSize:7,termsPageFit:"flow"};
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
+  state.fields.poNumber=refPrefix('PO',state.fields.poDate);
   state.fields.currency=business().defaultCurrency||'MYR';
   state.items=Array.from({length:template.items.initialRows},()=>Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));
  }
@@ -396,6 +399,7 @@ function draw(){
  for(const [target,keys] of Object.entries(groups)){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
  }
+ mountReferenceField($('poReferenceFields').querySelector('[data-po-field="poNumber"]'),'PO',state.fields.poDate,state.fields.poNumber);
  drawRows();
  $('termsEditor').innerHTML=template.terms.map(t=>{
   const hidden=Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number));
@@ -531,10 +535,10 @@ function fitPreview(){
  const available=mobileA4AvailableWidth(holder),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
-function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poNumber='';state.fields.poDate=new Date().toISOString().slice(0,10);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
+function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
- if(!state.fields.poNumber?.trim())return alert('Enter PO Reference Number before saving.');
+ if(!state.fields.poNumber?.trim()||state.fields.poNumber===refPrefix('PO',state.fields.poDate))return alert('Enter PO Reference Number before saving.');
  if(!['delivery','pickup'].includes(state.fields.fulfillmentMode))return alert('Choose Delivery or Pick-up in Terms & Conditions before saving the PO.');
  if(!business().id)return alert('Select a Business Profile first.');
  try{
@@ -614,7 +618,11 @@ document.addEventListener('input',e=>{
  if(d.poExtraShow!==undefined){state.extraTerms[Number(d.poExtraShow)].enabled=e.target.checked;render();return}
  if(d.poExtraTitle!==undefined){state.extraTerms[Number(d.poExtraTitle)].title=e.target.value;render();return}
  if(d.poExtraBody!==undefined){state.extraTerms[Number(d.poExtraBody)].body=e.target.value;render();return}
- if(d.poTermToggle!==undefined){const n=Number(d.poTermToggle);state.omittedTerms=Array.isArray(state.omittedTerms)?state.omittedTerms:[];state.omittedTerms=state.omittedTerms.filter(v=>Number(v)!==n);if(!e.target.checked)state.omittedTerms.push(n);render();return}if(d.poField){state.fields[d.poField]=e.target.value;render()}
+ if(d.poTermToggle!==undefined){const n=Number(d.poTermToggle);state.omittedTerms=Array.isArray(state.omittedTerms)?state.omittedTerms:[];state.omittedTerms=state.omittedTerms.filter(v=>Number(v)!==n);if(!e.target.checked)state.omittedTerms.push(n);render();return}if(d.poField){
+ if(d.poField==='poNumber'&&e.target.dataset.referenceSuffix)state.fields.poNumber=fullReference(refPrefix('PO',state.fields.poDate),e.target.value);
+ else if(d.poField==='poDate'){state.fields.poDate=e.target.value;state.fields.poNumber=updateReferenceYear(state.fields.poNumber,'PO',state.fields.poDate);syncReferenceField($('poReferenceFields'),'PO',state.fields.poDate,state.fields.poNumber)}
+ else state.fields[d.poField]=e.target.value;
+ render()}
  else if(d.row!==undefined){state.items[Number(d.row)][d.key]=e.target.value;const tr=e.target.closest('tr'),v=tr?.querySelector('.line-total');if(v)v.textContent=money(lineTotal(state.items[Number(d.row)]));render()}
  else if(d.term){state.termsOverrides[d.term]=e.target.value;render()}
  else if(d.sign){state.signatures[d.sign]??={};state.signatures[d.sign][d.signKey]=e.target.value;render()}
