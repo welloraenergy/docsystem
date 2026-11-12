@@ -82,34 +82,24 @@
  border:1px solid #444!important;border-top:0!important;
  box-sizing:border-box!important
 }
-.paper .po-vendor>div{
- display:flex!important;flex-direction:column!important;
- position:relative!important;min-width:0!important;
- min-height:39mm!important;padding:0!important
-}
-.paper .po-vendor-left{--po-label-width:24mm;border-right:1px solid #444!important}
-.paper .po-vendor-right{--po-label-width:19mm;border-left:0!important}
-.paper .po-vendor>div::before{
- content:"";position:absolute;left:var(--po-label-width);top:0;bottom:0;
- border-left:1px solid #999!important;pointer-events:none;z-index:1
-}
-.paper .po-vendor .po-vendor-row{
- display:grid!important;grid-template-columns:var(--po-label-width) minmax(0,1fr)!important;
- gap:0!important;margin:0!important;min-height:5.3mm!important;
- line-height:1.35;align-items:start!important
-}
-.paper .po-vendor .po-vendor-row strong{
- border:0!important;display:block!important;text-align:right!important;
- padding:1.1mm 2.5mm 1mm .7mm!important;white-space:normal;
- min-height:0!important
-}
-.paper .po-vendor .po-vendor-row span{
- padding:1.1mm 1.7mm 1mm 1.5mm!important;min-width:0!important;
- white-space:pre-wrap!important;overflow-wrap:break-word
-}
-.paper .po-vendor-left .po-address-row{flex:1!important;min-height:19mm!important}
-.paper .po-vendor-left .po-address-row span{min-height:18mm!important}
-.paper .po-vendor-right .po-vendor-row{min-height:5.3mm!important}
+
+.paper .po-vendor>div{display:block!important;position:relative!important;min-width:0!important;min-height:39mm!important;padding:0!important}
+.paper .po-vendor-left{border-right:1px solid #444!important}
+.paper .po-vendor-right{border-left:0!important}
+.paper .po-vendor>div::before{content:none!important;display:none!important}
+
+/* First information section: content-sized labels, continuous divider, no absolute lines. */
+.paper .po-info-table {width:100%;height:100%;table-layout:auto;border-collapse:collapse!important;font:inherit;background:#fff}
+.paper .po-info-table tr{break-inside:avoid}
+.paper .po-info-table th,
+.paper .po-info-table td{background:#fff!important;color:#111!important;border:0!important;vertical-align:top!important;font-size:inherit!important;font-weight:normal;line-height:1.35!important}
+.paper .po-info-table th{width:1%;white-space:nowrap!important;text-align:right!important;font-weight:600!important;border-right:1px solid #999!important;padding:1.1mm 2.5mm 1mm .7mm!important}
+.paper .po-info-table td{width:auto;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;min-width:0}
+.paper .po-info-table tr.info-address th,.paper .po-info-table tr.info-address td{height:16mm}
+.paper .po-info-table tr.info-filler{height:100%}
+.paper .po-info-table tr.info-filler th,.paper .po-info-table tr.info-filler td{padding:0!important}
+@media print{.paper .po-info-table th{border-right:1px solid #999!important}}
+
 /* Quotation's Terms & Conditions uses one box around heading and clauses,
    with a continuous vertical separator after the number column. */
 .paper .po-terms-section.excel-terms-section{
@@ -148,7 +138,7 @@
 }
 @media print{
  .paper .po-vendor{border:1px solid #444!important;border-top:0!important}
- .paper .po-vendor>div::before{border-left:1px solid #999!important}
+ .paper .po-info-table th{border-right:1px solid #999!important}
  .paper .po-terms-section.excel-terms-section{border:1px solid #444!important}
  .paper .po-terms-section .po-terms::before{border-left:1px solid #999!important}
 }
@@ -490,10 +480,10 @@ function render(){
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
  const companyMarkup='<div class="po-head"><div class="po-company-ident">'+sharedPresetSlot('logo',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('name',headerCompany,headerCfg,globalPlaceholders)+sharedPresetSlot('details',headerCompany,headerCfg,globalPlaceholders)+'</div><div class="po-right"><div class="po-title">'+poHeaderTitle()+'</div><div class="po-meta">'+metaRow('Date',formatPresetDate(f.poDate))+metaRow('Reference No',f.poNumber)+'</div></div></div>';
- const vendorRow=(label,value,address=false)=>'<div class="po-vendor-row'+(address?' po-address-row':'')+'"><strong>'+esc(label)+':</strong><span>'+esc(poPresetValue(value||''))+'</span></div>';
+ const vendorRow=(label,value,address=false)=>'<tr'+(address?' class="info-address"':'')+'><th scope="row">'+esc(label)+':</th><td>'+esc(poPresetValue(value||''))+'</td></tr>';
  const vendorMarkup='<section class="po-vendor-section"><div class="po-vendor-title">Vendor &amp; Quotation Information</div><div class="po-vendor">'+
-  '<div class="po-vendor-left">'+vendorRow('Company',f.vendorName)+vendorRow('Address',f.vendorAddress,true)+vendorRow('Contact Person',f.vendorContact)+vendorRow('Tel',f.vendorPhone)+vendorRow('Email',f.vendorEmail)+'</div>'+
-  '<div class="po-vendor-right">'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+'</div></div></section>';
+  '<div class="po-vendor-left"><table class="po-info-table"><tbody>'+vendorRow('Company',f.vendorName)+vendorRow('Address',f.vendorAddress,true)+vendorRow('Contact Person',f.vendorContact)+vendorRow('Tel',f.vendorPhone)+vendorRow('Email',f.vendorEmail)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div>'+
+  '<div class="po-vendor-right"><table class="po-info-table"><tbody>'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div></div></section>';
  const dynamicLabels=cols.map(c=>c.key==='unitPrice'?(template.id==='rental'?'Daily Rental Rate ('+esc(f.currency||'MYR')+'/Day)':'Unit Price ('+esc(f.currency||'MYR')+')'):c.key==='lineTotal'?'Total Amount ('+esc(f.currency||'MYR')+')':esc(c.label));
  const colWidths=template.id==='rental'?{number:5,description:39,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:14}:{number:5,description:52,unit:9,quantity:8,unitPrice:12,lineTotal:14};
  const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+dynamicLabels.map(label=>'<th>'+label+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
