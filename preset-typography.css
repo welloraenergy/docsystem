@@ -139,3 +139,37 @@
 .paper .dt-photos tbody td.photo-empty-filler{
  border:0!important;background:transparent!important
 }
+
+/* Standard top document metadata: long-form dates and references stay in one line. */
+.paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{
+ width:81mm!important;min-width:81mm!important;max-width:81mm!important;
+ font:8pt/1.35 Arial,sans-serif!important
+}
+.paper .excel-ref .ref-line,.paper .po-meta .po-meta-row,
+.paper .dt-meta .dt-meta-line,.paper .inv-meta .inv-meta-line{
+ grid-template-columns:27mm minmax(0,1fr)!important;
+ gap:1.5mm!important;min-height:4.5mm!important;
+ white-space:nowrap!important
+}
+.paper .excel-ref .ref-line>span:last-child,.paper .po-meta .po-meta-value,
+.paper .dt-meta .dt-meta-line>span,.paper .inv-meta .inv-meta-line>span{
+ white-space:nowrap!important;overflow:visible!important;overflow-wrap:normal!important;
+ word-break:normal!important;font-size:8pt!important
+}
+.paper .po-head{grid-template-columns:minmax(0,53%) minmax(0,47%)!important}
+.paper .dt-head,.paper .inv-head{grid-template-columns:minmax(0,53%) minmax(0,47%)!important}
+.paper .po-right,.paper .dt-right,.paper .inv-right{min-width:0!important;align-items:flex-end!important}
+.paper .excel-ref{margin-right:0!important}
+.preset-reference-control{
+ display:flex;align-items:stretch;width:100%;max-width:100%;min-width:0;
+ border:1px solid #9baabe;border-radius:7px;overflow:hidden;background:white
+}
+.preset-reference-control .preset-reference-prefix{
+ display:flex;align-items:center;padding:0 8px;flex:none;
+ color:#202a37;background:#e8edf3;font:600 13px Arial,sans-serif;
+ border-right:1px solid #b9c4d1;white-space:nowrap
+}
+.preset-reference-control input{
+ flex:1;min-width:0!important;width:100%;max-width:100%!important;
+ border:0!important;border-radius:0!important;outline-offset:-2px!important;
+}
