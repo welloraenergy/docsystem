@@ -641,3 +641,15 @@
   color:#64748b!important
  }
 }
+
+/* Short DD/MM/YY dates in A4 item/signature tables stay on one line. */
+.paper .inv-table tbody td:nth-child(5),
+.paper .inv-table tbody td:nth-child(6),
+.paper .inv-sign tbody td:nth-child(4),
+.paper .excel-sign-table tbody td:nth-child(4),
+.paper .dt-sign tbody td:nth-child(5){
+ white-space:nowrap!important;
+ overflow-wrap:normal!important;
+ word-break:normal!important;
+ font-variant-numeric:tabular-nums!important;
+}
