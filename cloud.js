@@ -43,6 +43,16 @@ export async function startCloud(authUser,profile){
   await loadSavedPresetCopies();
   if(canManage())await loadUsers();
 }
+// Refresh the shared Firestore list whenever the user returns to this PC/tab.
+let lastFocusRefresh=0;
+async function refreshDocumentsOnReturn(){
+ if(!user||loading||document.hidden)return;
+ if(Date.now()-lastFocusRefresh<15000)return;
+ lastFocusRefresh=Date.now();
+ await loadDocs();
+}
+window.addEventListener('focus',()=>{refreshDocumentsOnReturn().catch(()=>{})});
+document.addEventListener('visibilitychange',()=>{refreshDocumentsOnReturn().catch(()=>{})});
 export function clearCloud(){user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
 export function settingsChanged(){
   if(!user||!canManage()||loading)return;
