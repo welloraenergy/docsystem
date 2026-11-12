@@ -459,7 +459,8 @@ function render(){
  const vendorMarkup='<section class="po-vendor-section"><div class="po-vendor-title">Vendor &amp; Quotation Information</div><div class="po-vendor">'+
   '<div class="po-vendor-left">'+vendorRow('Company',f.vendorName)+vendorRow('Address',f.vendorAddress,true)+vendorRow('Contact Person',f.vendorContact)+vendorRow('Tel',f.vendorPhone)+vendorRow('Email',f.vendorEmail)+'</div>'+
   '<div class="po-vendor-right">'+vendorRow('Quotation No',f.vendorQuotationNo)+vendorRow('Date',f.vendorQuotationDate)+vendorRow('Currency',f.currency||'MYR')+vendorRow('SST (%)',f.sstRate??0)+'</div></div></section>';
- const table='<table class="po-items excel-table"><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
+ const colWidths=template.id==='rental'?{number:5,description:39,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:14}:{number:5,description:52,unit:9,quantity:8,unitPrice:12,lineTotal:14};
+ const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
  const totalTable='<table class="po-totals"><tr><td>Subtotal</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
  const amountWords='<div class="po-words"><strong>Total Amount in Words: </strong>'+esc(f.currency||'MYR')+' '+esc(moneyWords(grand))+'</div>';
  const clauseMarkup=t=>{
