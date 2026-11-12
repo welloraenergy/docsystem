@@ -485,31 +485,32 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 </style>
 <style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style>
 <style id="welloraQuotationMetaValueAlignment20261112">
-/* Keep Date and Reference No. together, anchored near the right paper margin.
-   Allow the complete suffix, e.g. 0001 or 0001-R1, without displacing labels. */
+/* Keep the complete Date and Reference No. group anchored to the right page edge.
+   Content width grows naturally for suffixes such as 0001-R1. */
 @media screen,print {
  .paper .excel-right{align-items:flex-end!important;min-width:0!important}
  .paper .excel-ref{
+   position:relative!important;
+   top:-2mm!important;right:auto!important;left:auto!important;
    box-sizing:border-box!important;
-   width:69mm!important;
-   max-width:100%!important;
+   width:max-content!important;max-width:100%!important;
+   min-width:0!important;
    align-self:flex-end!important;
-   margin-left:auto!important;
-   margin-right:0!important;
+   margin-left:auto!important;margin-right:0!important;
    padding:0 2mm 0 0!important;
  }
  .paper .excel-ref .ref-line{
    display:grid!important;
-   grid-template-columns:23mm minmax(0,1fr)!important;
-   gap:1mm!important;
-   width:100%!important;
+   grid-template-columns:23mm max-content!important;
+   gap:1.5mm!important;
+   width:max-content!important;max-width:100%!important;
    min-height:4.3mm!important;
    align-items:baseline!important;
-   justify-content:initial!important;
+   justify-content:end!important;
  }
  .paper .excel-ref .ref-line span:first-child{
    text-align:right!important;
-   padding:0 1mm 0 0!important;
+   padding:0!important;
    border:0!important;
    white-space:nowrap!important;
  }
@@ -518,8 +519,8 @@ body.embedded-preset .preview-only>.notice{display:none!important}
    text-align:left!important;
    padding:0!important;
    min-width:0!important;
-   white-space:normal!important;
-   overflow-wrap:anywhere!important;
+   white-space:nowrap!important;
+   overflow-wrap:normal!important;
    background:transparent!important;
  }
 }
