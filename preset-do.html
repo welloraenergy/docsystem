@@ -125,7 +125,7 @@
 <section class="card"><h3>Deliver To</h3><div class="section-fields" id="deliverToFields"></div></section>
 <section class="card"><h3>Delivery Items</h3><div class="table-wrap"><table class="items" id="itemEditor"></table></div><p class="muted">Total Qty: <strong id="qtyTotal">0</strong></p><button id="addRow" class="preset-add-item">+ Add Item</button> <button id="removeRow" class="preset-remove-last">Remove Last</button></section>
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
-<section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Images are resized and compressed to a maximum of 700 KB each, then uploaded to Firebase Storage on Save Online. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
+<section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Original images up to 12 MB each are uploaded to Firebase Storage on Save Online, without compression. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
@@ -142,7 +142,7 @@ const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app),params=new 
 if(params.get('embedded')==='1')document.body.classList.add('embedded');
 let user=null,role='user',profiles=[],profile=null,globals={},template=null,state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,busy=false,loaded=false,saving=false;
 const pendingPhotos=new Map(),photoPreviews=new Map(),resolvedPhotos=new Map();
-const MAX_PHOTO_BYTES=700*1024;
+const MAX_PHOTO_BYTES=12*1024*1024; // Original image upload; per-photo safety cap.
 const posted=(type,data={})=>{if(window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+type,...data},location.origin)};
 function notify(message){$('status').textContent=message;posted('status',{status:message})}
 function business(){const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:(typeof c.headerText==='string'&&c.headerText.trim())?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals}}
@@ -177,28 +177,12 @@ function clearPhotoSession(){
  for(const url of photoPreviews.values())URL.revokeObjectURL(url);
  photoPreviews.clear();resolvedPhotos.clear();photoRequests.clear();
 }
-async function compressPhoto(file){
- const bitmap=await createImageBitmap(file);
- try{
-  let longest=Math.min(Math.max(bitmap.width,bitmap.height),1800);
-  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
-  if(!ctx)throw Error('Canvas unavailable');
-  for(;longest>=400;longest=Math.floor(longest*.82)){
-   const ratio=Math.min(1,longest/Math.max(bitmap.width,bitmap.height));
-   canvas.width=Math.max(1,Math.round(bitmap.width*ratio));
-   canvas.height=Math.max(1,Math.round(bitmap.height*ratio));
-   ctx.clearRect(0,0,canvas.width,canvas.height);
-   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-   ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
-   for(const quality of [.83,.75,.67,.59,.5,.43]){
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
-    if(!blob)throw Error('JPEG compression unsupported');
-    if(blob.size<=MAX_PHOTO_BYTES)return blob;
-   }
-  }
-  throw Error('Unable to compress photo below 700 KB');
- }finally{bitmap.close()}
+async function preparePhoto(file){
+ if(!file.type.startsWith('image/'))throw Error('Please choose an image');
+ if(file.size>MAX_PHOTO_BYTES)throw Error('Image exceeds 12 MB. Choose a smaller file.');
+ return file; // Upload original pixels and quality; no compression or canvas conversion.
 }
+
 function draw(){
  if(!state)return;
  $('documentFields').innerHTML=template.fields.map(f=>field(f.label,f.key,state.fields[f.key],f.type,'fields')).join('');
@@ -237,13 +221,13 @@ function render(){
  const items='<table class="dt-items excel-table"><colgroup><col style="width:5%"><col style="width:49%"><col style="width:24%"><col style="width:10%"><col style="width:12%"></colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='qty'?'quantity':'')+'">'+esc(text(r[c.key]||''))+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
  const total='<table class="dt-total"><colgroup><col style="width:5%"><col style="width:49%"><col style="width:24%"><col style="width:10%"><col style="width:12%"></colgroup><tbody><tr><td colspan="3" class="dt-total-spacer"></td><th scope="row">Total Qty</th><td class="dt-total-value">'+esc(qtyTotal())+'</td></tr></tbody></table>';
  const sign='<table class="dt-sign"><colgroup><col style="width:14%"><col style="width:24%"><col style="width:15%"><col style="width:17%"><col style="width:10%"><col style="width:20%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td class="dt-name-position"><div class="dt-sign-name"><b>Name:</b><span>'+esc(text(d.name))+'</span></div><div class="dt-sign-position"><b>Position:</b><span>'+esc(text(d.position))+'</span></div></td><td>'+esc(text(d.contactNumber))+'</td><td class="dt-sign-company">'+esc(text(d.companyName))+'</td><td>'+esc(formatDate(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
- const photosPresent=Array.from({length:10},(_,i)=>({index:i,stored:state.photos?.[i],src:photoSrc(i)})).filter(x=>Boolean(x.src));
- // Keep only uploaded photographs in the A4 appendix; never print empty placeholders.
+ const photosPresent=Array.from({length:10},(_,i)=>({index:i,src:photoSrc(i)})).filter(x=>Boolean(x.src));
+ // Consistent two-column photo boxes: the last image never spans the whole page.
  const photoRows=Array.from({length:Math.ceil(photosPresent.length/2)},(_,rowIndex)=>{
   const pair=photosPresent.slice(rowIndex*2,rowIndex*2+2);
-  return '<tr>'+pair.map(p=>'<td'+(pair.length===1?' colspan="2"':'')+'>'+(p.src?'<img src="'+esc(p.src)+'" alt="Photo '+(p.index+1)+'">':'')+'</td>').join('')+'</tr>';
+  return '<tr>'+pair.map(p=>'<td><img src="'+esc(p.src)+'" alt="Photo '+(p.index+1)+'"></td>').join('')+'</tr>';
  }).join('');
- const photos=photosPresent.length?'<table class="dt-photos excel-table" data-preset-new-page="photos"><thead><tr><th colspan="2">Photos</th></tr></thead><tbody>'+photoRows+'</tbody></table>':'';
+ const photos=photosPresent.length?'<table class="dt-photos excel-table" data-preset-new-page="photos"><colgroup><col style="width:50%"><col style="width:50%"></colgroup><thead><tr><th colspan="2">Photos</th></tr></thead><tbody>'+photoRows+'</tbody></table>':'';
  $('paper').innerHTML='<article class="paper">'+headerHtml+template.sections.map(information).join('')+items+total+sign+photos+'</article>';
  const pages=paginatePresetDocument($('paper'),{fit:'normal'});
  $('pageCount').textContent=pages+' page(s)';
@@ -279,9 +263,9 @@ async function save(){
   const nextPhotos=[...state.photos];
   for(const [idx,blob] of pendingPhotos){
    notify('Uploading photo '+(idx+1)+' ('+Math.ceil(blob.size/1024)+' KB)…');
-   const path='delivery-tickets/'+user.uid+'/'+ref.id+'/photo-'+(idx+1)+'-'+Date.now()+'.jpg';
+   const path='delivery-tickets/'+user.uid+'/'+ref.id+'/photo-'+(idx+1)+'-'+Date.now()+'.'+({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'}[blob.type]||'img');
    const fileRef=storageRef(storage,path);
-   await uploadBytes(fileRef,blob,{contentType:'image/jpeg',customMetadata:{documentId:ref.id,slot:String(idx+1)}});
+   await uploadBytes(fileRef,blob,{contentType:blob.type||'application/octet-stream',customMetadata:{documentId:ref.id,slot:String(idx+1)}});
    uploaded.push(path);
    nextPhotos[idx]=path;
   }
@@ -354,14 +338,14 @@ document.addEventListener('change',async e=>{
  if(!file.type.startsWith('image/'))return alert('Please choose an image');
  const idx=Number(e.target.dataset.photo);
  try{
-  notify('Compressing photo '+(idx+1)+'…');
-  const blob=await compressPhoto(file);
+  notify('Preparing photo '+(idx+1)+'…');
+  const blob=await preparePhoto(file);
   if(photoPreviews.has(idx))URL.revokeObjectURL(photoPreviews.get(idx));
   const localUrl=URL.createObjectURL(blob);
   photoPreviews.set(idx,localUrl);pendingPhotos.set(idx,blob);
   state.photos[idx]='pending:'+idx;
   draw();notify('Photo '+(idx+1)+' ready ('+Math.ceil(blob.size/1024)+' KB). Save Online to upload.');
- }catch(err){notify('Photo compression failed');alert('Could not process photo: '+err.message)}
+ }catch(err){notify('Photo selection failed');alert('Could not process photo: '+err.message)}
 });
 async function start(){
  try{const response=await fetch('./templates/do/standard.json',{cache:'no-store'});if(!response.ok)throw Error('Delivery Ticket JSON not found');template=await response.json();state=empty();loaded=true;draw();if(docId)await loadSaved(docId);else{notify('Delivery Ticket ready');ready()}}catch(e){notify('Cannot load Delivery Ticket: '+e.message)}
