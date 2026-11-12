@@ -209,3 +209,26 @@
 .paper .inv-band,.paper .quote-item-section-title{
  break-after:avoid!important;page-break-after:avoid!important
 }
+
+/* Consistent item-table alignment in all preset A4 previews. */
+.paper .excel-table tbody td:not(:nth-child(2)),
+.paper .po-items tbody td:not(.description),
+.paper .dt-items tbody td:not(:nth-child(2)),
+.paper .inv-table tbody td:not(:nth-child(2)){
+ text-align:center!important;vertical-align:middle!important;
+}
+.paper .excel-table tbody td:nth-child(2),
+.paper .po-items tbody td.description,
+.paper .dt-items tbody td:nth-child(2),
+.paper .inv-table tbody td:nth-child(2){
+ text-align:left!important;vertical-align:middle!important;
+}
+.paper .po-items .line-total,.paper .inv-table .number{
+ text-align:center!important;
+}
+/* Editor data-entry cells: identifiers, units, quantities, days and rates. */
+.preset-item-editor td:not(:nth-child(2)) input,
+#itemsEditor td:not(:nth-child(2)) input,
+#itemsEditor td:not(:nth-child(2)) span{
+ text-align:center!important;
+}
