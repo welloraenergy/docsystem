@@ -708,7 +708,7 @@ const fields=[["docTitle","Printed Document Heading","text"],["headingLines","Ad
 let state={};const $=id=>document.getElementById(id),esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),fmt=n=>Number(n||0).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});
 const preset=()=>presets.find(p=>p.id===state.preset)||presets[0];
 const RENTAL3_TERMS = [
-["Purchase Order and Ordering Requirements", 'A formal Purchase Order ("PO") must be issued to Wellora Energy Sdn. Bhd. (1690936-D) prior to any preparation, dispatch, mobilisation, or load-out of the rental equipment.\nAll POs shall be addressed to: Wellora Energy Sdn. Bhd. (1690936-D), Lot 38, Block D, 2nd Floor, Lazenda Centre, Jalan Okk Abdullah, 87000 W.P. Labuan, Malaysia.'],
+["Purchase Order and Ordering Requirements", 'A formal Purchase Order ("PO") must be issued to Wellora Energy Sdn. Bhd. (1690936-D) prior to any preparation, dispatch, mobilisation, or load-out of the rental equipment. All POs shall be addressed to: Wellora Energy Sdn. Bhd. (1690936-D), Lot 38, Block D, 2nd Floor, Lazenda Centre, Jalan Okk Abdullah, 87000 W.P. Labuan, Malaysia.'],
 ["Correspondence","All correspondence and documentation relating to this quotation shall be addressed to Wellora Energy Sdn. Bhd. (1690936-D)."],
 ["Wellora Energy's Designated Facility Address",""],
 ["Equipment Availability and Price Adjustment","All quoted equipment is subject to availability at the time the order is placed. Any subsequent variation in the quantity of equipment required or the rental period may result in a corresponding adjustment to the quoted rates and/or charges."],
@@ -800,7 +800,7 @@ function specialTkrTerms(){
   return {num:i+1,title,body};
  });
 }
-function renderClauses(clauses){return clauses.map(x=>'<div class="excel-term"><span class="term-num">'+x.num+'</span><div class="term-text"><strong>'+esc(x.title)+':</strong> '+esc(x.body)+'</div></div>').join('')}
+function renderClauses(clauses){return clauses.map(x=>'<div class="excel-term"><span class="term-num">'+x.num+'</span><div class="term-text"><strong>'+esc(x.title)+':</strong>'+(x.title==='Consumables'&&x.num===12?'\n':' ')+esc(x.body)+'</div></div>').join('')}
 const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
 function activePresetClauses(){
  const omitted=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
