@@ -268,7 +268,7 @@ async function openSavedPresetCopy(){
   if(selected)profile=selected;
   state=copy.defaults;
   activeCopyDefaults=structuredClone(copy.defaults);
-  state.fields.reference='';state.items=Array.isArray(state.items)?state.items:[];
+  state.fields.reference=refPrefix('INV',state.fields.date);state.items=Array.isArray(state.items)?state.items:[];
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
 }
