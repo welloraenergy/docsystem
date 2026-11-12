@@ -20,7 +20,7 @@
 }
 .paper .quote-item-section-title{
  font:700 10pt/1.3 Arial,sans-serif!important;text-align:left!important;
- margin:3mm 0 1.5mm;padding:1mm 0;border-bottom:1px solid #777;
+ margin:3mm 0 1.5mm;padding:0;border:0;
  color:#111;break-after:avoid;page-break-after:avoid
 }
 /* Keep values aligned by their meaning rather than centering all data. */
@@ -28,3 +28,28 @@
 .paper .po-items tbody td.description{text-align:left!important}
 .paper .excel-table tbody td:nth-child(5),
 .paper .excel-table tbody td:nth-child(6){text-align:right!important}
+
+/* One item controller appearance across Quotation, PO, DO, RT and Invoice.
+   These controls are editor-only; never affect printed A4 pages. */
+@media screen{
+ .preset-add-item,.preset-remove-last,.preset-remove-item{
+  font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:600!important;
+  border-radius:7px!important;cursor:pointer!important;
+  border:1px solid transparent!important;box-shadow:none!important;
+ }
+ .preset-add-item{background:#d6ad2c!important;border-color:#d6ad2c!important;color:#151515!important;padding:10px 15px!important}
+ .preset-remove-last{background:#df2424!important;border-color:#df2424!important;color:#fff!important;padding:10px 15px!important}
+ .preset-remove-item{background:#df2424!important;border-color:#df2424!important;color:#fff!important;
+  min-width:37px!important;min-height:37px!important;padding:5px 9px!important;
+  line-height:1!important;text-align:center!important}
+ .preset-add-item:hover{background:#f0c94b!important}
+ .preset-remove-last:hover,.preset-remove-item:hover{background:#b91c1c!important}
+ .preset-add-item:focus-visible,.preset-remove-last:focus-visible,.preset-remove-item:focus-visible{
+  outline:2px solid #fff!important;outline-offset:2px!important}
+ .preset-item-editor th{vertical-align:middle!important;text-align:center!important}
+ .preset-item-editor td{vertical-align:middle}
+ .preset-item-editor td:last-child{width:54px;text-align:center}
+ .preset-item-editor textarea{min-width:150px;min-height:56px;resize:vertical}
+ .preset-item-editor input{min-width:68px}
+ .line-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
+}
