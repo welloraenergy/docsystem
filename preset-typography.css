@@ -268,3 +268,51 @@
  min-width:0;
  padding:.5mm 1mm!important;
 }
+
+/* Consistent item row heights for normal one-line entries in all five presets.
+   Table rows expand naturally when descriptions wrap onto more lines. */
+.paper table.excel-table tbody tr,
+.paper table.po-items tbody tr,
+.paper table.dt-items tbody tr,
+.paper table.inv-table tbody tr{height:8mm!important}
+.paper table.excel-table tbody td,
+.paper table.po-items tbody td,
+.paper table.dt-items tbody td,
+.paper table.inv-table tbody td{
+ height:8mm!important;
+ padding:1mm 1.2mm!important;
+ line-height:1.25!important;
+ vertical-align:middle!important;
+}
+/* Complete Quotation client information outline: shared border, centre divider,
+   no empty gap between the two halves of the section. */
+.paper .excel-client{
+ display:grid!important;
+ grid-template-columns:58% 42%!important;
+ gap:0!important;
+ border:1px solid #777!important;
+ min-height:27mm!important;
+ margin-top:0!important;
+ box-sizing:border-box!important;
+}
+.paper .excel-client>div{
+ min-width:0!important;
+ padding:1.2mm 1.5mm!important;
+ box-sizing:border-box!important;
+}
+.paper .excel-client>div:first-child{border-right:1px solid #777!important}
+.paper .excel-client .item{
+ grid-template-columns:26mm minmax(0,1fr)!important;
+ min-height:4mm!important;
+}
+.paper .excel-client-title{
+ border:1px solid #777!important;
+ border-bottom:0!important;
+ margin-bottom:0!important;
+}
+.po-editor-subtotal{
+ margin-top:10px;
+ margin-bottom:8px;
+ font-weight:700;
+ text-align:right;
+}
