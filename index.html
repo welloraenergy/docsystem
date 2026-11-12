@@ -864,7 +864,7 @@ function loadPresetConfigurator(copyId=null){
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version=20261112-reference-parens3&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ frame.src=editor+'?version=20261112-online-save2&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -893,7 +893,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261112-reference-parens3':family==='returning-ticket'?'preset-return.html?version=20261112-reference-parens3':family==='delivery-ticket'?'preset-do.html?version=20261112-reference-parens3':family==='purchase-order'?'preset-po.html?version=20261112-reference-parens3':'preset-quotation.html?version=20261112-reference-parens3';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261112-online-save2':family==='returning-ticket'?'preset-return.html?version=20261112-online-save2':family==='delivery-ticket'?'preset-do.html?version=20261112-online-save2':family==='purchase-order'?'preset-po.html?version=20261112-online-save2':'preset-quotation.html?version=20261112-online-save2';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
@@ -928,6 +928,15 @@ window.addEventListener('message',e=>{
   }
   selection.disabled=!!e.data.locked;
   document.getElementById('workspaceStatus').textContent=e.data.status||'Preset ready';
+  return;
+ }
+ if(e.data?.type==='docsystem-preset-saved'){
+  document.getElementById('workspaceStatus').textContent='Saved online: '+(e.data.number||'Document');
+  window.DocSystemCloud?.loadDocs?.().catch(error=>{document.getElementById('workspaceStatus').textContent='Saved online, but document list refresh failed: '+error.message});
+  return;
+ }
+ if(e.data?.type==='docsystem-preset-save-error'){
+  document.getElementById('workspaceStatus').textContent='Save failed: '+(e.data.message||'Check Firebase access');
   return;
  }
  if(e.data?.type==='docsystem-preset-status'){document.getElementById('workspaceStatus').textContent=e.data.status||'Preset ready';return}
