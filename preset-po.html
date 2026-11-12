@@ -430,7 +430,7 @@ function drawRows(){
  const cols=template.items.columns;
  const editableWidths=template.id==='rental'?{number:5,description:35,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:12}:{number:5,description:48,unit:9,quantity:8,unitPrice:12,lineTotal:12};
  $('itemsEditor').innerHTML='<colgroup>'+cols.map(c=>'<col style="width:'+(editableWidths[c.key]||Math.floor(94/cols.length))+'%">').join('')+'<col style="width:6%"></colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+
- state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'||c.type==='money'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
+ state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(c.type==='money'&&String(row[c.key]??'').trim()?money(num(row[c.key])):row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
 }
 function lineTotal(row){return num(row.quantity)*num(row.unitPrice)*(template.id==='rental'?num(row.rentalDays):1)}
 function moneyWords(amount){
@@ -608,6 +608,12 @@ $('removeRow').addEventListener('click',()=>{if(state.items.length>1){state.item
 $('itemsEditor').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(!b)return;state.items.splice(Number(b.dataset.remove),1);if(!state.items.length)state.items=[{}];drawRows();render()});
 
 $('termsPageFit').addEventListener('change',e=>{state.termsPageFit=e.target.value;render()});
+document.addEventListener('focusout',e=>{
+ if(e.target?.dataset?.key==='unitPrice'){
+  const raw=String(e.target.value||'').trim();
+  if(raw)e.target.value=money(num(raw));
+ }
+});
 document.addEventListener('input',e=>{
  const d=e.target.dataset;
  if(d.poFulfillment!==undefined){
