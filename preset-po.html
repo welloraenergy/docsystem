@@ -552,7 +552,7 @@ async function save(){
   }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
-  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);reportPresetSaved(state.fields.poNumber,docId);ready();
  }catch(error){notify('PO save failed: '+(error.code||error.message));reportPresetSaveError(error);alert('PO save failed: '+(error.code||error.message))}
 }
