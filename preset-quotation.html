@@ -124,8 +124,9 @@ body.preview .preview-only{display:block}
 .paper .excel-info-table th{width:1%;white-space:nowrap!important;text-align:right!important;font-weight:600!important;border-right:1px solid #999!important;padding:1.1mm 2.5mm 1mm .7mm!important}
 .paper .excel-info-table td{width:auto;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;min-width:0}
 .paper .excel-info-table tr.info-address th,.paper .excel-info-table tr.info-address td{height:16mm}
-.paper .excel-info-table tr.info-filler{height:100%}
-.paper .excel-info-table tr.info-filler th,.paper .excel-info-table tr.info-filler td{padding:0!important}
+.paper .excel-info-table tbody{height:100%!important}
+.paper .excel-info-table tr.info-filler{height:12mm!important;min-height:12mm!important}
+.paper .excel-info-table tr.info-filler th,.paper .excel-info-table tr.info-filler td{height:12mm!important;padding:0!important;vertical-align:top!important}
 @media print{.paper .excel-info-table th{border-right:1px solid #999!important}}
 
 </style><style id="headerNoVerticalDivider">
@@ -162,6 +163,7 @@ body.preview .preview-only{display:block}
 .paper .excel-terms .excel-term{display:grid!important;grid-template-columns:7mm minmax(0,1fr)!important;gap:1.5mm!important;width:100%!important;max-width:none!important;align-items:start!important;margin:0 0 1.6mm!important;break-inside:avoid}
 .paper .excel-terms .excel-term .term-num{display:block!important;width:auto!important;min-width:0!important;text-align:center!important;white-space:nowrap}
 .paper .excel-terms .excel-term .term-text{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;text-align:justify!important;text-justify:inter-word!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;line-height:1.25!important}
+.paper .excel-terms .quote-lettered-items{display:block!important;margin-top:.5mm!important;padding-left:2mm!important;text-align:left!important}.paper .excel-terms .quote-lettered-item{display:block!important;margin:0!important;padding:0!important;white-space:normal!important;text-align:left!important;line-height:1.25!important}
 @media print{.paper .excel-terms,.paper .excel-terms .excel-term{width:100%!important}.paper .excel-terms .term-text{text-align:justify!important}}
 </style><style id="termsTableBorders">
 /* Excel-style enclosing box with one continuous rule between clause numbers and text. */
@@ -798,7 +800,7 @@ function quoteClauseHtml(body){
  let intro=first.trim();
  if(/^\s*\(?a\)\s/i.test(first)){items.unshift(first);intro=''}
  const blocks=items.map(item=>'<div class="quote-lettered-item">'+esc(item.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') '))+'</div>').join('');
- return {html:(intro?'<span>'+esc(intro)+'</span>':'')+blocks,lettered:true};
+ return {html:(intro?'<span>'+esc(intro)+'</span>':'')+'<div class="quote-lettered-items">'+blocks+'</div>',lettered:true};
 }
 function renderClauses(clauses){
  return clauses.map(x=>{
