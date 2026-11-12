@@ -434,3 +434,111 @@
   print-color-adjust:exact!important;
  }
 }
+
+/* 2026-11-12: Structural information columns.
+   Divider positions and label grid widths MUST use one common variable.
+   Previous overrides made one change without the other, producing overflow. */
+.paper .excel-client,
+.paper .po-vendor,.paper .inv-client{width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+.paper .excel-client{grid-template-columns:minmax(0,58%) minmax(0,42%)!important;column-gap:0!important}
+.paper .excel-client>div:first-child{--label-col:31mm!important}
+.paper .excel-client>div:last-child{--label-col:26mm!important}
+.paper .excel-client>div{position:relative!important;min-width:0!important}
+.paper .excel-client>div::before{left:var(--label-col)!important;top:0!important;bottom:0!important}
+.paper .excel-client .item,
+.paper .excel-client>div:last-child .item{
+ display:grid!important;grid-template-columns:var(--label-col) minmax(0,1fr)!important;
+ gap:0!important;box-sizing:border-box!important;min-width:0!important;
+}
+.paper .excel-client .item b{
+ min-width:0!important;box-sizing:border-box!important;
+ padding:1mm 1.2mm .3mm .6mm!important;text-align:right!important;
+ white-space:nowrap!important;font-size:7.2pt!important;
+}
+.paper .excel-client .item span{
+ min-width:0!important;box-sizing:border-box!important;padding:1mm 1.2mm .3mm!important;
+}
+.paper .po-vendor{grid-template-columns:minmax(0,58%) minmax(0,42%)!important;column-gap:0!important}
+.paper .po-vendor-left{--po-label-width:31mm!important}
+.paper .po-vendor-right{--po-label-width:26mm!important}
+.paper .po-vendor>div{min-width:0!important;position:relative!important}
+.paper .po-vendor>div::before{left:var(--po-label-width)!important;top:0!important;bottom:0!important}
+.paper .po-vendor .po-vendor-row,
+.paper .po-vendor-right .po-vendor-row{
+ display:grid!important;grid-template-columns:var(--po-label-width) minmax(0,1fr)!important;
+ gap:0!important;box-sizing:border-box!important;min-width:0!important;
+}
+.paper .po-vendor .po-vendor-row strong{
+ min-width:0!important;box-sizing:border-box!important;white-space:nowrap!important;
+ padding:1mm 1.2mm .3mm .6mm!important;font-size:7.2pt!important;
+}
+.paper .po-vendor .po-vendor-row span{
+ min-width:0!important;box-sizing:border-box!important;padding:1mm 1.2mm .3mm!important;
+}
+/* Invoice: full-height vertical rules follow the same grid tracks as the labels.
+   No dependence on the height of an individual line. */
+.paper .inv-client{
+ display:grid!important;grid-template-columns:minmax(0,56%) minmax(0,44%)!important;
+ gap:0!important;overflow:hidden!important;
+}
+.paper .inv-client>div{
+ --inv-label-width:28mm;
+ position:relative!important;
+ box-sizing:border-box!important;min-width:0!important;
+ padding:1mm 0!important;
+}
+.paper .inv-client>div:last-child{--inv-label-width:29mm}
+.paper .inv-client>div:first-child{border-right:1px solid #777!important}
+.paper .inv-client>div+div{border-left:0!important}
+.paper .inv-client>div::before{
+ content:"";position:absolute;top:0;bottom:0;
+ left:var(--inv-label-width);border-left:1px solid #777!important;
+ pointer-events:none;z-index:1;
+}
+.paper .inv-client .line,
+.paper .inv-client>div+div .line{
+ display:grid!important;grid-template-columns:var(--inv-label-width) minmax(0,1fr)!important;
+ gap:0!important;width:100%!important;min-width:0!important;
+}
+.paper .inv-client .line b{
+ min-width:0!important;box-sizing:border-box!important;
+ font-size:7.2pt!important;padding:1mm 1.2mm .3mm .6mm!important;
+ text-align:right!important;white-space:nowrap!important;
+}
+.paper .inv-client .line span{
+ min-width:0!important;box-sizing:border-box!important;
+ padding:1mm 1.2mm .3mm!important;
+}
+/* Shared editor form controls and spacing across all five presets.
+   Screen only: do not change the document/print design. */
+@media screen{
+ .form-only .card,.workspace .editor .card{border-radius:12px!important}
+ .form-only .card h3,.workspace .editor .card h3{
+  font-size:18px!important;font-weight:700!important;
+  line-height:1.3!important;margin-bottom:14px!important
+ }
+ .form-only .card label,.workspace .editor .card label{
+  font-size:15px!important;line-height:1.35!important;
+  min-width:0!important
+ }
+ .form-only .card .grid,.workspace .editor .card .fields,
+ .workspace .editor .card .section-fields{column-gap:14px!important;row-gap:12px!important}
+ .form-only .card input:not([type=checkbox]):not([type=radio]):not([type=color]),
+ .form-only .card select,.form-only .card textarea,
+ .workspace .editor .card input:not([type=checkbox]):not([type=radio]):not([type=color]),
+ .workspace .editor .card select,.workspace .editor .card textarea{
+  box-sizing:border-box!important;max-width:100%!important;
+  border-radius:7px!important
+ }
+ .form-only .card textarea,.workspace .editor .card textarea{
+  white-space:pre-wrap!important;overflow-wrap:anywhere!important;
+ }
+}
+/* Guard the information tables against column clipping when printing. */
+@media print{
+ .paper .excel-client,.paper .po-vendor,.paper .inv-client{
+  overflow:hidden!important;break-inside:avoid!important
+ }
+ .paper .excel-client .item,.paper .po-vendor .po-vendor-row,
+ .paper .inv-client .line{min-width:0!important}
+}
