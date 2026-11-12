@@ -298,7 +298,7 @@ async function save(){
    nextPhotos[idx]=path;
   }
   const snapshot=business();
-  const payload={templateSource:'preset',templateFamily:'returning-ticket',templateId:'standard',templateVersion:1,documentType:'Returning Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const payload={templateSource:'preset',templateFamily:'returning-ticket',templateId:'standard',templateVersion:1,documentType:'Returning Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,payload,{merge:true});
   docId=ref.id;savedCompany=snapshot;state.photos=nextPhotos;
   pendingPhotos.clear();
