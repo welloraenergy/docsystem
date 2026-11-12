@@ -482,7 +482,7 @@ function render(){
  const colWidths=template.id==='rental'?{number:5,description:39,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:14}:{number:5,description:52,unit:9,quantity:8,unitPrice:12,lineTotal:14};
  const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+dynamicLabels.map(label=>'<th>'+label+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
  const totalTable='<table class="po-totals"><tr><td>Subtotal ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></table>';
- const amountWords='<div class="po-words"><strong>Total Amount in Words: </strong>'+esc(currencyAmountWords(grand,f.currency))+'</div>';
+ const amountWords='<div class="po-words">'+esc(currencyAmountWords(grand,f.currency))+'</div>';
  const clauseMarkup=t=>{
   const override=state.termsOverrides?.[t.number];
   // Clause 6 is a structured Excel field group, not a replaceable paragraph.
