@@ -651,8 +651,8 @@ async function openSavedPresetCopy(){
   state=copy.defaults;
   activeCopyDefaults=structuredClone(copy.defaults);
   state.preset=copy.basePresetId;
-  state.reference='';
   state.date=new Date().toISOString().slice(0,10);
+  state.reference=refPrefix('QUO',state.date);
   draw();
   $('status').textContent='Template copy ready: '+copy.name+' · New document';
   announcePresetReady();
