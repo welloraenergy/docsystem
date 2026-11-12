@@ -128,7 +128,7 @@
     }
   ],
   "items": {
-    "initialRows": 10,
+    "initialRows": 3,
     "allowAddRows": true,
     "columns": [
       {
