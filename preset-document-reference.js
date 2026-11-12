@@ -4,19 +4,19 @@ export function shortDate(value){
  if(!value)return '';
  const d=new Date(String(value).slice(0,10)+'T12:00:00');
  if(Number.isNaN(d.getTime()))return String(value);
- return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).format(d).replace(/^(\\w+), (\\d+) (\\w+) (\\d+)$/,'$1, $2 $3, $4').replace(/^(\\w+) (\\d+) (\\w+) (\\d+)$/,'$1, $2 $3, $4');
+ return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).format(d).replace(/^(\w+), (\d+) (\w+) (\d+)$/,'$1, $2 $3, $4').replace(/^(\w+) (\d+) (\w+) (\d+)$/,'$1, $2 $3, $4');
 }
 export function refPrefix(code,date){
- const year=/^\\d{4}/.exec(String(date||''))?.[0]||String(new Date().getFullYear());
+ const year=/^\d{4}/.exec(String(date||''))?.[0]||String(new Date().getFullYear());
  return 'WLR-'+code+'-'+year.slice(-2)+'-';
 }
-export function fullReference(prefix,input){return prefix+String(input??'').replace(/^\\s+/,'');}
+export function fullReference(prefix,input){return prefix+String(input??'').replace(/^\s+/,'');}
 export function referenceSuffix(full,prefix){
  const val=String(full||'');return val.startsWith(prefix)?val.slice(prefix.length):val;
 }
 export function updateReferenceYear(oldValue,code,date){
  const prefix=refPrefix(code,date),old=String(oldValue||'');
- const matching=new RegExp('^WLR-'+code+'-\\d{2}-');
+ const matching=new RegExp('^WLR-'+code+'-\d{2}-');
  if(!old||matching.test(old))return prefix+old.replace(matching,'');
  return old; // historical reference without standard prefix
 }
