@@ -99,7 +99,7 @@
   "items": {
     "firstRow": 33,
     "lastRow": 42,
-    "initialRows": 10,
+    "initialRows": 3,
     "columns": [
       {
         "key": "no",
