@@ -393,7 +393,7 @@ async function chooseTemplate(id,clear=true){
   state.fields.poDate=new Date().toISOString().slice(0,10);
   state.fields.poNumber=refPrefix('PO',state.fields.poDate);
   state.fields.currency=business().defaultCurrency||'MYR';
-  state.items=Array.from({length:template.items.initialRows},()=>Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));
+  state.items=Array.from({length:3},()=>Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));
  }
  $('poTemplate').value=entry.id;
  draw();
@@ -484,9 +484,8 @@ function render(){
  try{
  const co=business(),f=state.fields,subtotal=state.items.reduce((v,row)=>v+lineTotal(row),0),sst=subtotal*num(f.sstRate)/100,grand=subtotal+sst;
  const editSubtotal=$('poEditorSubtotal');if(editSubtotal)editSubtotal.textContent='Subtotal ('+(f.currency||'MYR')+'): '+money(subtotal);
- const visible=state.items.filter(row=>template.items.columns.some(c=>c.type!=='calculated'&&String(row[c.key]??'').trim()));
  const cols=template.items.columns;
- const itemRows=(visible.length?visible:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
+ const itemRows=(state.items.length?state.items:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
  const headerCompany={...co,documentTitle:'PURCHASE ORDER',documentNumber:f.poNumber||'',documentDate:f.poDate||''};
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
