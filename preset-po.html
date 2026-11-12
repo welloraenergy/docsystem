@@ -401,8 +401,14 @@ function draw(){
   const hidden=Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number));
   const toggle='<label style="display:flex;flex-direction:row;gap:8px;align-items:center;margin:10px 0 3px"><input type="checkbox" data-po-term-toggle="'+t.number+'" style="width:auto;flex:none" '+(hidden?'':'checked')+'><strong>Show · '+t.number+'. '+esc(t.title)+'</strong></label>';
   // The source field remains unchanged; only its editor moves under the clause it drives.
-  const linkedKeys=t.number===2?['fulfillmentAddress']:t.number===3?['fulfillmentDate']:t.number===4?['fulfillmentMode']:[];
-  const linkedControls=linkedKeys.map(key=>template.fields.find(f=>f.key===key)).filter(Boolean).map(htmlField).join('');
+  const linkedKeys=t.number===2?[]:t.number===3?['fulfillmentDate']:[];
+  const mode=state.fields.fulfillmentMode||'';
+  const fulfillmentChoice=t.number===2?'<fieldset class="po-fulfillment-choice"><legend>Fulfillment method (choose one)</legend>'+
+   '<label><input type="radio" name="poFulfillmentMode" data-po-fulfillment="delivery" '+(mode==='delivery'?'checked':'')+'> Delivery — supplier delivers the goods</label>'+
+   '<label><input type="radio" name="poFulfillmentMode" data-po-fulfillment="pickup" '+(mode==='pickup'?'checked':'')+'> Pick-up — goods are collected from supplier</label></fieldset>'+
+   '<div class="po-fulfillment-address-wrap" '+(!mode?'hidden':'')+'><label><span id="poFulfillmentAddressLabel">'+(mode==='pickup'?'Pick-up Address':'Delivery Address')+'</span>'+
+   '<textarea rows="4" data-po-field="fulfillmentAddress" placeholder="Enter full address">'+esc(state.fields.fulfillmentAddress||'')+'</textarea></label></div>':'';
+  const linkedControls=fulfillmentChoice+linkedKeys.map(key=>template.fields.find(f=>f.key===key)).filter(Boolean).map(htmlField).join('');
   const linkedBox=linkedControls?'<div class="po-clause-inline-fields" style="border-top:1px solid #e2e8f0;padding-top:9px;margin-top:9px;display:grid;gap:9px">'+linkedControls+'</div>':'';
 
   if(t.number===6){
@@ -436,10 +442,12 @@ function expandedTerm(term){
  if(state.termsOverrides?.[term.number]?.trim())return poPresetValue(state.termsOverrides[term.number]);
  if(term.clauses)return term.clauses.map(c=>c.label+' '+c.sourceText).join('\n');
  const v=term.binding?String(f[term.binding]||''):'';
- if(term.number===2||term.number===3)return term.sourceText+(v?'\n'+v:'');
+ if(term.number===2){const label=f.fulfillmentMode==='pickup'?'Pick-up Address:':f.fulfillmentMode==='delivery'?'Delivery Address:':'Fulfillment method not selected';return label+(v?'\n'+v:'')}
+ if(term.number===3){const label=f.fulfillmentMode==='pickup'?'Date of Collection:':f.fulfillmentMode==='delivery'?'Date of Receipt at Delivery Address:':'Delivery / Collection Date:';return label+(v?'\n'+v:'')}
  if(term.number===4){
-  const delivery=f.fulfillmentMode!=='pickup';
-  return delivery?'Vendor must ensure to deliver all item(s) under this order to the Delivery Address by the Date of Receipt.':'Vendor must ensure that all item(s) under this order is/are ready to be picked up from the Pick-up Address by the Date of Collection.';
+  if(f.fulfillmentMode==='delivery')return 'Vendor must ensure to deliver all item(s) under this order to the Delivery Address by the Date of Receipt.';
+  if(f.fulfillmentMode==='pickup')return 'Vendor must ensure that all item(s) under this order is/are ready to be picked up from the Pick-up Address by the Date of Collection.';
+  return 'Delivery or Pick-up method has not been selected.';
  }
  if(term.number===6)return ['a) Contact Name: '+(f.welloraContactName||''),'b) Contact Number: '+(f.welloraContactPhone||''),'c) Contact Email: '+(f.welloraContactEmail||'')].join('\n');
  return term.sourceText||'';
@@ -477,7 +485,8 @@ function render(){
    ].map(([label,value])=>'<div class="po-clause6-line"><span>'+esc(label)+'</span><span>'+esc(poPresetValue(value||''))+'</span></div>').join('')+
    (String(override||'').trim()?'<div class="po-clause6-note">'+esc(poPresetValue(override))+'</div>':'')+'</div>':
    '<span class="po-clause-body">'+esc(poPresetValue(expandedTerm(t)))+'</span>';
-  return '<div class="po-term excel-term'+(isContact?' po-contact-clause':'')+'"><span class="po-term-num term-num">'+(t.displayNumber||t.number)+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(isContact?body:' '+body)+'</div></div>';
+  const heading=t.number===2?(f.fulfillmentMode==='pickup'?'Pick-up Address':f.fulfillmentMode==='delivery'?'Delivery Address':'Delivery / Pick-up Address'):t.number===3?(f.fulfillmentMode==='pickup'?'Date of Collection':f.fulfillmentMode==='delivery'?'Date of Delivery':'Date of Delivery / Collection'):t.title;
+  return '<div class="po-term excel-term'+(isContact?' po-contact-clause':'')+'"><span class="po-term-num term-num">'+(t.displayNumber||t.number)+'.</span><div class="term-text"><strong>'+esc(heading)+':</strong>'+(isContact?body:' '+body)+'</div></div>';
  };
  const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">Terms &amp; Conditions</div><div class="po-terms excel-terms" style="font-size:'+7+'pt">'+[...template.terms.filter(t=>!(Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number)))).map(t=>({ ...t,additional:false})),...(state.extraTerms||[]).filter(t=>t.enabled!==false&&(t.title||t.body)).map(t=>({title:t.title||'Additional Statement',sourceText:t.body||'',additional:true}))].map((t,i)=>t.additional?
  '<div class="po-term excel-term"><span class="po-term-num term-num">'+(i+1)+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong> '+esc(poPresetValue(t.sourceText))+'</div></div>':clauseMarkup({...t,displayNumber:i+1})).join('')+'</div></section>';
@@ -526,6 +535,7 @@ function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activ
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim())return alert('Enter PO Reference Number before saving.');
+ if(!['delivery','pickup'].includes(state.fields.fulfillmentMode))return alert('Choose Delivery or Pick-up in Terms & Conditions before saving the PO.');
  if(!business().id)return alert('Select a Business Profile first.');
  try{
   const snapshot=business();
@@ -594,6 +604,13 @@ $('itemsEditor').addEventListener('click',e=>{const b=e.target.closest('[data-re
 $('termsPageFit').addEventListener('change',e=>{state.termsPageFit=e.target.value;render()});
 document.addEventListener('input',e=>{
  const d=e.target.dataset;
+ if(d.poFulfillment!==undefined){
+  state.fields.fulfillmentMode=d.poFulfillment;
+  const wrap=document.querySelector('.po-fulfillment-address-wrap'),label=document.getElementById('poFulfillmentAddressLabel');
+  if(wrap)wrap.hidden=false;
+  if(label)label.textContent=d.poFulfillment==='pickup'?'Pick-up Address':'Delivery Address';
+  render();return;
+ }
  if(d.poExtraShow!==undefined){state.extraTerms[Number(d.poExtraShow)].enabled=e.target.checked;render();return}
  if(d.poExtraTitle!==undefined){state.extraTerms[Number(d.poExtraTitle)].title=e.target.value;render();return}
  if(d.poExtraBody!==undefined){state.extraTerms[Number(d.poExtraBody)].body=e.target.value;render();return}
