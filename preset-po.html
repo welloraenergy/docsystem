@@ -276,7 +276,7 @@
 .paper .po-totals{font-size:8.5pt}
 .paper .po-signatures tbody td{font-size:8pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261112-item-controls2">
+<link rel="stylesheet" href="./preset-typography.css?v=20261112-table-layout3">
 </head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
 <div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
@@ -416,7 +416,8 @@ function draw(){
 }
 function drawRows(){
  const cols=template.items.columns;
- $('itemsEditor').innerHTML='<thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+
+ const editableWidths=template.id==='rental'?{number:5,description:35,unit:8,quantity:7,rentalDays:14,unitPrice:13,lineTotal:12}:{number:5,description:48,unit:9,quantity:8,unitPrice:12,lineTotal:12};
+ $('itemsEditor').innerHTML='<colgroup>'+cols.map(c=>'<col style="width:'+(editableWidths[c.key]||Math.floor(94/cols.length))+'%">').join('')+'<col style="width:6%"></colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+
  state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'||c.type==='money'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
 }
 function lineTotal(row){return num(row.quantity)*num(row.unitPrice)*(template.id==='rental'?num(row.rentalDays):1)}
