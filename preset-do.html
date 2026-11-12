@@ -178,7 +178,7 @@ function clearPhotoSession(){
  photoPreviews.clear();resolvedPhotos.clear();photoRequests.clear();
 }
 async function preparePhoto(file){
- if(!file.type.startsWith('image/'))throw Error('Please choose an image');
+ if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type))throw Error('Choose a JPG, PNG, WebP or GIF image.');
  if(file.size>MAX_PHOTO_BYTES)throw Error('Image exceeds 12 MB. Choose a smaller file.');
  return file; // Upload original pixels and quality; no compression or canvas conversion.
 }
