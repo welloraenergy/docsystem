@@ -130,6 +130,8 @@
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Invoice Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
@@ -237,11 +239,11 @@ async function save(){
  try{
   if(!docId){const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));if(hits.docs.some(x=>x.data().templateFamily==='invoice'&&x.data().profileId===business().id))return alert('Invoice reference exists for this company. Open it instead.')}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),prior=await getDoc(ref),snap=business();
-  const payload={templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:state,profileId:snap.id,companySnapshot:snap,presetHeaderSnapshot:savedHeader||structuredClone(profile?.presetHeader||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
-  await setDoc(ref,payload,{merge:true});docId=ref.id;savedCompany=snap;notify('Saved Invoice '+state.fields.reference);ready();
- }catch(e){notify('Invoice save failed');alert(e.message)}finally{saving=false}
+  const payload={templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:encodePreset(state),profileId:snap.id,companySnapshot:encodePreset(snap),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  await setDoc(ref,payload,{merge:true});docId=ref.id;savedCompany=snap;notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();
+ }catch(e){notify('Invoice save failed: '+(e.code||e.message));reportPresetSaveError(e);alert(e.code||e.message)}finally{saving=false}
 }
-async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=d.presetData;savedCompany=d.companySnapshot||null;savedHeader=d.presetHeaderSnapshot||null;profile=profiles.find(p=>p.id===d.profileId)||profile;draw();notify('Opened Invoice '+d.number);ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
+async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=decodePreset(d.presetData);savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;draw();notify('Opened Invoice '+d.number);ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()}
 window.printDoc=()=>{render();window.print()};
