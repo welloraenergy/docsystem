@@ -232,3 +232,39 @@
 #itemsEditor td:not(:nth-child(2)) span{
  text-align:center!important;
 }
+
+/* Invoice Notes — one uninterrupted divider between the number and text.
+   Draw the separator on the shared body rather than separate note rows so
+   preview and print/PDF have identical continuous vertical borders. */
+.paper .inv-notes-body{
+ position:relative;
+ display:block;
+ width:100%;
+}
+.paper .inv-notes-body::before{
+ content:"";
+ position:absolute;
+ top:0;
+ bottom:0;
+ left:7mm;
+ width:0;
+ border-left:1px solid #777;
+ pointer-events:none;
+ z-index:2;
+}
+.paper .inv-notes-body .inv-note{
+ display:grid!important;
+ grid-template-columns:7mm minmax(0,1fr)!important;
+ padding:0!important;
+ margin:0!important;
+ break-inside:avoid;
+}
+.paper .inv-notes-body .inv-note>span:first-child{
+ border-right:0!important;
+ padding:.5mm .7mm!important;
+ text-align:center!important;
+}
+.paper .inv-notes-body .inv-note>span:nth-child(2){
+ min-width:0;
+ padding:.5mm 1mm!important;
+}
