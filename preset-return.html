@@ -349,7 +349,7 @@ async function openSavedPresetCopy(){
   state=copy.defaults;
   activeCopyDefaults=structuredClone(copy.defaults);
   if(state.fields){
-   state.fields.reference='';
+   state.fields.reference=refPrefix('RT',state.fields.date);
   }
   state.photos=Array(10).fill('');pendingPhotos.clear();
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
