@@ -284,7 +284,7 @@
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
 <section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
 <section class="card"><h3>Vendor &amp; Quotation Information</h3><div class="po-vendor-form"><div class="fields" id="poVendorFields"></div><div class="fields" id="poQuotationFields"></div></div></section>
-<section class="card"><h3>PO Items</h3><div class="fields" id="poFinancialFields"></div><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow" class="preset-add-item">+ Add Item</button><button id="removeRow" class="preset-remove-last">Remove Last</button></div></section>
+<section class="card"><h3>PO Items</h3><div class="fields" id="poFinancialFields"></div><div class="table-wrap"><table id="itemsEditor"></table></div><div class="line-actions"><button id="addRow" class="preset-add-item">+ Add Item</button><button id="removeRow" class="preset-remove-last">Remove Last</button></div><div id="poEditorSubtotal" class="po-editor-subtotal"></div><div class="fields" id="poSstFields"></div></section>
 <section class="card"><h3>Terms &amp; Conditions</h3><div class="po-terms-fitting"><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="normal">Normal size / add page</option></select></label></div><p id="termsFitStatus" class="muted" role="status" aria-live="polite">Checking how the terms fit on A4…</p><p class="muted">These controls affect the A4 preview and print layout, not the template wording. The six PO clauses remain specific to the selected template.</p><div id="termsEditor"></div></section>
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
@@ -397,7 +397,8 @@ function draw(){
   poReferenceFields:['poDate','poNumber'],
   poVendorFields:['vendorName','vendorAddress','vendorContact','vendorPhone','vendorEmail'],
   poQuotationFields:['vendorQuotationNo','vendorQuotationDate'],
-  poFinancialFields:['currency','sstRate']
+  poFinancialFields:['currency'],
+  poSstFields:['sstRate']
  };
  for(const [target,keys] of Object.entries(groups)){
   $(target).innerHTML=keys.map(k=>template.fields.find(f=>f.key===k)).filter(Boolean).map(htmlField).join('');
@@ -464,6 +465,7 @@ function render(){
  renderBusy=true;
  try{
  const co=business(),f=state.fields,subtotal=state.items.reduce((v,row)=>v+lineTotal(row),0),sst=subtotal*num(f.sstRate)/100,grand=subtotal+sst;
+ const editSubtotal=$('poEditorSubtotal');if(editSubtotal)editSubtotal.textContent='Subtotal ('+(f.currency||'MYR')+'): '+money(subtotal);
  const visible=state.items.filter(row=>template.items.columns.some(c=>c.type!=='calculated'&&String(row[c.key]??'').trim()));
  const cols=template.items.columns;
  const itemRows=(visible.length?visible:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
