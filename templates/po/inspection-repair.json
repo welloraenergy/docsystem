@@ -94,13 +94,12 @@
     },
     {
       "key": "fulfillmentMode",
-      "label": "Delivery / Pick-up",
+      "label": "Delivery or Pick-up",
       "type": "select",
       "options": [
         "delivery",
         "pickup"
-      ],
-      "default": "delivery"
+      ]
     },
     {
       "key": "fulfillmentAddress",
