@@ -441,8 +441,8 @@
 .paper .excel-client,
 .paper .po-vendor,.paper .inv-client{width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
 .paper .excel-client{grid-template-columns:minmax(0,58%) minmax(0,42%)!important;column-gap:0!important}
-.paper .excel-client>div:first-child{--label-col:31mm!important}
-.paper .excel-client>div:last-child{--label-col:26mm!important}
+.paper .excel-client>div:first-child{--label-col:23mm!important}
+.paper .excel-client>div:last-child{--label-col:21mm!important}
 .paper .excel-client>div{position:relative!important;min-width:0!important}
 .paper .excel-client>div::before{left:var(--label-col)!important;top:0!important;bottom:0!important}
 .paper .excel-client .item,
@@ -459,8 +459,8 @@
  min-width:0!important;box-sizing:border-box!important;padding:1mm 1.2mm .3mm!important;
 }
 .paper .po-vendor{grid-template-columns:minmax(0,58%) minmax(0,42%)!important;column-gap:0!important}
-.paper .po-vendor-left{--po-label-width:31mm!important}
-.paper .po-vendor-right{--po-label-width:26mm!important}
+.paper .po-vendor-left{--po-label-width:23mm!important}
+.paper .po-vendor-right{--po-label-width:24mm!important}
 .paper .po-vendor>div{min-width:0!important;position:relative!important}
 .paper .po-vendor>div::before{left:var(--po-label-width)!important;top:0!important;bottom:0!important}
 .paper .po-vendor .po-vendor-row,
@@ -482,12 +482,12 @@
  gap:0!important;overflow:hidden!important;
 }
 .paper .inv-client>div{
- --inv-label-width:28mm;
+ --inv-label-width:21mm;
  position:relative!important;
  box-sizing:border-box!important;min-width:0!important;
  padding:1mm 0!important;
 }
-.paper .inv-client>div:last-child{--inv-label-width:29mm}
+.paper .inv-client>div:last-child{--inv-label-width:25mm}
 .paper .inv-client>div:first-child{border-right:1px solid #777!important}
 .paper .inv-client>div+div{border-left:0!important}
 .paper .inv-client>div::before{
