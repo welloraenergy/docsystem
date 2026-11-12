@@ -108,41 +108,20 @@ body.preview .preview-only{display:block}
 .paper .excel-sign-table tbody td{border:1px solid #aaa;background:#fff!important;height:12mm;padding:1.2mm 1mm;vertical-align:middle;overflow-wrap:anywhere}
 .paper .excel-sign-table .sign-blank{background:#fff!important}
 @media print{.paper .excel-sign-table{break-inside:avoid;page-break-inside:avoid}}
-</style><style id="clientInformationSpacingRefinement">
-/* Compact labels, generous values, and an independently taller address row. */
-.paper .excel-client{grid-template-columns:58% 42%!important;align-items:stretch}
-.paper .excel-client>div{padding:1.5mm 1.7mm!important;min-width:0;min-height:31mm!important}
-.paper .excel-client .item{display:grid;grid-template-columns:23mm minmax(0,1fr)!important;column-gap:1.5mm;align-items:start;min-height:4mm;line-height:1.35}
-.paper .excel-client>div:last-child .item{grid-template-columns:18mm minmax(0,1fr)!important}
-.paper .excel-client .item b{font-weight:600;text-align:right;white-space:nowrap}
-.paper .excel-client .item span{min-width:0;white-space:pre-wrap!important;overflow-wrap:break-word}
-.paper .excel-client .item:has(.client-address-value){min-height:13mm;align-items:start}
-.paper .excel-client .client-address-value{white-space:pre-wrap!important;line-height:1.4;min-height:11mm}
-.paper .excel-ref .ref-line{grid-template-columns:24mm minmax(0,1fr)!important;gap:1mm!important}
-.paper .excel-ref .ref-line span:first-child{white-space:nowrap}
-@media print{.paper .excel-client{grid-template-columns:58% 42%!important}}
-</style><style id="labelValueDividers">
-/* Subtle column rules distinguish fixed labels from entered values. */
-.paper .excel-client .item{column-gap:0!important}
-.paper .excel-client .item b{border-right:1px solid #9da7b2;padding-right:1.6mm;margin-right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:flex-end}
-.paper .excel-client .item span{padding-left:1.8mm;min-width:0}
-.paper .excel-ref .ref-line{gap:0!important}
-.paper .excel-ref .ref-line span:first-child{border-right:1px solid #9da7b2;padding-right:1.5mm}
-.paper .excel-ref .ref-line span:last-child{padding-left:1.8mm}
-@media print{.paper .excel-client .item b,.paper .excel-ref .ref-line span:first-child{border-right:1px solid #9da7b2!important}}
 </style><style id="fullClientColumnSeparators">
-/* Two uninterrupted vertical rules, with address reserved its own generous space. */
-.paper .excel-client{display:grid!important;grid-template-columns:58% 42%!important;align-items:stretch}
-.paper .excel-client>div{display:flex!important;flex-direction:column!important;padding:0!important;min-width:0;min-height:39mm!important;position:relative}
+/* Client Information: canonical label/value geometry for Quotation preview and print. */
+.paper .excel-client-title{margin-bottom:0!important;border-bottom:0!important}
+.paper .excel-client{display:grid!important;grid-template-columns:58% 42%!important;align-items:stretch;margin-top:0!important;row-gap:0!important;border-top:1px solid #444!important}
+.paper .excel-client>div{display:flex!important;flex-direction:column!important;padding:0!important;min-width:0!important;min-height:39mm!important;position:relative}
 .paper .excel-client>div:first-child{--label-col:24mm}
 .paper .excel-client>div:last-child{--label-col:19mm}
 .paper .excel-client>div::before{content:"";position:absolute;top:0;bottom:0;left:var(--label-col);border-left:1px solid #999;pointer-events:none;z-index:1}
-.paper .excel-client .item,.paper .excel-client>div:last-child .item{display:grid!important;grid-template-columns:var(--label-col) minmax(0,1fr)!important;gap:0!important;min-height:4.3mm!important;line-height:1.35;align-items:start}
-.paper .excel-client .item b{border:0!important;margin:0!important;padding:1mm 1.5mm .3mm .5mm!important;min-height:0!important;display:block!important;text-align:right;white-space:nowrap}
-.paper .excel-client .item span{padding:1mm 1.7mm .3mm!important;white-space:pre-wrap!important;overflow-wrap:break-word}
-.paper .excel-client .address-row{flex:1!important;min-height:19mm!important}
-.paper .excel-client .address-row .client-address-value{min-height:18mm!important;white-space:pre-wrap!important}
-.paper .excel-client>div:last-child .item{min-height:6.5mm!important}
+.paper .excel-client .item,.paper .excel-client>div:last-child .item{display:grid!important;grid-template-columns:var(--label-col) minmax(0,1fr)!important;gap:0!important;min-height:5.3mm!important;line-height:1.35!important;align-items:start!important}
+.paper .excel-client .item b{box-sizing:border-box!important;border:0!important;margin:0!important;padding:1.1mm 2.5mm 1.0mm .7mm!important;min-height:0!important;display:block!important;text-align:right!important;white-space:normal!important;align-self:start!important;line-height:1.35!important}
+.paper .excel-client .item span{box-sizing:border-box!important;display:block!important;padding:1.1mm 1.7mm 1.0mm 1.5mm!important;min-width:0!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;align-self:start!important;line-height:1.35!important}
+.paper .excel-client .address-row{flex:1!important;min-height:17mm!important}
+.paper .excel-client .address-row .client-address-value{min-height:16mm!important;white-space:pre-wrap!important}
+.paper .excel-client>div:last-child .item{min-height:5.3mm!important}
 @media print{.paper .excel-client>div::before{border-left:1px solid #999!important}}
 </style><style id="headerNoVerticalDivider">
 /* Excel reference header uses aligned labels and values without separator rules. */
@@ -171,25 +150,6 @@ body.preview .preview-only{display:block}
  line-height:1.4!important;
  padding-top:0!important;
  padding-bottom:0!important;
-}
-.paper .excel-client .item,
-.paper .excel-client>div:last-child .item{
- align-items:baseline!important;
- line-height:1.4!important;
-}
-.paper .excel-client .item b,
-.paper .excel-client .item span{
- align-self:baseline!important;
- line-height:1.4!important;
- padding-top:.65mm!important;
- padding-bottom:.35mm!important;
-}
-.paper .excel-client .address-row{align-items:start!important}
-.paper .excel-client .address-row b,
-.paper .excel-client .address-row span{align-self:start!important}
-@media print{
- .paper .excel-ref .ref-line{align-items:baseline!important}
- .paper .excel-client .item{align-items:baseline!important}
 }
 </style><style id="rental3TermsPresetStyles">.preset-terms-list{margin-top:12px;padding:12px;background:#fff;border:1px solid #d8e0e8;border-radius:8px;font-size:13px;line-height:1.45}.preset-terms-list .excel-term{margin:0 0 10px;display:grid;grid-template-columns:22px 1fr;gap:6px}.preset-terms-list .term-text{white-space:pre-wrap}.paper .excel-terms .excel-term .term-text{white-space:pre-wrap}.form-only #facilityAddress{min-height:85px;background:#fff;resize:vertical}</style><style id="termsFullWidthFix">
 /* Force Excel terms to use the full printable page width. */
@@ -512,7 +472,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 /* Harmonized vertical rhythm for all five original preset document families. */
 @media screen,print {
  .paper{--preset-section-gap:3mm}
- .paper .excel-client-title,.paper .excel-terms-header,
+ .paper .excel-terms-header,
  .paper .po-vendor-section,.paper .po-section-title,
  .paper .dt-section,.paper .inv-section,.paper .inv-notes {margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
  .paper .excel-table,.paper .po-items,.paper .dt-items,.paper .inv-table{margin-top:var(--preset-section-gap)!important;margin-bottom:var(--preset-section-gap)!important}
@@ -523,55 +483,8 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
 </style>
-<style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style><style id="welloraFirstInfoPORhythm20261112">
-/* Match PO's Vendor & Quotation Information cell rhythm in every preset. */
-@media screen,print {
- .paper .excel-client .item,
- .paper .dt-info .dt-row,
- .paper .inv-client .line {
-   min-height:5mm!important;
-   line-height:1.35!important;
-   align-items:start!important;
-   column-gap:0!important;
- }
- .paper .excel-client .item > b,
- .paper .excel-client .item > strong,
- .paper .dt-info .dt-row > b,
- .paper .inv-client .line > b {
-   box-sizing:border-box!important;
-   padding:1mm 3mm .7mm .6mm!important;
-   text-align:right!important;
-   align-self:start!important;
-   white-space:normal!important;
-   line-height:1.35!important;
- }
- .paper .excel-client .item > span,
- .paper .dt-info .dt-row > span,
- .paper .inv-client .line > span {
-   box-sizing:border-box!important;
-   padding:1mm 1.7mm .7mm 1.5mm!important;
-   text-align:left!important;
-   align-self:start!important;
-   min-width:0!important;
-   line-height:1.35!important;
-   white-space:pre-wrap!important;
-   overflow-wrap:anywhere!important;
- }
- .paper .excel-client .item.address-row,
- .paper .dt-info .dt-row.address,
- .paper .inv-client .line.address {
-   min-height:16mm!important;
- }
- .paper .excel-client .item.address-row > span,
- .paper .dt-info .dt-row.address > span,
- .paper .inv-client .line.address > span {
-   min-height:15mm!important;
- }
- .paper .excel-client > div{min-width:0!important}
- .paper .dt-info > div,.paper .inv-client > div{min-width:0!important}
-}
-</style>
-<style id="welloraInfoHeaderJoined20261112">/* Header band and first information grid form one continuous box; outer section spacing remains unchanged. */@media screen,print{.paper .excel-client-title{margin-bottom:0!important;border-bottom:0!important}.paper .excel-client{margin-top:0!important;row-gap:0!important;border-top:1px solid #444!important}}</style><style id="welloraQuotationMetaValueAlignment20261112">
+<style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style>
+<style id="welloraQuotationMetaValueAlignment20261112">
 /* Keep Date and Reference No. together, anchored near the right paper margin.
    Allow the complete suffix, e.g. 0001 or 0001-R1, without displacing labels. */
 @media screen,print {
