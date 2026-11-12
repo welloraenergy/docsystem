@@ -36,7 +36,7 @@
 .po-vendor-left .po-address-row span{display:block;min-height:16mm;white-space:pre-wrap;overflow-wrap:anywhere}
 .po-vendor-left .po-vendor-row:not(.po-address-row){min-height:4.2mm}
 .po-vendor-form textarea[data-po-field="vendorAddress"]{min-height:100px;white-space:pre-wrap;resize:vertical}
-/* The source Excel uses three distinct indented contact lines under Clause 6. */
+/* Identical standalone sub-item rows for all structured PO clauses (including 5 and 6). */
 .paper .po-lettered-lines{display:block;margin-top:0.7mm;padding-left:2mm;line-height:1.3}
 .paper .po-lettered-item{display:block;margin:0;padding:0;white-space:pre-wrap;overflow-wrap:anywhere}
 
@@ -472,7 +472,6 @@ function poPresetValue(v){
 function expandedTerm(term){
  const f=state.fields;
  if(state.termsOverrides?.[term.number]?.trim())return poPresetValue(state.termsOverrides[term.number]);
- if(term.clauses)return term.clauses.map(c=>c.label+' '+c.sourceText).join('\n');
  const v=term.binding?String(f[term.binding]||''):'';
  if(term.number===2)return v||(!f.fulfillmentMode?'Select Delivery or Pick-up':'');
  if(term.number===3)return v||'';
@@ -481,7 +480,6 @@ function expandedTerm(term){
   if(f.fulfillmentMode==='pickup')return 'Vendor must ensure that all item(s) under this order is/are ready to be picked up from the Pick-up Address by the Date of Collection.';
   return 'Delivery or Pick-up method has not been selected.';
  }
- if(term.number===6)return ['a) Contact Name: '+(f.welloraContactName||''),'b) Contact Number: '+(f.welloraContactPhone||''),'c) Contact Email: '+(f.welloraContactEmail||'')].join('\n');
  return term.sourceText||'';
 }
 function render(){
