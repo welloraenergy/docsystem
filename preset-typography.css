@@ -103,28 +103,6 @@
 .po-fulfillment-address-wrap[hidden]{display:none!important}
 .po-fulfillment-address-wrap textarea{width:100%;min-height:90px;resize:vertical}
 
-/* Same upper-right document metadata system in every Wellora preset. */
-.paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{
- box-sizing:border-box!important;width:61mm!important;max-width:100%!important;
- font:8pt/1.4 Arial,sans-serif!important;text-align:left!important;
- margin-left:auto!important
-}
-.paper .excel-ref .ref-line,.paper .po-meta .po-meta-row,
-.paper .dt-meta .dt-meta-line,.paper .inv-meta .inv-meta-line{
- display:grid!important;grid-template-columns:28mm minmax(0,1fr)!important;
- gap:1.2mm!important;align-items:baseline!important;
- min-height:4.5mm!important;margin-bottom:.4mm!important;
- font-size:8pt!important;line-height:1.35!important
-}
-.paper .excel-ref .ref-line>span:first-child,
-.paper .po-meta .po-meta-label,.paper .dt-meta .dt-meta-line>b,
-.paper .inv-meta .inv-meta-line>b{
- font-weight:700!important;text-align:right!important;white-space:nowrap!important
-}
-.paper .excel-ref .ref-line>span:last-child,.paper .po-meta .po-meta-value,
-.paper .dt-meta .dt-meta-line>span,.paper .inv-meta .inv-meta-line>span{
- text-align:left!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important
-}
 /* DO/Return photo appendix: 2 equal compact cells in every row; never enlarge a single image. */
 .paper .dt-photos{table-layout:fixed!important;width:100%!important}
 .paper .dt-photos tbody td{
@@ -308,7 +286,7 @@
 .paper .excel-company>div,.paper .excel-right,.paper .excel-identity{
  min-width:0!important;max-width:100%!important;
 }
-.paper .excel-right .excel-ref{max-width:100%!important;min-width:0!important;width:100%!important}
+
 /* Narrow information-label columns were clipping RFQ / Contact / Load Out labels.
    Adjust just enough to keep labels legible within the original A4 widths. */
 .paper .excel-client .item{
