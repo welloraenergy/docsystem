@@ -39,8 +39,7 @@
 /* The source Excel uses three distinct indented contact lines under Clause 6. */
 .paper .po-lettered-lines{display:block;margin-top:0.7mm;padding-left:2mm;line-height:1.3}
 .paper .po-lettered-item{display:block;margin:0;padding:0;white-space:pre-wrap;overflow-wrap:anywhere}
-.paper .po-contact-clause .po-clause6-note{margin-left:0}
-.paper .po-term.po-contact-clause .term-text{white-space:normal}
+
 </style><style id="poSharedTermsControls20261101">.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.18}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}</style><style id="poSignatureAndVerticalGridNormalization20261101">
 /* Exactly the three grouped signature cards used by Preset Quotations. */
 .po-signature-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
@@ -509,35 +508,35 @@ function render(){
 
  const poLetteredClauseHtml=body=>{
   const raw=String(body??'');
-  // Recognize subclauses (a)/(b)/(c) or a)/b)/c), only when they form a sequence.
-  const markers=[...raw.matchAll(/(?:^|\s)(\(?([a-z])\))\s/gi)];
-  if(!markers.some(m=>m[2].toLowerCase()==='a')||!markers.some(m=>m[2].toLowerCase()==='b'))return {html:esc(raw),lettered:false};
-  const parts=raw.split(/\s+(?=\(?[a-z]\)\s)/gi);
-  const intro=parts.shift()||'';
-  const chunks=intro.trim()?[ '<span>'+esc(intro.trim())+'</span>' ]:[];
-  const items=parts.length?parts:(/^\s*\(?a\)\s/i.test(raw)?[raw.trim()]:[]);
-  // When the clause begins with (a), do not mistake it for introductory text.
-  if(/^\s*\(?a\)\s/i.test(intro)){items.unshift(intro.trim());chunks.length=0}
-  for(const item of items){
-   const normalized=item.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') ');
-   chunks.push('<div class="po-lettered-item">'+esc(normalized)+'</div>');
-  }
-  return {html:chunks.join(''),lettered:true};
+  // Format only a genuine a/b sequence. Ordinary text is never changed.
+  const chunks=raw.split(/(?:^|\s)(?=\(?[a-z]\)\s)/gi).filter(x=>x.trim());
+  const letters=chunks.map(c=>c.trim().match(/^\(?([a-z])\)\s/i)?.[1]?.toLowerCase());
+  if(!letters.includes('a')||!letters.includes('b'))return {html:esc(raw),lettered:false};
+  const introductory=chunks.filter((c,i)=>!letters[i]).map(x=>esc(x.trim())).join(' ');
+  const items=chunks.filter((c,i)=>letters[i]).map(c=>'<div class="po-lettered-item">'+esc(c.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') '))+'</div>').join('');
+  return {html:(introductory?'<div>'+introductory+'</div>':'')+items,lettered:true};
  };
+ const poLetteredRows=entries=>'<div class="po-lettered-lines">'+entries.map(e=>
+  '<div class="po-lettered-item">'+esc('('+String(e.label||'').trim().replace(/^\(?([a-z])\).*/i,'$1').toLowerCase()+')')+' '+esc(e.text||'')+'</div>'
+ ).join('')+'</div>';
  const clauseMarkup=t=>{
-  const override=state.termsOverrides?.[t.number];
-  const isContact=t.number===6;
-  const body=isContact?
-   '<div class="po-lettered-lines">'+[
-     ['(a) Contact Name:',f.welloraContactName],
-     ['(b) Contact Number:',f.welloraContactPhone],
-     ['(c) Contact Email:',f.welloraContactEmail]
-   ].map(([label,value])=>'<div class="po-lettered-item">'+esc(label)+(value?' '+esc(poPresetValue(value)):'')+'</div>').join('')+
-   (String(override||'').trim()?'<div class="po-clause6-note">'+esc(poPresetValue(override))+'</div>':'')+'</div>':
-   '';
-  const heading=t.number===2?(f.fulfillmentMode==='pickup'?'Pick-up Address':f.fulfillmentMode==='delivery'?'Delivery Address':'Delivery / Pick-up Address'):t.number===3?(f.fulfillmentMode==='pickup'?'Date of Collection':f.fulfillmentMode==='delivery'?'Date of Delivery':'Date of Delivery / Collection'):t.title;
-  const rendered=isContact?null:poLetteredClauseHtml(poPresetValue(expandedTerm(t)));
-  return '<div class="po-term excel-term'+(isContact?' po-contact-clause':'')+'"><span class="po-term-num term-num">'+(t.displayNumber||t.number)+'.</span><div class="term-text"><strong>'+esc(heading)+':</strong>'+(isContact?body:rendered.lettered?'<div class="po-lettered-lines">'+rendered.html+'</div>':' '+rendered.html)+'</div></div>';
+  const f=state.fields;
+  const heading=t.number===2?(f.fulfillmentMode==='pickup'?'Pick-up Address':f.fulfillmentMode==='delivery'?'Delivery Address':'Delivery / Pick-up Address'):
+   t.number===3?(f.fulfillmentMode==='pickup'?'Date of Collection':f.fulfillmentMode==='delivery'?'Date of Delivery':'Date of Delivery / Collection'):t.title;
+  const override=String(state.termsOverrides?.[t.number]||'').trim();
+  let rendered;
+  if(t.clauses?.length&&!override){
+   // PO clause 5: use the structured JSON subclauses directly, never flattened paragraph text.
+   rendered={lettered:true,html:poLetteredRows(t.clauses.map(c=>({label:c.label,text:c.sourceText})))};
+  }else if(t.contactLines?.length){
+   // PO clause 6: the exact same row markup, with values from the document fields.
+   rendered={lettered:true,html:poLetteredRows(t.contactLines.map(c=>({label:c.label,text:c.label.replace(/^\s*\(?[a-z]\)\s*/i,'')+' '+poPresetValue(f[c.binding]||'')})))+
+    (override?'<div class="po-clause6-note">'+esc(poPresetValue(override))+'</div>':'')};
+  }else{
+   const parsed=poLetteredClauseHtml(poPresetValue(expandedTerm(t)));
+   rendered={lettered:parsed.lettered,html:parsed.lettered?'<div class="po-lettered-lines">'+parsed.html+'</div>':parsed.html};
+  }
+  return '<div class="po-term excel-term"><span class="po-term-num term-num">'+(t.displayNumber||t.number)+'.</span><div class="term-text"><strong>'+esc(heading)+':</strong>'+(rendered.lettered?'':' ')+rendered.html+'</div></div>';
  };
  const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">Terms &amp; Conditions</div><div class="po-terms excel-terms" style="font-size:'+7+'pt">'+[...template.terms.filter(t=>!(Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number)))).map(t=>({ ...t,additional:false})),...(state.extraTerms||[]).filter(t=>t.enabled!==false&&(t.title||t.body)).map(t=>({title:t.title||'Additional Statement',sourceText:t.body||'',additional:true}))].map((t,i)=>t.additional?
  '<div class="po-term excel-term"><span class="po-term-num term-num">'+(i+1)+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(poLetteredClauseHtml(poPresetValue(t.sourceText)).lettered?'<div class="po-lettered-lines">'+poLetteredClauseHtml(poPresetValue(t.sourceText)).html+'</div>':' '+esc(poPresetValue(t.sourceText)))+'</div></div>':clauseMarkup({...t,displayNumber:i+1})).join('')+'</div></section>';
