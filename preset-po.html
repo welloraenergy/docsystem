@@ -442,8 +442,8 @@ function expandedTerm(term){
  if(state.termsOverrides?.[term.number]?.trim())return poPresetValue(state.termsOverrides[term.number]);
  if(term.clauses)return term.clauses.map(c=>c.label+' '+c.sourceText).join('\n');
  const v=term.binding?String(f[term.binding]||''):'';
- if(term.number===2){const label=f.fulfillmentMode==='pickup'?'Pick-up Address:':f.fulfillmentMode==='delivery'?'Delivery Address:':'Fulfillment method not selected';return label+(v?'\n'+v:'')}
- if(term.number===3){const label=f.fulfillmentMode==='pickup'?'Date of Collection:':f.fulfillmentMode==='delivery'?'Date of Receipt at Delivery Address:':'Delivery / Collection Date:';return label+(v?'\n'+v:'')}
+ if(term.number===2)return v||(!f.fulfillmentMode?'Select Delivery or Pick-up':'');
+ if(term.number===3)return v||'';
  if(term.number===4){
   if(f.fulfillmentMode==='delivery')return 'Vendor must ensure to deliver all item(s) under this order to the Delivery Address by the Date of Receipt.';
   if(f.fulfillmentMode==='pickup')return 'Vendor must ensure that all item(s) under this order is/are ready to be picked up from the Pick-up Address by the Date of Collection.';
