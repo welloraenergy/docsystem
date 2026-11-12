@@ -1,0 +1,30 @@
+/* Wellora preset typography — shared print/preview design, 2026-11-12.
+   Company/header slots retain their individual user-configured formatting. */
+.paper{font-family:Arial,sans-serif}
+.paper table thead th,
+.paper table tbody th{font:700 8pt/1.25 Arial,sans-serif!important;text-align:center!important;vertical-align:middle!important;white-space:normal}
+.paper .excel-table tbody td,.paper .po-items tbody td,.paper .dt-items tbody td,
+.paper .inv-table tbody td{font-size:8pt!important}
+.paper .excel-client .item,.paper .po-vendor-row,.paper .dt-row,
+.paper .inv-client .line{font-size:8pt!important}
+.paper .excel-client-title,.paper .po-vendor-title,.paper .dt-section-title,
+.paper .dt-table-title,.paper .inv-band,.paper .ticket-comments-title,
+.paper .excel-terms-header,.paper .po-terms-header{font:700 9pt/1.3 Arial,sans-serif!important}
+.paper .po-section-title{font:700 10pt/1.3 Arial,sans-serif!important}
+.paper .excel-sig>div,.paper .po-signatures tbody td,.paper .dt-sign tbody td,
+.paper .inv-sign tbody td{font-size:8pt!important}
+.paper .po-totals,.paper .inv-totals{font-size:9pt!important}
+.paper .excel-terms,.paper .po-terms,.paper .excel-terms .excel-term,
+.paper .po-terms .po-term,.paper .inv-notes,.paper .inv-notes .inv-note{
+ font-size:7pt!important;line-height:1.2!important
+}
+.paper .quote-item-section-title{
+ font:700 10pt/1.3 Arial,sans-serif!important;text-align:left!important;
+ margin:3mm 0 1.5mm;padding:1mm 0;border-bottom:1px solid #777;
+ color:#111;break-after:avoid;page-break-after:avoid
+}
+/* Keep values aligned by their meaning rather than centering all data. */
+.paper .excel-table tbody td:nth-child(2),
+.paper .po-items tbody td.description{text-align:left!important}
+.paper .excel-table tbody td:nth-child(5),
+.paper .excel-table tbody td:nth-child(6){text-align:right!important}
