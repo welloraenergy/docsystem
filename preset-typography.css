@@ -360,3 +360,77 @@
  text-align:right!important;
  padding:1mm!important;
 }
+
+/* Narrow information-label columns were clipping RFQ / Contact / Load Out labels.
+   Adjust just enough to keep labels legible within the original A4 widths. */
+.paper .excel-client .item{
+ grid-template-columns:30mm minmax(0,1fr)!important;
+ column-gap:1.3mm!important;
+}
+.paper .excel-client .item b{
+ white-space:nowrap!important;
+ padding-right:0.5mm!important;
+}
+.paper .po-vendor-row{
+ grid-template-columns:30mm minmax(0,1fr)!important;
+ column-gap:1.5mm!important;
+}
+.paper .po-vendor-right .po-vendor-row{
+ grid-template-columns:27mm minmax(0,1fr)!important;
+}
+.paper .po-vendor-row strong{white-space:nowrap!important;padding-right:.5mm!important}
+.paper .po-vendor>div{min-width:0!important;box-sizing:border-box!important}
+.paper .po-vendor-row span{min-width:0!important;overflow-wrap:anywhere!important}
+.po-currency-setting{margin-top:10px}
+/* Editor-only, easy-to-proof descriptions: wide, wrapped and vertically resizable.
+   No changes to the stored field values or PDF table heights. */
+.preset-item-editor textarea,
+#itemsEditor textarea,
+#itemEditor textarea{
+ display:block!important;
+ box-sizing:border-box!important;
+ width:100%!important;
+ min-width:0!important;
+ min-height:74px!important;
+ max-height:240px;
+ height:auto;
+ field-sizing:content;
+ padding:8px!important;
+ white-space:pre-wrap!important;
+ overflow-wrap:anywhere!important;
+ word-break:normal!important;
+ resize:vertical!important;
+ line-height:1.4!important;
+}
+.preset-item-editor td:nth-child(2),
+#itemsEditor td:nth-child(2),
+#itemEditor td:nth-child(2){min-width:0!important}
+.preset-item-editor input,
+#itemsEditor input,
+#itemEditor input{box-sizing:border-box;max-width:100%}
+@media screen{
+ /* Preview-only zebra shading; first data row WHITE, second very light grey. */
+ .paper table.excel-table tbody tr:nth-child(odd)>td,
+ .paper table.po-items tbody tr:nth-child(odd)>td,
+ .paper table.dt-items tbody tr:nth-child(odd)>td,
+ .paper table.inv-table tbody tr:nth-child(odd)>td{
+  background:#fff!important;
+ }
+ .paper table.excel-table tbody tr:nth-child(even)>td,
+ .paper table.po-items tbody tr:nth-child(even)>td,
+ .paper table.dt-items tbody tr:nth-child(even)>td,
+ .paper table.inv-table tbody tr:nth-child(even)>td{
+  background:#f3f4f6!important;
+ }
+}
+@media print{
+ /* Printed/PDF item tables have white rows, no grey striping. */
+ .paper table.excel-table tbody tr>td,
+ .paper table.po-items tbody tr>td,
+ .paper table.dt-items tbody tr>td,
+ .paper table.inv-table tbody tr>td{
+  background:#fff!important;
+  -webkit-print-color-adjust:exact!important;
+  print-color-adjust:exact!important;
+ }
+}
