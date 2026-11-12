@@ -10,8 +10,8 @@
 .paper .dt-total{display:table!important;border-collapse:collapse!important;table-layout:fixed!important;width:100%!important;margin:0 0 2mm!important;font-size:8pt}
 .paper .dt-total tr{break-inside:avoid}
 .paper .dt-total .dt-total-spacer{border:0!important;background:none!important;padding:0!important}
-.paper .dt-total th{border:1px solid #444!important;text-align:center!important;background:#fff!important;color:#111!important;font-weight:bold!important;padding:2mm 0!important}
-.paper .dt-total .dt-total-value{border:1px solid #444!important;text-align:center!important;padding:2mm 1mm!important}
+.paper .dt-total th{border:0!important;border-bottom:1px solid #555!important;text-align:center!important;background:#fff!important;color:#111!important;font-weight:bold!important;padding:2mm 0!important}
+.paper .dt-total .dt-total-value{border:0!important;border-bottom:1px solid #555!important;text-align:center!important;padding:2mm 1mm!important}
 /* The Excel signature cells reserve distinct spaces for Name and Position. */
 .paper .dt-sign tbody tr{break-inside:avoid;page-break-inside:avoid}
 .paper .dt-sign tbody td{height:20mm!important;vertical-align:middle!important}
@@ -30,7 +30,7 @@
 }
 .paper .dt-sign-name{border-bottom:1px solid #aaa}
 @media print{
- .paper .dt-total th,.paper .dt-total .dt-total-value{border:1px solid #444!important}
+ .paper .dt-total th,.paper .dt-total .dt-total-value{border:0!important;border-bottom:1px solid #555!important}
  .paper .dt-sign-name{border-bottom:1px solid #aaa!important}
 }
 
