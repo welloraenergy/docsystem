@@ -289,6 +289,8 @@
 <section class="card"><h3>Signatures</h3><div class="po-signature-groups" id="signatureFields"></div></section>
 </div><div class="preview-container"><div class="preview-header"><strong>Live A4 Preview</strong><span id="pageCount" class="muted"></span></div><div id="paper"></div></div></div>
 <script type="module">
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
@@ -550,13 +552,13 @@ async function save(){
   }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
-  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:state,profileId:snapshot.id,companySnapshot:snapshot,presetHeaderSnapshot:savedHeaderSnapshot||structuredClone(profile?.presetHeader||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
-  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved PO '+state.fields.poNumber);ready();
- }catch(error){alert('PO save failed: '+error.message)}
+  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);reportPresetSaved(state.fields.poNumber,docId);ready();
+ }catch(error){notify('PO save failed: '+(error.code||error.message));reportPresetSaveError(error);alert('PO save failed: '+(error.code||error.message))}
 }
 async function loadSaved(id){
  if(!user||!id)return;
- try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=data.presetData;savedSnapshot=data.companySnapshot||null;savedHeaderSnapshot=data.presetHeaderSnapshot||null;profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);notify('Opened PO '+data.number);ready()}
+ try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=decodePreset(data.presetData);savedSnapshot=decodePreset(data.companySnapshot||null);savedHeaderSnapshot=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);notify('Opened PO '+data.number);ready()}
  catch(e){notify('Cannot open PO: '+e.message)}
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
