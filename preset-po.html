@@ -310,7 +310,7 @@ let user=null,role='user',profile=null,profiles=[],globalPlaceholders={},savedSn
 const posted=(kind,extra={})=>{if(embedded&&window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...extra},location.origin)};
 const notify=message=>{$('status').textContent=message;posted('status',{status:message})};
 const money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
-const num=n=>Number.isFinite(Number(n))?Number(n):0;
+const num=n=>Number.isFinite(Number(String(n??'').replace(/,/g,'')))?Number(String(n??'').replace(/,/g,'')):0;
 const fieldsByKey=new Map();
 function profileData(){const co=profile?.company||{};return {id:profile?.id||'',name:co.name||'',logo:co.logo||'',info:typeof co.headerText==='string'&&co.headerText.trim()?co.headerText:(co.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),currencies:co.currencies||[],defaultCurrency:co.defaultCurrency||'MYR',placeholders:globalPlaceholders} }
 function business(){return savedSnapshot||profileData()}
@@ -465,7 +465,7 @@ function render(){
  const co=business(),f=state.fields,subtotal=state.items.reduce((v,row)=>v+lineTotal(row),0),sst=subtotal*num(f.sstRate)/100,grand=subtotal+sst;
  const visible=state.items.filter(row=>template.items.columns.some(c=>c.type!=='calculated'&&String(row[c.key]??'').trim()));
  const cols=template.items.columns;
- const itemRows=(visible.length?visible:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
+ const itemRows=(visible.length?visible:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
  const headerCompany={...co,documentTitle:'PURCHASE ORDER',documentNumber:f.poNumber||'',documentDate:f.poDate||''};
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
