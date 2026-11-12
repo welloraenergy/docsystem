@@ -225,7 +225,7 @@ function render(){
  // Consistent two-column photo boxes: the last image never spans the whole page.
  const photoRows=Array.from({length:Math.ceil(photosPresent.length/2)},(_,rowIndex)=>{
   const pair=photosPresent.slice(rowIndex*2,rowIndex*2+2);
-  return '<tr>'+pair.map(p=>'<td><img src="'+esc(p.src)+'" alt="Photo '+(p.index+1)+'"></td>').join('')+'</tr>';
+  return '<tr>'+pair.map(p=>'<td><img src="'+esc(p.src)+'" alt="Photo '+(p.index+1)+'"></td>').join('')+(pair.length===1?'<td class="photo-empty-filler"></td>':'')+'</tr>';
  }).join('');
  const photos=photosPresent.length?'<table class="dt-photos excel-table" data-preset-new-page="photos"><colgroup><col style="width:50%"><col style="width:50%"></colgroup><thead><tr><th colspan="2">Photos</th></tr></thead><tbody>'+photoRows+'</tbody></table>':'';
  $('paper').innerHTML='<article class="paper">'+headerHtml+template.sections.map(information).join('')+items+total+sign+photos+'</article>';
