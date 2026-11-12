@@ -10,7 +10,7 @@ export function shortDate(value){
 }
 export function refPrefix(code,date){
  const year=/^\d{4}/.exec(String(date||''))?.[0]||String(new Date().getFullYear());
- return 'WLR-'+code+'-'+year.slice(-2)+'-';
+ return 'WLR-'+code+'('+year.slice(-2)+')-';
 }
 export function fullReference(prefix,input){return prefix+String(input??'').replace(/^\s+/,'');}
 export function referenceSuffix(full,prefix){
@@ -18,14 +18,14 @@ export function referenceSuffix(full,prefix){
 }
 export function updateReferenceYear(oldValue,code,date){
  const prefix=refPrefix(code,date),old=String(oldValue||'');
- const matching=new RegExp('^WLR-'+code+'-[0-9]{2}-');
+ const matching=new RegExp('^WLR-'+code+'\\([0-9]{2}\\)-');
  if(!old||matching.test(old))return prefix+old.replace(matching,'');
  return old; // historical reference without standard prefix
 }
 export function mountReferenceField(input,code,date,full){
  if(!input)return;
  const prefix=refPrefix(code,date),v=String(full||'');
- if(v&&!v.startsWith('WLR-'+code+'-'))return; // legacy document stays fully editable
+ if(v&&!v.startsWith('WLR-'+code+'('))return; // legacy document stays fully editable
  const wrapper=document.createElement('div');wrapper.className='preset-reference-control';
  const tag=document.createElement('span');tag.className='preset-reference-prefix';tag.textContent=prefix;
  input.parentNode.insertBefore(wrapper,input);wrapper.append(tag,input);
