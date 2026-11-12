@@ -606,7 +606,7 @@ async function start(){
   const response=await fetch('./templates/po/index.json',{cache:'no-cache'});
   if(!response.ok)throw Error('PO template catalog unavailable');
   manifest=await response.json();
-  $('poTemplate').innerHTML=manifest.templates.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.title)+'</option>').join('');
+  $('poTemplate').innerHTML=manifest.templates.filter(x=>['rental','inspection-repair'].includes(x.id)).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.id==='inspection-repair'?'Others':'Rental')+'</option>').join('');
   await chooseTemplate(params.get('preset')||manifest.templates[0].id,true);
   loaded=true;posted('height',{height:document.documentElement.scrollHeight+8});
  }catch(e){notify('Could not load PO templates: '+e.message)}
