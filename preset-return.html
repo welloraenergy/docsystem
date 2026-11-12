@@ -143,7 +143,7 @@
 <section class="card"><h3>Returning Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collect From</h3><div class="section-fields" id="collectionFields"></div></section>
 <section class="card"><h3>Delivery Address &amp; Contact Person</h3><div class="section-fields" id="deliverToFields"></div></section>
-<section class="card"><h3>Delivery Items</h3><div class="table-wrap"><table class="items" id="itemEditor"></table></div><p class="muted">Total Qty: <strong id="qtyTotal">0</strong></p><button id="addRow">+ Add Item</button> <button id="removeRow">Remove Last</button></section>
+<section class="card"><h3>Delivery Items</h3><div class="table-wrap"><table class="items" id="itemEditor"></table></div><p class="muted">Total Qty: <strong id="qtyTotal">0</strong></p><button id="addRow" class="preset-add-item">+ Add Item</button> <button id="removeRow" class="preset-remove-last">Remove Last</button></section>
 <section class="card"><h3>Comments</h3><label>Comments<textarea id="ticketComments" rows="4" placeholder="Comments, if any"></textarea></label></section>
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
 <section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Images are resized and compressed to a maximum of 700 KB each, then uploaded to Firebase Storage on Save Online. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
@@ -232,7 +232,7 @@ function draw(){
 }
 function drawItems(){
  const cols=template.items.columns;
- $('itemEditor').innerHTML='<thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='multiline'?'<textarea data-row="'+i+'" data-col="'+c.key+'">'+esc(row[c.key])+'</textarea>':'<input type="'+(c.type==='number'?'number':'text')+'" step="any" data-row="'+i+'" data-col="'+c.key+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button class="remove" data-remove-row="'+i+'">×</button></td></tr>').join('')+'</tbody>';
+ $('itemEditor').innerHTML='<thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='multiline'?'<textarea data-row="'+i+'" data-col="'+c.key+'">'+esc(row[c.key])+'</textarea>':'<input type="'+(c.type==='number'?'number':'text')+'" step="any" data-row="'+i+'" data-col="'+c.key+'" value="'+esc(row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="remove preset-remove-item" data-remove-row="'+i+'">×</button></td></tr>').join('')+'</tbody>';
  $('qtyTotal').textContent=qtyTotal();
 }
 function qtyTotal(){return state.items.reduce((n,row)=>n+(Number(row.qty)||0),0).toLocaleString('en-MY',{maximumFractionDigits:3})}
