@@ -303,7 +303,7 @@ function drawNotes(){
  const hidden=Array.isArray(state.noteVisibility)?state.noteVisibility:[];
  const extras=Array.isArray(state.extraNotes)?state.extraNotes:[];
  const originals=state.notes.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
- '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input style="width:auto" type="checkbox" data-note-visible="'+i+'" '+(hidden[i]===false?'':'checked')+'>Show Note '+(i+1)+' (original, locked)</label>'+
+ '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input style="width:auto" type="checkbox" data-note-visible="'+i+'" '+(hidden[i]===false?'':'checked')+'>Show Note '+(i+1)</label>'+
  '<div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.45;padding:8px;background:#171717;color:#f5f5f5;border:1px solid #505050;border-radius:5px">'+richPresetText(n)+'</div></div>').join('');
  const additions=extras.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-invoice-extra-visible="'+i+'" '+(n.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
