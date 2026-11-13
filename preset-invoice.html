@@ -413,7 +413,7 @@ document.addEventListener('focusout',e=>{
   if(raw)e.target.value=money(count(raw));
  }
 });
-document.addEventListener('input',e=>{const d=e.target.dataset;if(d.invDateDisplay!==undefined||d.invPicker!==undefined)return;
+document.addEventListener('input',e=>{const d=e.target.dataset;if(e.target.matches('textarea[data-group="client"][data-key="address"]')){const previous=e.target.value;const lines=previous.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(e.target.value.length,e.target.value.length)}}if(d.invDateDisplay!==undefined||d.invPicker!==undefined)return;
  if(d.noteVisible!==undefined){state.noteVisibility??=[];state.noteVisibility[Number(d.noteVisible)]=e.target.checked;render();return}
  if(d.invoiceExtraVisible!==undefined){state.extraNotes[Number(d.invoiceExtraVisible)].enabled=e.target.checked;render();return}
  if(d.invoiceExtraNote!==undefined){state.extraNotes[Number(d.invoiceExtraNote)].text=e.target.value;render();return}if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj){if(d.group==='fields'&&d.key==='reference'&&e.target.dataset.referenceSuffix)obj[d.key]=fullReference(refPrefix('INV',state.fields.date),e.target.value);
