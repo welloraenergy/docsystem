@@ -377,7 +377,18 @@ function poHeaderSlot(slot,co){
  });
  return '<div style="font-family:'+font+';font-size:'+size+'pt;text-align:'+align+';color:'+color+';white-space:pre-wrap">'+html+'</div>';
 }
-function formatPresetDate(value){if(!value)return '';const d=new Date(String(value).slice(0,10)+'T12:00:00');return shortDate(value)}
+function poDateFormat(value,long=false){
+ const raw=String(value||'').trim(),parts=raw.split('-');
+ if(parts.length!==3||parts[0].length!==4||parts[1].length!==2||parts[2].length!==2)return raw;
+ const yr=Number(parts[0]),mo=Number(parts[1]),day=Number(parts[2]),d=new Date(Date.UTC(yr,mo-1,day,12));
+ if(d.getUTCFullYear()!==yr||d.getUTCMonth()!==mo-1||d.getUTCDate()!==day)return raw;
+ if(!long)return parts[2]+'/'+parts[1]+'/'+parts[0];
+ return new Intl.DateTimeFormat('en-GB',{weekday:'short',timeZone:'UTC'}).format(d)+', '+parts[2]+' '+new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(d)+', '+parts[0];
+}
+function poDateControl(attrs,value){
+ return '<span style="display:flex;gap:4px;align-items:center;position:relative;min-width:0"><input type="text" readonly tabindex="-1" data-date-display placeholder="DD/MM/YYYY" value="'+esc(poDateFormat(value))+'" style="flex:1;min-width:0"><button type="button" data-date-open style="flex:none;padding:6px 5px" aria-label="Choose date">📅</button><input type="date" data-date-picker '+attrs+' value="'+esc(value||'')+'" tabindex="-1" style="position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0"></span>';
+}
+function formatPresetDate(value){return poDateFormat(value,true)}
 function poHeaderTitle(){
  const cfg=poHeaderSettings(),font=['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(cfg.titleFont)?cfg.titleFont:'Arial';
  const size=Math.max(8,Math.min(36,Number(cfg.titleSize)||16));
@@ -413,7 +424,7 @@ function draw(){
  const htmlField=f=>{
   const value=state.fields[f.key]??'';
   const options=f.key==='currency'?Array.from(new Set([...(business().currencies||[]).map(x=>x.code),'MYR','USD'])):f.options;
-  const control=f.type==='multiline'?'<textarea rows="'+3+'" placeholder="'+(f.key==='vendorAddress'?'Address line 1&#10;Address line 2&#10;Address line 3':'')+'" data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='date'?'date':f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
+  const control=f.type==='multiline'?'<textarea rows="'+3+'" placeholder="'+(f.key==='vendorAddress'?'Address line 1&#10;Address line 2&#10;Address line 3':'')+'" data-po-field="'+esc(f.key)+'">'+esc(value)+'</textarea>':options?'<select data-po-field="'+esc(f.key)+'">'+options.map(o=>'<option value="'+esc(o)+'" '+(String(o)===String(value)?'selected':'')+'>'+esc(o==='pickup'?'Pick-up':o==='delivery'?'Delivery':o)+'</option>').join('')+'</select>':f.type==='date'?poDateControl('data-po-field="'+esc(f.key)+'"',value):'<input data-po-field="'+esc(f.key)+'" type="'+(f.type==='number'?'number':f.type==='email'?'email':'text')+'" value="'+esc(value)+'">';
   const label=({poDate:'Date',poNumber:'Reference No.',vendorName:'Company',vendorAddress:'Address',vendorContact:'Contact Person',vendorPhone:'Tel',vendorEmail:'Email',vendorQuotationNo:'Quotation No.',vendorQuotationDate:'Quotation Date',currency:'Currency',sstRate:'SST (%)'})[f.key]||f.label;
   return '<label class="'+(f.type==='multiline'?'wide':'')+'">'+esc(label)+control+'</label>';
  };
@@ -449,7 +460,7 @@ function draw(){
   }
   return toggle+'<div class="preset-locked-statement" style="border:1px solid #d9e2eb;border-radius:6px;padding:10px;margin-bottom:10px"><p class="muted" style="white-space:pre-wrap">'+esc(t.number===2?(mode==='pickup'?'Pick-up Address:':mode==='delivery'?'Delivery Address:':'Select Delivery or Pick-up below'):t.number===3?(mode==='pickup'?'Date of Collection:':'Date of Receipt at Delivery Address:'):t.number===4?(mode==='pickup'?'Vendor must have the ordered item(s) ready for collection from the specified Pick-up Address.':'Vendor must deliver the ordered item(s) to the specified Delivery Address.'):t.sourceText||'Original formula/field-linked clause')+'</p>'+linkedBox+(new URLSearchParams(location.search).get('configure')==='1'?'<label>Optional replacement clause text<textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea></label>':'')+'</div>';
  }).join('')+('<h4>Additional statements</h4>'+(state.extraTerms||[]).map((t,i)=>'<div style="border:1px solid #d9e2eb;padding:10px;border-radius:6px;margin:8px 0"><label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-po-extra-show="'+i+'" '+(t.enabled===false?'':'checked')+'>Show statement '+(i+1)+'</label><label>Heading<input data-po-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Text<textarea data-po-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-po-extra-remove="'+i+'">Remove added statement</button></div>').join('')+'<button type="button" class="small" id="poAddStatement">+ Add Statement</button>');
- $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+'<input type="'+(k==='date'?'date':'text')+'" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'"></label>').join('')+'</fieldset>').join('');
+ $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+(k==='date'?poDateControl('data-sign="'+esc(role)+'" data-sign-key="'+k+'"',state.signatures?.[role]?.[k]||''):'<input type="text" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'">')+'</label>').join('')+'</fieldset>').join('');
  render();
 }
 function drawRows(){
@@ -538,7 +549,7 @@ function render(){
  };
  const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">Terms &amp; Conditions</div><div class="po-terms excel-terms" style="font-size:'+7+'pt">'+[...template.terms.filter(t=>!(Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number)))).map(t=>({ ...t,additional:false})),...(state.extraTerms||[]).filter(t=>t.enabled!==false&&(t.title||t.body)).map(t=>({title:t.title||'Additional Statement',sourceText:t.body||'',additional:true}))].map((t,i)=>t.additional?
  '<div class="po-term excel-term"><span class="po-term-num term-num">'+(i+1)+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(poLetteredClauseHtml(poPresetValue(t.sourceText)).lettered?'<div class="po-lettered-lines">'+poLetteredClauseHtml(poPresetValue(t.sourceText)).html+'</div>':' '+esc(poPresetValue(t.sourceText)))+'</div></div>':clauseMarkup({...t,displayNumber:i+1})).join('')+'</div></section>';
- const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(v.date||'')+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
+ const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(poDateFormat(v.date))+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
  // Page fitting is evaluated on unscaled, physical A4 pages.
  const paperRoot=$('paper');
@@ -657,6 +668,7 @@ document.addEventListener('focusout',e=>{
  }
 });
 document.addEventListener('input',e=>{
+if(e.target.matches('[data-date-picker]')){const display=e.target.closest('span').querySelector('[data-date-display]');if(display)display.value=poDateFormat(e.target.value)}
 if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-field="fulfillmentAddress"]')){const lines=e.target.value.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(e.target.value.length,e.target.value.length)}}
  const d=e.target.dataset;
  if(d.poFulfillment!==undefined){
@@ -678,7 +690,7 @@ if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-fi
  else if(d.term){state.termsOverrides[d.term]=e.target.value;render()}
  else if(d.sign){state.signatures[d.sign]??={};state.signatures[d.sign][d.signKey]=e.target.value;render()}
 });
-document.addEventListener('click',e=>{if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.poExtraRemove),1);draw()}});
+document.addEventListener('click',e=>{if(e.target.closest('[data-date-open]')){const picker=e.target.closest('span').querySelector('[data-date-picker]');if(picker.showPicker)picker.showPicker();else picker.click();return}if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.poExtraRemove),1);draw()}});
 $('newBtn').onclick=newPo;$('saveBtn').onclick=save;$('printBtn').onclick=()=>window.printDoc();
 async function start(){
  try{
