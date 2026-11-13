@@ -339,16 +339,17 @@ function render(){
   const allNotes=[...state.notes.map((note,i)=>({text:note,originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
 const invoiceLetteredNoteHtml=body=>{
  const raw=String(body??'');
+ const format=s=>richPresetText(s).replace(/liang\.ss@welloraenergy\.com/gi,'<a href="mailto:liang.ss@welloraenergy.com" style="color:inherit;text-decoration:none">liang.ss@welloraenergy.com</a>');
  const markers=[...raw.matchAll(/(?:^|\s)\(?([a-z])\)\s/gi)];
- if(!markers.some(m=>m[1].toLowerCase()==='a')||!markers.some(m=>m[1].toLowerCase()==='b'))return richPresetText(raw);
+ if(!markers.some(m=>m[1].toLowerCase()==='a')||!markers.some(m=>m[1].toLowerCase()==='b'))return format(raw);
  const parts=raw.split(/\s+(?=\(?[a-z]\)\s)/gi);
  const heading=parts.shift()||'';
  const items=parts.length?parts:[];
  if(/^\s*\(?a\)\s/i.test(heading))items.unshift(heading);
  const title=/^\s*\(?a\)\s/i.test(heading)?'':heading.trim();
- return (title?'<div>'+richPresetText(title)+'</div>':'')+items.map(item=>'<div class="inv-note-lettered">'+richPresetText(item.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') '))+'</div>').join('');
+ return (title?'<div>'+format(title)+'</div>':'')+items.map(item=>'<div class="inv-note-lettered">'+format(item.trim().replace(/^\(?([a-z])\)\s/i,(_,letter)=>'('+letter.toLowerCase()+') '))+'</div>').join('');
 };
-  const notes='<section class="inv-notes"><div class="inv-band">Notes</div><div class="inv-notes-body">'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'</span><span>'+invoiceLetteredNoteHtml(content)+'</span></div>'}).join('')+'</div></section>';
+  const notes='<section class="inv-notes"><div class="inv-band">Notes</div><div class="inv-notes-body">'+allNotes.map((note,i)=>{let content=note.text||'';if(note.originalIndex===0)content=content.replace(/(Account No:\s*)([^\n]+)/i,'$1'+template.bankAccounts[currencySymbol()]);return '<div class="inv-note"><span>'+(i+1)+'.</span><span>'+invoiceLetteredNoteHtml(content)+'</span></div>'}).join('')+'</div></section>';
   const sign='<table class="inv-sign"><colgroup><col style="width:13%"><col style="width:31%"><col style="width:22%"><col style="width:15%"><col style="width:19%"></colgroup><thead><tr><th></th>'+template.signatures.columns.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+template.signatures.roles.map(role=>{const d=state.signatures[role]||{};return '<tr><td class="role">'+esc(role)+'</td><td>'+esc(expanded(d.name||''))+'</td><td>'+esc(expanded(d.position||''))+'</td><td>'+esc(tableDate(d.date))+'</td><td></td></tr>'}).join('')+'</tbody></table>';
   $('paper').innerHTML='<article class="paper">'+headHtml+clientHtml+table+totals+'<div class="inv-words">'+esc(currencyAmountWords(total(),currencySymbol()))+'</div>'+notes+sign+'</article>';
   const n=paginatePresetDocument($('paper'),{fit:'normal'});$('pageCount').textContent=n+' page(s)';fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
