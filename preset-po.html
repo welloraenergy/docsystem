@@ -115,10 +115,10 @@
  -webkit-print-color-adjust:exact;print-color-adjust:exact
 }
 .paper .po-terms-section .po-terms{
- display:block!important;position:relative!important;
+ display:flow-root!important;position:relative!important;
  width:100%!important;max-width:none!important;min-width:0!important;
  margin:0!important;border:0!important;
- padding:1.5mm 1.8mm 1.5mm 0!important;
+ padding:1.5mm 1.8mm 0 0!important;
  box-sizing:border-box!important
 }
 .paper .po-terms-section .po-terms::before{
@@ -130,7 +130,6 @@
  gap:1.5mm!important;width:100%!important;align-items:start!important;
  margin:0 0 var(--term-gap,1.6mm)!important
 }
-.paper .po-terms-section .po-term:last-child{margin-bottom:0!important}
 .paper .po-terms-section .po-term .term-num{padding:0 1mm!important;text-align:center!important}
 .paper .po-terms-section .po-term .term-text{
  min-width:0!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;
