@@ -252,7 +252,18 @@ function amountWords(amount){
  if(major>999999999999)return money(amount)+' '+currency;
  return integer(major)+' '+currency+(cents?' and '+integer(cents)+' '+minor:' only');
 }
-function dateText(v){if(!v)return '';const d=new Date(v+'T12:00:00');return shortDate(v)}
+function dateText(v,longLoadOut=false){
+ if(!v)return '';
+ if(!longLoadOut)return shortDate(v);
+ const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v));
+ if(!match)return String(v);
+ const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+ const date=new Date(Date.UTC(year,month-1,day,12));
+ if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)return String(v);
+ const weekday=new Intl.DateTimeFormat('en-GB',{weekday:'short',timeZone:'UTC'}).format(date);
+ const monthName=new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(date);
+ return weekday+', '+String(day).padStart(2,'0')+' '+monthName+', '+year;
+}
 function displayInvoiceDate(value){
  const raw=String(value||'').trim(),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
  return m?m[3]+'/'+m[2]+'/'+m[1]:raw;
@@ -319,7 +330,7 @@ function render(){
   const extraHtml=renderedExtra.trim()?'<div class="inv-heading-extra" style="color:'+extraColor+';font-size:'+extraSize+'pt;font-family:'+extraFont+';text-align:'+extraAlign+';white-space:pre-wrap;overflow-wrap:anywhere;margin-top:1mm">'+renderedExtra+'</div>':'';
   const headHtml='<div class="inv-head"><div class="inv-ident">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="inv-right"><div class="inv-title" style="color:'+color+';font-size:'+titleSize+'pt;font-family:'+titleFont+';text-align:'+titleAlign+';white-space:pre-wrap">'+renderedTitle+'</div>'+extraHtml+'<div class="inv-meta">'+[['Date',dateText(state.fields.date)],['Reference No',state.fields.reference]].map(([label,val])=>'<div class="inv-meta-line"><b>'+esc(label)+':</b><span>'+esc(val)+'</span></div>').join('')+'</div></div></div>';
   const client=state.client,line=(lab,val)=>'<tr'+(lab==='Address'?' class="info-address"':'')+'><th scope="row">'+esc(lab)+':</th><td>'+esc(expanded(val||'').replace(/\r\n?/g,'\n'))+'</td></tr>';
-  const clientHtml='<section class="inv-section"><div class="inv-band">Client Information</div><div class="inv-client"><div><table class="inv-info-table"><tbody>'+line('Company',client.company)+line('Address',client.address)+line('Contact Person',client.contact)+line('Tel',client.tel)+line('Email',client.email)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div><div><table class="inv-info-table"><tbody>'+line('Purchase Order No',client.poNumber)+line('Date',dateText(client.poDate))+line('Operator',client.operator)+line('Rig',client.rig)+line('Well',client.well)+line('Load Out Date',tableDate(client.loadOut))+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div></div></section>';
+  const clientHtml='<section class="inv-section"><div class="inv-band">Client Information</div><div class="inv-client"><div><table class="inv-info-table"><tbody>'+line('Company',client.company)+line('Address',client.address)+line('Contact Person',client.contact)+line('Tel',client.tel)+line('Email',client.email)+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div><div><table class="inv-info-table"><tbody>'+line('Purchase Order No',client.poNumber)+line('Date',dateText(client.poDate))+line('Operator',client.operator)+line('Rig',client.rig)+line('Well',client.well)+line('Load Out Date',dateText(client.loadOut,true))+'<tr class="info-filler"><th></th><td></td></tr></tbody></table></div></div></section>';
   const c=template.items.columns,headings=c.map(x=>x.key==='dailyRate'?'Daily Rental Rate ('+currencySymbol()+'/Unit/Day)':x.key==='amount'?'Total Amount ('+currencySymbol()+')':x.label);
   const table='<table class="inv-table excel-table"><colgroup><col style="width:5%"><col style="width:31%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:12%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+c.map(x=>'<td class="'+(['qty','dailyRate','amount','duration'].includes(x.key)?'number':'')+'">'+esc(x.key==='duration'?(dates(r)??''):x.key==='amount'?money(rowTotal(r)):x.key==='dailyRate'&&r[x.key]?money(r[x.key]):x.key==='hireFrom'||x.key==='hireTo'?tableDate(r[x.key]):r[x.key])+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const totals='<table class="inv-totals" style="width:76mm;max-width:100%;margin:3mm 0 3mm auto;border-collapse:collapse;table-layout:fixed;border:1px solid #b7c3d0"><colgroup><col style="width:53.92mm"><col style="width:22.08mm"></colgroup><tbody>'+[['Subtotal ('+currencySymbol()+')',subtotal()],['SST ('+Number(state.fields.sstRate||0)+'%)',tax()],['Grand Total ('+currencySymbol()+')',total()]].map(([l,v],i)=>'<tr><td class="lbl" style="border:1px solid #b7c3d0!important;padding:1.3mm 2mm!important;text-align:left!important;font-weight:'+(i===2?'700':'400')+'!important;background:#fff!important">'+esc(l)+'</td><td class="num" style="border:1px solid #b7c3d0!important;padding:1.3mm 2mm!important;text-align:right!important;font-weight:'+(i===2?'700':'400')+'!important;background:#fff!important">'+esc(money(v))+'</td></tr>').join('')+'</tbody></table>';
