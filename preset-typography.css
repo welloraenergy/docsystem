@@ -79,7 +79,7 @@
 /* PO editor: compact number/quantity and larger description input without cropping. */
 #itemsEditor{table-layout:fixed;min-width:640px}
 #itemsEditor th,#itemsEditor td{overflow-wrap:anywhere}
-#itemsEditor input,#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
+#itemsEditor input:not(.inv-native-date),#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
 #itemsEditor td:has(textarea) textarea{min-height:50px;resize:vertical}
 
 /* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
@@ -286,7 +286,7 @@
 #itemsEditor td:nth-child(2),
 #itemEditor td:nth-child(2){min-width:0!important}
 .preset-item-editor input,
-#itemsEditor input,
+#itemsEditor input:not(.inv-native-date),
 #itemEditor input{box-sizing:border-box;max-width:100%}
 @media screen{
  /* Preview-only zebra shading; first data row WHITE, second very light grey. */
@@ -408,7 +408,7 @@
  #itemsEditor{min-width:920px!important}
  #itemEditor{min-width:850px!important}
  /* Invoice needs two complete date controls plus amount and action columns. */
- #itemsEditor.items-editor{min-width:1160px!important}
+ #itemsEditor.items-editor{min-width:1250px!important}
  .preset-item-editor th,.preset-item-editor td,
  #itemsEditor th,#itemsEditor td,#itemEditor th,#itemEditor td{
   box-sizing:border-box!important;min-width:0!important;
@@ -420,7 +420,7 @@
   word-break:normal!important;font-size:13px!important;line-height:1.25!important;
  }
  .preset-item-editor td input,.preset-item-editor td textarea,
- #itemsEditor td input,#itemsEditor td textarea,
+ #itemsEditor td input:not(.inv-native-date),#itemsEditor td textarea,
  #itemEditor td input,#itemEditor td textarea{
   display:block!important;width:100%!important;max-width:100%!important;
   min-width:0!important;box-sizing:border-box!important;
@@ -437,13 +437,13 @@
   padding:9px 10px!important;
  }
  .preset-item-editor td input[type=date],
- #itemsEditor td input[type=date],#itemEditor td input[type=date]{
+ #itemsEditor td input[type=date]:not(.inv-native-date),#itemEditor td input[type=date]{
   font-size:12px!important;padding:7px 3px!important;
   min-width:0!important;
  }
  .preset-item-editor td span,
  #itemsEditor td .line-total,
- #itemsEditor td span,#itemEditor td span{
+ #itemsEditor td>span:not(.inv-date-control),#itemEditor td span{
   display:block;min-width:0!important;box-sizing:border-box!important;
   color:#111827!important;background:#fff!important;
   text-align:center!important;white-space:normal!important;
