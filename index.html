@@ -893,7 +893,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261112-normalized-lettered-terms39':family==='returning-ticket'?'preset-return.html?version=20261112-meta-right36':family==='delivery-ticket'?'preset-do.html?version=20261112-meta-right36':family==='purchase-order'?'preset-po.html?version=20261112-po-lettered-pagination44':'preset-quotation.html?version=20261112-quote-divider-pagination43';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261113-invoice-balanced-notes42':family==='returning-ticket'?'preset-return.html?version=20261112-meta-right36':family==='delivery-ticket'?'preset-do.html?version=20261112-meta-right36':family==='purchase-order'?'preset-po.html?version=20261113-po-balanced-terms48':'preset-quotation.html?version=20261113-quote-balanced-terms46';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
