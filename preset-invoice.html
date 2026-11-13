@@ -299,12 +299,18 @@ function draw(){if(!state||!template)return;$('invoiceFields').innerHTML=templat
  mountReferenceField($('invoiceFields').querySelector('[data-group="fields"][data-key="reference"]'),'INV',state.fields.date,state.fields.reference);
  $('invoiceCurrencyFields').innerHTML=template.fields.filter(f=>f.key==='currency').map(f=>control(f.label,f.key,state.fields[f.key],'fields',f.type)).join('');$('clientFields').innerHTML=template.clientFields.map(f=>control(f.label,f.key,state.client[f.key],'client',f.type)).join('');drawRows();drawNotes();drawSignatures();render()}
 function drawRows(){const cols=template.items.columns;$('itemsEditor').innerHTML='<colgroup>'+[5,30,7,6,10,10,8,10,9,5].map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr>'+cols.map(c=>'<td>'+ (c.calculated?'<span data-inv-calculated="'+c.key+'">'+esc(c.key==='duration'?(dates(r)??''):money(rowTotal(r)))+'</span>':c.key==='description'?'<textarea data-row="'+i+'" data-col="'+c.key+'">'+esc(r[c.key])+'</textarea>':(['hireFrom','hireTo'].includes(c.key)?invoiceDateEditor('data-row="'+i+'" data-col="'+c.key+'"',r[c.key],true):'<input data-row="'+i+'" data-col="'+c.key+'" '+(c.key==='qty'?'type="number" step="any"':c.key==='dailyRate'?'type="text" inputmode="decimal"':'type="text"')+' value="'+esc(c.key==='dailyRate'&&String(r[c.key]??'').trim()?money(count(r[c.key])):r[c.key])+'">'))+'</td>').join('')+'<td><button type="button" class="preset-remove-item" data-remove-row="'+i+'">×</button></td></tr>').join('')+'</tbody>';$('totalSummary').textContent='Sub-Total: '+money(subtotal())+' · SST: '+money(tax())+' · Grand Total: '+money(total())+' '+currencySymbol()}
+function invoiceDefaultNote(n){
+ return n.no==='1'?[n.title,...n.lines].join('\n'):n.text;
+}
+function invoiceFormattedNote(value){
+ return richPresetText(value).replace(/\[b\]([\s\S]*?)\[\/b\]/gi,'<strong>$1</strong>');
+}
 function drawNotes(){
  const hidden=Array.isArray(state.noteVisibility)?state.noteVisibility:[];
  const extras=Array.isArray(state.extraNotes)?state.extraNotes:[];
- const originals=state.notes.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
+ const originals=template.notes.map((note,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input style="width:auto" type="checkbox" data-note-visible="'+i+'" '+(hidden[i]===false?'':'checked')+'>Show Note '+(i+1)+'</label>'+
- '<div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.45;padding:8px;background:#171717;color:#f5f5f5;border:1px solid #505050;border-radius:5px">'+richPresetText(n)+'</div></div>').join('');
+ '<div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.45;padding:8px;background:#171717;color:#f5f5f5;border:1px solid #505050;border-radius:5px">'+invoiceFormattedNote(invoiceDefaultNote(note))+'</div></div>').join('');
  const additions=extras.map((n,i)=>'<div style="border:1px solid #d9e2eb;border-radius:6px;padding:9px;margin:7px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-invoice-extra-visible="'+i+'" '+(n.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
  '<label>Custom statement<textarea data-invoice-extra-note="'+i+'" rows="3">'+esc(n.text||'')+'</textarea></label>'+
@@ -336,10 +342,10 @@ function render(){
   const c=template.items.columns,headings=c.map(x=>x.key==='dailyRate'?'Daily Rental Rate ('+currencySymbol()+'/Unit/Day)':x.key==='amount'?'Total Amount ('+currencySymbol()+')':x.label);
   const table='<table class="inv-table excel-table"><colgroup><col style="width:5%"><col style="width:31%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:12%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map(r=>'<tr>'+c.map(x=>'<td class="'+(['qty','dailyRate','amount','duration'].includes(x.key)?'number':'')+'">'+esc(x.key==='duration'?(dates(r)??''):x.key==='amount'?money(rowTotal(r)):x.key==='dailyRate'&&r[x.key]?money(r[x.key]):x.key==='hireFrom'||x.key==='hireTo'?tableDate(r[x.key]):r[x.key])+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const totals='<table class="inv-totals" style="width:76mm;max-width:100%;margin:3mm 0 3mm auto;border-collapse:collapse;table-layout:fixed;border:1px solid #b7c3d0"><colgroup><col style="width:53.92mm"><col style="width:22.08mm"></colgroup><tbody>'+[['Subtotal ('+currencySymbol()+')',subtotal()],['SST ('+Number(state.fields.sstRate||0)+'%)',tax()],['Grand Total ('+currencySymbol()+')',total()]].map(([l,v],i)=>'<tr><td class="lbl" style="border:1px solid #b7c3d0!important;padding:1.3mm 2mm!important;text-align:left!important;font-weight:'+(i===2?'700':'400')+'!important;background:#fff!important">'+esc(l)+'</td><td class="num" style="border:1px solid #b7c3d0!important;padding:1.3mm 2mm!important;text-align:right!important;font-weight:'+(i===2?'700':'400')+'!important;background:#fff!important">'+esc(money(v))+'</td></tr>').join('')+'</tbody></table>';
-  const allNotes=[...state.notes.map((note,i)=>({text:note,originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
+  const allNotes=[...template.notes.map((note,i)=>({text:invoiceDefaultNote(note),originalIndex:i,enabled:state.noteVisibility?.[i]!==false})),...(state.extraNotes||[]).map(n=>({text:n.text||'',enabled:n.enabled!==false}))].filter(n=>n.enabled&&String(n.text||'').trim());
 const invoiceLetteredNoteHtml=body=>{
  const raw=String(body??'');
- const format=s=>richPresetText(s).replace(/liang\.ss@welloraenergy\.com/gi,'<a href="mailto:liang.ss@welloraenergy.com" style="color:inherit;text-decoration:none">liang.ss@welloraenergy.com</a>');
+ const format=s=>invoiceFormattedNote(s).replace(/liang\.ss@welloraenergy\.com/gi,'<a href="mailto:liang.ss@welloraenergy.com" style="color:inherit;text-decoration:none">liang.ss@welloraenergy.com</a>');
  const markers=[...raw.matchAll(/(?:^|\s)\(?([a-z])\)\s/gi)];
  if(!markers.some(m=>m[1].toLowerCase()==='a')||!markers.some(m=>m[1].toLowerCase()==='b'))return format(raw);
  const parts=raw.split(/\s+(?=\(?[a-z]\)\s)/gi);
