@@ -15,10 +15,10 @@
 /* The Excel signature cells reserve distinct spaces for Name and Position. */
 .paper .dt-sign tbody tr{break-inside:avoid;page-break-inside:avoid}
 .paper .dt-sign tbody td{height:20mm!important;vertical-align:middle!important}
-.paper .dt-name-position{padding:0!important;vertical-align:stretch!important}
-.paper .dt-name-position>div{display:grid;grid-template-columns:15mm minmax(0,1fr);align-items:center;min-height:10mm}
-.paper .dt-name-position b{font-weight:normal;text-align:right;padding:1mm 1.2mm;white-space:nowrap}
-.paper .dt-name-position span{min-height:8mm;padding:.7mm 1mm;overflow-wrap:anywhere;white-space:pre-wrap}
+.paper .dt-name-position{padding:0!important;vertical-align:stretch!important;text-align:left!important}
+.paper .dt-name-position>div{display:flex;align-items:center;justify-content:flex-start;min-height:10mm}
+.paper .dt-name-position b{font-weight:normal;text-align:left;padding:1mm .6mm 1mm 1mm;white-space:nowrap;flex:none}
+.paper .dt-name-position span{min-height:0;padding:.7mm .5mm;overflow-wrap:anywhere;white-space:pre-wrap;flex:1;min-width:0}
 .paper .dt-sign td.dt-sign-company{
  font-family:Arial,sans-serif!important;
  font-size:6pt!important;
@@ -82,7 +82,7 @@
 .paper .dt-sign{margin-top:1.5mm!important;margin-bottom:3mm!important}
 .paper .dt-sign tbody td{height:18mm!important}
 .paper .dt-name-position>div{min-height:9mm!important}
-.paper .dt-name-position span{min-height:7mm!important}
+.paper .dt-name-position span{min-height:0!important}
 @media print{
  .paper .dt-info{min-height:21mm!important}
  .paper .dt-row.address{min-height:11mm!important}
