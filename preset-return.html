@@ -374,7 +374,7 @@ async function loadSaved(id){
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){profile=selected;draw();ready()}}
-window.printDoc=()=>{render();window.print()};
+window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Return Ticket').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
 let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
