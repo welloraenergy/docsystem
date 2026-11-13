@@ -607,7 +607,7 @@ function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.compa
 async function chooseBusiness(id){
  if(docId){ready();return}const picked=profiles.find(p=>p.id===id);if(!picked)return;profile=picked;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()
 }
-window.printDoc=()=>{document.body.classList.add('printing');render();window.print()};
+window.printDoc=()=>{const reference=String(state.fields.poNumber||'').trim();const pdfName=(reference||'Purchase Order').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}document.body.classList.add('printing');render();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
 
 let presetCopyApplied=false,activeCopyDefaults=null;
