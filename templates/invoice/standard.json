@@ -98,8 +98,8 @@
     },
     {
       "key": "loadOut",
-      "label": "Load Out",
-      "type": "text",
+      "label": "Load Out Date",
+      "type": "date",
       "cell": "J25"
     }
   ],
