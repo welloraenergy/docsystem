@@ -224,7 +224,7 @@ function notify(value){$('status').textContent=value;posted('status',{status:val
 function business(){const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:typeof c.headerText==='string'&&c.headerText.trim()?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals,defaultCurrency:c.defaultCurrency||'MYR'}}
 function header(){return profile?.presetHeader||savedHeader||{}}
 function expanded(v){return expandPresetText(v,business(),globals)}
-function blank(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('INV',new Date().toISOString().slice(0,10)),currency:business().defaultCurrency||'MYR',sstRate:'0'},client:Object.fromEntries(template.clientFields.map(f=>[f.key,''])),items:Array.from({length:3},(_,i)=>({no:String(i+1),description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''})),notes:template.notes.map(n=>n.no==='1'?[n.title,...n.lines].join('\n'):n.text),noteVisibility:[],extraNotes:[],signatures:Object.fromEntries(template.signatures.roles.map(x=>[x,{name:'',position:'',date:''}]))}}
+function blank(){return {fields:{date:new Date().toISOString().slice(0,10),reference:refPrefix('INV',new Date().toISOString().slice(0,10)),currency:business().defaultCurrency||'MYR',sstRate:'0'},client:Object.fromEntries(template.clientFields.map(f=>[f.key,''])),items:Array.from({length:3},(_,i)=>({no:String(i+1),description:'',unit:'',qty:'',hireFrom:'',hireTo:'',dailyRate:''})),noteVisibility:[],extraNotes:[],signatures:Object.fromEntries(template.signatures.roles.map(x=>[x,{name:'',position:'',date:''}]))}}
 const currencySymbol=()=>state.fields.currency==='USD'?'USD':'MYR',money=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}),count=n=>Number(String(n??'').replace(/,/g,''))||0;
 function dates(r){if(!r.hireFrom||!r.hireTo)return null;const a=new Date(r.hireFrom+'T12:00:00'),b=new Date(r.hireTo+'T12:00:00');if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime()))return null;return Math.max(0,Math.round((b-a)/86400000)+1)}
 function rowTotal(r){const days=dates(r);return days===null?0:count(r.qty)*days*count(r.dailyRate)}
@@ -380,11 +380,11 @@ async function save(){
  try{
   if(!docId){const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));if(hits.docs.some(x=>x.data().templateFamily==='invoice'&&x.data().profileId===business().id))return alert('Invoice reference exists for this company. Open it instead.')}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),prior=docId?await getDoc(ref):null,snap=business();
-  const payload={templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:encodePreset(state),profileId:snap.id,profileName:snap.name||'',companySnapshot:encodePreset(snap),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const payload={templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:encodePreset((({notes,...documentState})=>documentState)(state)),profileId:snap.id,profileName:snap.name||'',companySnapshot:encodePreset(snap),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,payload,{merge:true});docId=ref.id;savedCompany=snap;notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();
  }catch(e){notify('Invoice save failed: '+(e.code||e.message));reportPresetSaveError(e);alert(e.code||e.message)}finally{saving=false}
 }
-async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=decodePreset(d.presetData);savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;draw();notify('Opened Invoice '+d.number);ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
+async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=decodePreset(d.presetData);if(state&&Object.hasOwn(state,'notes'))delete state.notes;savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;draw();notify('Opened Invoice '+d.number);ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()}
 window.printDoc=()=>{render();window.print()};
@@ -395,7 +395,7 @@ async function saveAsNewPresetTemplate(name){
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
  try{
-  const saved=await savePresetCopy({user,family:'invoice',basePresetId:'standard',name,state,profileId:business().id});
+  const saved=await savePresetCopy({user,family:'invoice',basePresetId:'standard',name,state:(({notes,...templateState})=>templateState)(state),profileId:business().id});
   notify('Template saved: '+saved.name);
   posted('template-saved',{name:saved.name,id:saved.id});
  }catch(error){alert('Could not save template copy: '+error.message)}
@@ -409,8 +409,8 @@ async function openSavedPresetCopy(){
   docId=null;savedCompany=null;savedHeader=null;
   const selected=profiles.find(p=>p.id===copy.profileId);
   if(selected)profile=selected;
-  state=copy.defaults;
-  activeCopyDefaults=structuredClone(copy.defaults);
+  state=copy.defaults;if(Object.hasOwn(state,'notes'))delete state.notes;
+  activeCopyDefaults=structuredClone(state);
   state.fields.reference=refPrefix('INV',state.fields.date);state.items=Array.isArray(state.items)?state.items:[];
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
