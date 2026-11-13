@@ -553,7 +553,7 @@ function render(){
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
  // Page fitting is evaluated on unscaled, physical A4 pages.
  const paperRoot=$('paper');
- const totalPages=paginatePresetDocument(paperRoot,{size:7,fit:state.termsPageFit==='normal'?'normal':'flow'});
+ const totalPages=paginatePresetDocument(paperRoot,{size:7,fit:state.termsPageFit==='normal'?'normal':'flow',bottomReserveMm:15});
  $('pageCount').textContent=totalPages+' page(s)';
  const termPages=Number(paperRoot.dataset.pageFitTermsPages)||0;
  const termsStartPage=Number(paperRoot.dataset.pageFitTermsStartPage)||1;
