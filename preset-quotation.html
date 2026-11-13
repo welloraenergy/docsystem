@@ -996,7 +996,7 @@ document.addEventListener('focusout',e=>{
   if(raw)e.target.value=fmt(Number(raw.replace(/,/g,'')));
  }
 });
-document.addEventListener('input',e=>{if(e.target.dataset.quoteTerm!==undefined){
+document.addEventListener('input',e=>{if(e.target.matches('textarea[data-field="address"],#facilityAddress,#pickupAddress,#returnAddress')){const previous=e.target.value;const lines=previous.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(e.target.value.length,e.target.value.length)}}if(e.target.dataset.quoteTerm!==undefined){
  const n=Number(e.target.dataset.quoteTerm);
  state.omittedTerms=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
  state.omittedTerms=state.omittedTerms.filter(x=>Number(x)!==n);
