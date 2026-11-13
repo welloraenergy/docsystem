@@ -35,7 +35,7 @@
 .po-vendor-left .po-address-row strong,.po-vendor-left .po-address-row span{align-self:start}
 .po-vendor-left .po-address-row span{display:block;min-height:16mm;white-space:pre-wrap;overflow-wrap:anywhere}
 .po-vendor-left .po-vendor-row:not(.po-address-row){min-height:4.2mm}
-.po-vendor-form textarea[data-po-field="vendorAddress"]{min-height:100px;white-space:pre-wrap;resize:vertical}
+.po-vendor-form textarea[data-po-field="vendorAddress"]{height:72px;min-height:72px;white-space:pre-wrap;resize:vertical}
 /* Identical standalone sub-item rows for all structured PO clauses (including 5 and 6). */
 .paper .po-lettered-lines{display:block;margin-top:0.7mm;padding-left:2mm;line-height:1.3}
 .paper .po-lettered-item{display:block;margin:0;padding:0;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -439,7 +439,7 @@ function draw(){
    '<label><input type="radio" name="poFulfillmentMode" data-po-fulfillment="delivery" '+(mode==='delivery'?'checked':'')+'> Delivery — supplier delivers the goods</label>'+
    '<label><input type="radio" name="poFulfillmentMode" data-po-fulfillment="pickup" '+(mode==='pickup'?'checked':'')+'> Pick-up — goods are collected from supplier</label></fieldset>'+
    '<div class="po-fulfillment-address-wrap" '+(!mode?'hidden':'')+'><label><span id="poFulfillmentAddressLabel">'+(mode==='pickup'?'Pick-up Address':'Delivery Address')+'</span>'+
-   '<textarea rows="4" data-po-field="fulfillmentAddress" placeholder="Enter full address">'+esc(state.fields.fulfillmentAddress||'')+'</textarea></label></div>':'';
+   '<textarea rows="3" data-po-field="fulfillmentAddress" placeholder="Enter full address">'+esc(state.fields.fulfillmentAddress||'')+'</textarea></label></div>':'';
   const linkedControls=fulfillmentChoice+linkedKeys.map(key=>template.fields.find(f=>f.key===key)).filter(Boolean).map(htmlField).join('');
   const linkedBox=linkedControls?'<div class="po-clause-inline-fields" style="border-top:1px solid #e2e8f0;padding-top:9px;margin-top:9px;display:grid;gap:9px">'+linkedControls+'</div>':'';
 
