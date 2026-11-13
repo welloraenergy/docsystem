@@ -657,6 +657,7 @@ document.addEventListener('focusout',e=>{
  }
 });
 document.addEventListener('input',e=>{
+if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-field="fulfillmentAddress"]')){const lines=e.target.value.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(e.target.value.length,e.target.value.length)}}
  const d=e.target.dataset;
  if(d.poFulfillment!==undefined){
   state.fields.fulfillmentMode=d.poFulfillment;
