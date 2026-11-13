@@ -24,7 +24,11 @@ export function paginatePresetDocument(root, options = {}) {
     // Measure against the actual A4 content bottom, accounting for the page's
     // configured padding, rather than assuming one fixed preset padding.
     const paddingBottom = parseFloat(getComputedStyle(page).paddingBottom) || 0;
-    const pageBottom = pr.top + (297 * mm * scale) - paddingBottom * scale - 2 * mm * scale;
+    // Reserve optional extra printable space for browser PDF layout differences.
+    // This ensures a trailing block is moved to a real A4 page (with top padding)
+    // instead of being fragmented at the top edge of Chrome's next print sheet.
+    const reserveMm = Math.max(0, Number(options.bottomReserveMm) || 0);
+    const pageBottom = pr.top + (297 * mm * scale) - paddingBottom * scale - (2 + reserveMm) * mm * scale;
     return nr.bottom <= pageBottom + 0.5;
   }
   function appendWhole(node) {
