@@ -158,22 +158,22 @@
   "notes": [
     {
       "no": "1",
-      "title": "Please remit to:",
+      "title": "[b]Please remit to[/b]",
       "lines": [
-        "Account Name: WELLORA ENERGY SDN. BHD.",
-        "Account No: 3-2509132-14 (MYR Account)",
-        "Name of Bank: Public Bank Berhad",
-        "SWIFT Code: PBBEMYKL",
-        "Bank Address: Ground Floor Bangunan Public Bank, No.5 Jalan Merdeka, 87000 W.P. Labuan."
+        "(a) Account Name: WELLORA ENERGY SDN. BHD.",
+        "(b) Account No: 3-2509132-14 (MYR Account)",
+        "(c) Name of Bank: Public Bank Berhad",
+        "(d) SWIFT Code: PBBEMYKL",
+        "(e) Bank Address: Ground Floor Bangunan Public Bank, No.5 Jalan Merdeka, 87000 W.P. Labuan."
       ]
     },
     {
       "no": "2",
-      "text": "Any query to this Invoice must be made within seven (7) days."
+      "text": "Any query to this invoice must be made within [b]seven (7) days[/b]."
     },
     {
       "no": "3",
-      "text": "Late Payment: Payment for this Invoice is due in full within thirty (30) days from the invoice date. A late payment interest rate of 2% per month will be applied to any unpaid remaining balance after the due date."
+      "text": "[b]Late Payment[/b]: Payment for this invoice is due in full within [b]thirty (30) days[/b] from the invoice date. A late payment interest rate of 2% per month will be applied to any unpaid remaining balance after the due date."
     },
     {
       "no": "4",
