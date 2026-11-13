@@ -15,7 +15,7 @@
 .paper .inv-sign tbody td{font-size:8pt!important}
 .paper .po-totals,.paper .inv-totals{font-size:9pt!important}
 .paper .excel-terms,.paper .po-terms,.paper .excel-terms .excel-term,
-.paper .po-terms .po-term,.paper .inv-notes,.paper .inv-notes .inv-note{
+.paper .po-terms .po-term{
  font-size:7pt!important;line-height:1.2!important
 }
 .paper .quote-item-section-title{
@@ -82,15 +82,6 @@
 #itemsEditor input,#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
 #itemsEditor td:has(textarea) textarea{min-height:50px;resize:vertical}
 
-/* Invoice: the notes number column has a continuous printed vertical separator. */
-.paper .inv-notes .inv-note{padding:0!important;grid-template-columns:7mm minmax(0,1fr)!important}
-.paper .inv-notes .inv-note>span:first-child{
- border-right:1px solid #777!important;display:block;text-align:center!important;
- padding:.5mm .7mm!important;box-sizing:border-box
-}
-.paper .inv-notes .inv-note>span:nth-child(2){
- padding:.5mm 1mm!important;white-space:pre-wrap;overflow-wrap:anywhere
-}
 /* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
 .po-fulfillment-choice{
  display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px;padding:10px;
@@ -159,7 +150,6 @@
 .paper .inv-table{margin-top:2mm!important;margin-bottom:0!important}
 .paper .inv-totals{margin-top:0!important;margin-bottom:1.5mm!important}
 .paper .inv-words{margin-top:1mm!important;margin-bottom:2mm!important}
-.paper .inv-notes{margin-top:2mm!important;margin-bottom:2mm!important}
 .paper .inv-sign{margin-top:2mm!important}
 
 /* Prevent a header bar from becoming an orphan at a page boundary. */
@@ -189,42 +179,6 @@
 #itemsEditor td:not(:nth-child(2)) input,
 #itemsEditor td:not(:nth-child(2)) span{
  text-align:center!important;
-}
-
-/* Invoice Notes — one uninterrupted divider between the number and text.
-   Draw the separator on the shared body rather than separate note rows so
-   preview and print/PDF have identical continuous vertical borders. */
-.paper .inv-notes-body{
- position:relative;
- display:block;
- width:100%;
-}
-.paper .inv-notes-body::before{
- content:"";
- position:absolute;
- top:0;
- bottom:0;
- left:7mm;
- width:0;
- border-left:1px solid #777;
- pointer-events:none;
- z-index:2;
-}
-.paper .inv-notes-body .inv-note{
- display:grid!important;
- grid-template-columns:7mm minmax(0,1fr)!important;
- padding:0!important;
- margin:0!important;
- break-inside:avoid;
-}
-.paper .inv-notes-body .inv-note>span:first-child{
- border-right:0!important;
- padding:.5mm .7mm!important;
- text-align:center!important;
-}
-.paper .inv-notes-body .inv-note>span:nth-child(2){
- min-width:0;
- padding:.5mm 1mm!important;
 }
 
 /* Consistent item row heights for normal one-line entries in all five presets.
