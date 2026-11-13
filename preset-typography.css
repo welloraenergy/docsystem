@@ -288,31 +288,23 @@
 .preset-item-editor input,
 #itemsEditor input:not(.inv-native-date),
 #itemEditor input{box-sizing:border-box;max-width:100%}
-@media screen{
- /* Preview-only zebra shading; first data row WHITE, second very light grey. */
- .paper table.excel-table tbody tr:nth-child(odd)>td,
- .paper table.po-items tbody tr:nth-child(odd)>td,
- .paper table.dt-items tbody tr:nth-child(odd)>td,
- .paper table.inv-table tbody tr:nth-child(odd)>td{
-  background:#fff!important;
- }
- .paper table.excel-table tbody tr:nth-child(even)>td,
- .paper table.po-items tbody tr:nth-child(even)>td,
- .paper table.dt-items tbody tr:nth-child(even)>td,
- .paper table.inv-table tbody tr:nth-child(even)>td{
-  background:#f3f4f6!important;
- }
+/* Identical item-row striping in preview, browser print and Save as PDF.
+   Data rows always begin WHITE; the second row is light grey. */
+.paper table.excel-table tbody tr:nth-child(odd)>td,
+.paper table.po-items tbody tr:nth-child(odd)>td,
+.paper table.dt-items tbody tr:nth-child(odd)>td,
+.paper table.inv-table tbody tr:nth-child(odd)>td{
+ background:#fff!important;
+ -webkit-print-color-adjust:exact!important;
+ print-color-adjust:exact!important;
 }
-@media print{
- /* Printed/PDF item tables have white rows, no grey striping. */
- .paper table.excel-table tbody tr>td,
- .paper table.po-items tbody tr>td,
- .paper table.dt-items tbody tr>td,
- .paper table.inv-table tbody tr>td{
-  background:#fff!important;
-  -webkit-print-color-adjust:exact!important;
-  print-color-adjust:exact!important;
- }
+.paper table.excel-table tbody tr:nth-child(even)>td,
+.paper table.po-items tbody tr:nth-child(even)>td,
+.paper table.dt-items tbody tr:nth-child(even)>td,
+.paper table.inv-table tbody tr:nth-child(even)>td{
+ background:#f3f4f6!important;
+ -webkit-print-color-adjust:exact!important;
+ print-color-adjust:exact!important;
 }
 
 /* 2026-11-12: Structural information columns.
