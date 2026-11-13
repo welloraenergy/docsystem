@@ -387,7 +387,7 @@ async function save(){
 async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=decodePreset(d.presetData);if(state&&Object.hasOwn(state,'notes'))delete state.notes;savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;draw();notify('Opened Invoice '+d.number);ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()}
-window.printDoc=()=>{render();window.print()};
+window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Invoice').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
 let presetCopyApplied=false,activeCopyDefaults=null;
 async function saveAsNewPresetTemplate(name){
