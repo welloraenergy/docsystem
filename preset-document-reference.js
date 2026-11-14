@@ -1,5 +1,5 @@
 /* Shared preset reference number and date handling. Legacy saved references are left unchanged. */
-export const familyCode={quotation:'QUO','purchase-order':'PO','delivery-ticket':'DT','returning-ticket':'RT',invoice:'INV','payment-voucher':'PV','pay-slip':'SP'};
+export const familyCode={quotation:'QUO','purchase-order':'PO','delivery-ticket':'DT','returning-ticket':'RT',invoice:'INV','payment-voucher':'PV','salary-payslip':'SP'};
 export function shortDate(value){
  if(!value)return '';
  const d=new Date(String(value).slice(0,10)+'T12:00:00');
