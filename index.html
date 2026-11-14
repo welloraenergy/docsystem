@@ -328,7 +328,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <section class="workspace">
 <section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Month (clear for latest 150)<input type="month" id="cloudMonth"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="user">User</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
-<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation (Quo)</option><option value="purchase-order">Purchase Order (PO)</option><option value="delivery-ticket">Delivery Ticket (DT)</option><option value="returning-ticket">Return Ticket (RT)</option><option value="invoice">Invoice (Inv)</option><option value="payment-voucher">Payment Voucher (PV)</option><option value="pay-slip">Salary Payslip (SP)</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
+<section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation (Quo)</option><option value="purchase-order">Purchase Order (PO)</option><option value="delivery-ticket">Delivery Ticket (DT)</option><option value="returning-ticket">Return Ticket (RT)</option><option value="invoice">Invoice (Inv)</option><option value="payment-voucher">Payment Voucher (PV)</option><option value="salary-payslip">Salary Payslip (SP)</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
 <div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
 <label class="workspace-business-label">Business Profile<select id="businessProfile" aria-label="Business Profile"></select></label>
 <div class="unified-toolbar-actions">
@@ -505,7 +505,7 @@ function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n
  if(event.detail?.ok&&activeWorkspacePreset()){
   const frame=document.getElementById('presetWorkspaceFrame');
   if(frame&&!frame.getAttribute('src'))setWorkspaceSource('preset',true);
-  else if(frame&&['payment-voucher','pay-slip'].includes(document.getElementById('workspacePresetFamily').value))
+  else if(frame&&['payment-voucher','salary-payslip'].includes(document.getElementById('workspacePresetFamily').value))
    frame.contentWindow?.postMessage({type:'docsystem-preset-command',action:'refresh-header'},location.origin);
  }
  const note=document.getElementById('customLayoutSaveStatus');
@@ -855,20 +855,20 @@ const deliveryTicketPresetChoices=[['standard','Standard Delivery Ticket']];
 const returningTicketPresetChoices=[['standard','Standard Return Ticket']];
 const invoicePresetChoices=[['standard','Standard Invoice']];
  const paymentVoucherPresetChoices=[['standard','Standard Payment Voucher']];
- const paySlipPresetChoices=[['standard','Standard Salary Payslip']];
+ const salaryPayslipPresetChoices=[['standard','Standard Salary Payslip']];
 const quotationPresetChoices=[['rental3','Rental'],['rentcon53','Rental + Consumable'],['consumable','Consumable']];
 
 function presetConfiguratorTypes(){
  const family=document.getElementById('presetConfigureFamily').value;
- const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:family==='returning-ticket'?returningTicketPresetChoices:family==='invoice'?invoicePresetChoices:family==='payment-voucher'?paymentVoucherPresetChoices:family==='pay-slip'?paySlipPresetChoices:quotationPresetChoices;
+ const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:family==='returning-ticket'?returningTicketPresetChoices:family==='invoice'?invoicePresetChoices:family==='payment-voucher'?paymentVoucherPresetChoices:family==='salary-payslip'?salaryPayslipPresetChoices:quotationPresetChoices;
  document.getElementById('presetConfigureType').innerHTML=choices.map(([id,title])=>'<option value="'+esc(id)+'">'+esc(title)+'</option>').join('');
 }
 function loadPresetConfigurator(copyId=null){
  const family=document.getElementById('presetConfigureFamily').value,base=document.getElementById('presetConfigureType').value;
- const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','payment-voucher':'preset-payment-voucher.html','pay-slip':'preset-pay-slip.html'}[family];
+ const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','payment-voucher':'preset-payment-voucher.html','salary-payslip':'preset-salary-payslip.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-header-parity19','preset-pay-slip.html':'20261114-salary-payslip-header-sp19'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-header-parity19','preset-salary-payslip.html':'20261114-salary-payslip-clean20'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -876,7 +876,7 @@ presetConfiguratorTypes();
 function fillPresetTypes(preserve=false){
  const family=document.getElementById('workspacePresetFamily').value;
  const select=document.getElementById('workspacePresetSelect'),previous=select.value;
- const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:family==='returning-ticket'?returningTicketPresetChoices:family==='invoice'?invoicePresetChoices:family==='payment-voucher'?paymentVoucherPresetChoices:family==='pay-slip'?paySlipPresetChoices:quotationPresetChoices;
+ const choices=family==='purchase-order'?poPresetChoices:family==='delivery-ticket'?deliveryTicketPresetChoices:family==='returning-ticket'?returningTicketPresetChoices:family==='invoice'?invoicePresetChoices:family==='payment-voucher'?paymentVoucherPresetChoices:family==='salary-payslip'?salaryPayslipPresetChoices:quotationPresetChoices;
  select.innerHTML=choices.map(([id,label])=>'<option value="'+id+'">'+esc(label)+'</option>').join('');
  if(preserve&&choices.some(([id])=>id===previous))select.value=previous;
 }
@@ -897,7 +897,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261113-invoice-ref-pdf58':family==='returning-ticket'?'preset-return.html?version=20261113-ticket-address-compact42':family==='delivery-ticket'?'preset-do.html?version=20261113-ticket-address-compact42':family==='purchase-order'?'preset-po.html?version=20261113-po-short-sign-date57':family==='payment-voucher'?'preset-payment-voucher.html?version=20261114-payment-voucher-header-parity19':family==='pay-slip'?'preset-pay-slip.html?version=20261114-salary-payslip-header-sp19':'preset-quotation.html?version=20261113-quote-sign-center52';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261113-invoice-ref-pdf58':family==='returning-ticket'?'preset-return.html?version=20261113-ticket-address-compact42':family==='delivery-ticket'?'preset-do.html?version=20261113-ticket-address-compact42':family==='purchase-order'?'preset-po.html?version=20261113-po-short-sign-date57':family==='payment-voucher'?'preset-payment-voucher.html?version=20261114-payment-voucher-header-parity19':family==='salary-payslip'?'preset-salary-payslip.html?version=20261114-salary-payslip-clean20':'preset-quotation.html?version=20261113-quote-sign-center52';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
@@ -914,8 +914,8 @@ window.DocSystemOpenPreset=(record,id)=>{
   (record.documentType==='Purchase Order'?'purchase-order':
    record.documentType==='Delivery Ticket'?'delivery-ticket':
    record.documentType==='Return Ticket'?'returning-ticket':
-   record.documentType==='Invoice'?'invoice':record.documentType==='Payment Voucher'?'payment-voucher':(record.documentType==='Pay Slip'||record.documentType==='Salary Payslip')?'pay-slip':'quotation');
- const allowed=['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','pay-slip'];
+   record.documentType==='Invoice'?'invoice':record.documentType==='Payment Voucher'?'payment-voucher':record.documentType==='Salary Payslip'?'salary-payslip':'quotation');
+ const allowed=['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','salary-payslip'];
  if(!allowed.includes(family))throw Error('Unsupported saved document family');
  const families=document.getElementById('workspacePresetFamily');
  families.value=family;
@@ -1005,10 +1005,10 @@ document.addEventListener('click',e=>{
  if(e.target.id==='presetConfigLoad'){loadPresetConfigurator();return}
  if(e.target.id==='presetConfigSave'){const name=document.getElementById('presetConfigureName').value.trim();if(!name)return alert('Enter a new template name');const frame=document.getElementById('presetConfigureFrame');if(!frame.getAttribute('src')||frame.dataset.family!==document.getElementById('presetConfigureFamily').value||frame.dataset.base!==document.getElementById('presetConfigureType').value)return alert('Click Load Original to load the selected preset before saving');frame.contentWindow.postMessage({type:'docsystem-preset-command',action:'save-template',name},location.origin);return}
  const editCopy=e.target.closest('[data-edit-preset-copy]');
- if(editCopy){const family=editCopy.dataset.copyFamily,base=editCopy.dataset.copyBase,id=editCopy.dataset.editPresetCopy;if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','pay-slip'].includes(family))return;document.getElementById('presetConfigureFamily').value=family;presetConfiguratorTypes();document.getElementById('presetConfigureType').value=base;document.getElementById('presetConfigWorkspace').hidden=false;document.getElementById('presetConfigureName').value='';loadPresetConfigurator(id);return}
+ if(editCopy){const family=editCopy.dataset.copyFamily,base=editCopy.dataset.copyBase,id=editCopy.dataset.editPresetCopy;if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','salary-payslip'].includes(family))return;document.getElementById('presetConfigureFamily').value=family;presetConfiguratorTypes();document.getElementById('presetConfigureType').value=base;document.getElementById('presetConfigWorkspace').hidden=false;document.getElementById('presetConfigureName').value='';loadPresetConfigurator(id);return}
  const savedCopy=e.target.closest('[data-open-preset-copy]');
  if(savedCopy){const family=savedCopy.dataset.copyFamily,base=savedCopy.dataset.copyBase,copyId=savedCopy.dataset.openPresetCopy;
-  if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','pay-slip'].includes(family))return;
+  if(!['quotation','purchase-order','delivery-ticket','returning-ticket','invoice','payment-voucher','salary-payslip'].includes(family))return;
   document.getElementById('workspacePresetFamily').value=family;fillPresetTypes();
   const options=document.getElementById('workspacePresetSelect');if(!Array.from(options.options).some(o=>o.value===base))return;
   options.value=base;setWorkspaceSource('preset',true,null,copyId);showDocPage('create');return;
@@ -1213,7 +1213,7 @@ if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset
  const family=incomingPreset.has('invoiceDoc')||incomingPreset.get('family')==='invoice'?'invoice':incomingPreset.has('returnDoc')||incomingPreset.get('family')==='returning-ticket'?'returning-ticket':incomingPreset.has('doDoc')||incomingPreset.get('family')==='delivery-ticket'?'delivery-ticket':incomingPreset.has('poDoc')||incomingPreset.get('family')==='purchase-order'?'purchase-order':'quotation';
  document.getElementById('workspacePresetFamily').value=family;
  fillPresetTypes();
- const selected=incomingPreset.get('preset')||(family==='invoice'||family==='payment-voucher'||family==='pay-slip'||family==='returning-ticket'||family==='delivery-ticket'?'standard':family==='purchase-order'?'purchase-credit':'rental3');
+ const selected=incomingPreset.get('preset')||(family==='invoice'||family==='payment-voucher'||family==='salary-payslip'||family==='returning-ticket'||family==='delivery-ticket'?'standard':family==='purchase-order'?'purchase-credit':'rental3');
  const selector=document.getElementById('workspacePresetSelect');
  if(Array.from(selector.options).some(o=>o.value===selected))selector.value=selected;
  setWorkspaceSource('preset',true,incomingPreset.get('invoiceDoc')||incomingPreset.get('returnDoc')||incomingPreset.get('doDoc')||incomingPreset.get('poDoc')||incomingPreset.get('presetDoc'));
