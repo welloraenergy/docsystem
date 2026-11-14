@@ -46,4 +46,18 @@ body.embedded .toolbar{display:none}body.embedded{background:transparent}body.em
  .preview-column,#paper{overflow:visible!important;width:210mm!important;max-width:none!important}
  .paper .section-head,.paper .document-table thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
-</style></head><body data-family="payment-voucher"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-invoice-layout3"></script></body></html>
+
+/* PV/PS parity with Invoice: compact numbering, date control and centred approvals. */
+.paper .financial th:first-child,.paper .financial td:first-child{width:7%!important;max-width:7%!important;min-width:0!important;text-align:center!important;padding-left:.5mm!important;padding-right:.5mm!important}
+.paper .financial th:nth-child(2),.paper .financial td:nth-child(2){width:71%!important}
+.paper .financial th:last-child,.paper .financial td:last-child{width:22%!important}
+.editor .edit-table:has([data-array="items"]) th:first-child,.editor .edit-table:has([data-array="items"]) td:first-child{width:36px!important;min-width:36px!important;max-width:36px!important;text-align:center!important;padding:4px 2px!important}
+.paper .approval tbody td,.paper .approval thead th{text-align:center!important;vertical-align:middle!important}
+.paper .approval tbody td:first-child{text-align:center!important}
+.paper .approval tbody td:nth-child(2),.paper .approval tbody td:nth-child(3),.paper .approval tbody td:nth-child(4){text-align:center!important}
+.payment-date-control{display:flex;position:relative;align-items:center;gap:4px;min-width:0;width:100%}
+.payment-date-control>input[data-payment-date-display]{flex:1 1 auto;width:0!important;min-width:0!important}
+.payment-date-control .payment-date-trigger{flex:none!important;width:37px;padding:7px 5px!important;border-radius:5px!important;cursor:pointer}
+.payment-date-control .payment-native-date{position:absolute!important;right:0!important;bottom:0!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;padding:0!important;border:0!important}
+.editor .currency-settings{margin-bottom:4px}
+</style></head><body data-family="payment-voucher"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-pvps-four-refinements5"></script></body></html>
