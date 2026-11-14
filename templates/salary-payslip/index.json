@@ -1,0 +1,10 @@
+{
+  "family": "salary-payslip",
+  "templates": [
+    {
+      "id": "standard",
+      "name": "Standard Salary Payslip",
+      "editor": "preset-salary-payslip.html"
+    }
+  ]
+}
