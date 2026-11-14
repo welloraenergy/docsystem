@@ -1,0 +1,10 @@
+{
+  "family": "pay-slip",
+  "templates": [
+    {
+      "id": "standard",
+      "name": "Standard Pay Slip",
+      "editor": "preset-pay-slip.html"
+    }
+  ]
+}
