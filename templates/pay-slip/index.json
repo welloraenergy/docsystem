@@ -3,7 +3,7 @@
   "templates": [
     {
       "id": "standard",
-      "name": "Standard Pay Slip",
+      "name": "Standard Salary Payslip",
       "editor": "preset-pay-slip.html"
     }
   ]
