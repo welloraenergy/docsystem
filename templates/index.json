@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogName": "DocSystem Preset Template Registry",
-  "updated": "2026-11-01",
+  "updated": "2026-11-14",
   "families": [
     {
       "id": "quotation",
@@ -42,6 +42,22 @@
       "editor": "preset-invoice.html",
       "templateCount": 1,
       "status": "integrated-pending-live-A4-and-Firebase-verification"
+    },
+    {
+      "id": "payment-voucher",
+      "name": "Payment Voucher",
+      "manifest": "payment-voucher/index.json",
+      "editor": "preset-payment-voucher.html",
+      "templateCount": 1,
+      "status": "native-browser-preset-integrated-pending-live-verification"
+    },
+    {
+      "id": "pay-slip",
+      "name": "Pay Slip",
+      "manifest": "pay-slip/index.json",
+      "editor": "preset-pay-slip.html",
+      "templateCount": 1,
+      "status": "native-browser-preset-integrated-pending-live-verification"
     }
   ],
   "isolation": {
