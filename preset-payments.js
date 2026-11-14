@@ -3,6 +3,7 @@ import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {sharedPresetSlot} from './preset-shared.js';
 import {currencyAmountWords} from './preset-amount-words.js';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261114-payment-layout1';
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
 import {refPrefix,updateReferenceYear} from './preset-document-reference.js';
 const kind=new URLSearchParams(location.search).get('family')||document.body.dataset.family;
@@ -12,6 +13,7 @@ const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location
 if(embedded)document.body.classList.add('embedded');
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const emptyNumber=v=>String(v??'').trim()?fmt(number(v)):' ';
 const number=v=>{const n=Number(String(v??'').replace(/,/g,''));return Number.isFinite(n)?n:0};
 const today=()=>new Date().toLocaleDateString('en-CA').split('/').reverse().join('-');
 const dateText=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4):d||'';
@@ -31,12 +33,12 @@ function slot(id){return sharedPresetSlot(id,{...currentBusiness(),documentTitle
 function input(label,key,type='text',options=null){
  const v=state[key]??'',id='f-'+key;
  let el=options?'<select data-field="'+key+'" id="'+id+'">'+options.map(o=>'<option value="'+esc(o.value||o)+'" '+(String(o.value||o)===String(v)?'selected':'')+'>'+esc(o.label||o)+'</option>').join('')+'</select>':'<input id="'+id+'" data-field="'+key+'" type="'+type+'" value="'+esc(v)+'">';
- return '<label>'+esc(label)+el+'</label>';
+ return '<label class="form-field"><span class="field-label">'+esc(label)+'</span>'+el+'</label>';
 }
-function moneyField(label,group,key){return '<label>'+esc(label)+'<input inputmode="decimal" data-money-group="'+group+'" data-money-key="'+key+'" value="'+esc(state[group]?.[key]??'')+'"></label>'}
+function moneyField(label,group,key){return '<label class="form-field"><span class="field-label">'+esc(label)+'</span><input inputmode="decimal" data-money-group="'+group+'" data-money-key="'+key+'" value="'+esc(state[group]?.[key]??'')+'"></label>'}
 function renderForm(){
  const monthOptions=Array.from({length:12},(_,i)=>({value:String(i+1).padStart(2,'0'),label:new Date(2020,i,1).toLocaleString('en-GB',{month:'long'})}));
- let html='<div class="form-grid">'+input('Document Reference','reference')+(slip?input('Month','month','text',monthOptions)+input('Year','year','number'):input('Date','date','date')+input('Cheque No.','chequeNo')+input('Currency','currency','text',[{value:'MYR',label:'Ringgit Malaysia (MYR)'},{value:'USD',label:'United States Dollar (USD)'}]))+'</div>';
+ let html='<h3 class="editor-section-title">Document Information</h3><div class="form-grid">'+input('Document Reference','reference')+(slip?input('Month','month','text',monthOptions)+input('Year','year','number'):input('Date','date','date')+input('Cheque No.','chequeNo')+input('Currency','currency','text',[{value:'MYR',label:'Ringgit Malaysia (MYR)'},{value:'USD',label:'United States Dollar (USD)'}]))+'</div>';
  if(slip){
   html+='<h3>Employee Information</h3><div class="form-grid">'+[['Full Name','fullName'],['IC No.','icNo'],['Department','department'],['Employee No.','employeeNo'],['EPF No.','epfNo'],['Bank Account Name','bankAccountName'],['Bank Account No.','bankAccountNo']].map(([label,key])=>input(label,key)).join('')+'</div>';
   html+='<h3>Earnings (RM)</h3><div class="form-grid">'+[['Basic Salary','basicSalary'],['Over Time','overtime'],['Bonus','bonus'],['Commission','commission'],['Allowance','allowance'],['Other / Additional Earning','other']].map(([label,key])=>moneyField(label,'earnings',key)).join('')+'</div>';
@@ -48,7 +50,7 @@ function renderForm(){
   html+='<h3>Posting To — Debit / Credit</h3><div class="table-scroll"><table class="edit-table"><thead><tr><th>Debit Code</th><th>Debit Account Name</th><th>Debit Amount</th><th>Credit Code</th><th>Credit Account Name</th><th>Credit Amount</th><th></th></tr></thead><tbody>'+state.postings.map((r,i)=>'<tr>'+[['debitCode','text'],['debitAccount','text'],['debitAmount','decimal'],['creditCode','text'],['creditAccount','text'],['creditAmount','decimal']].map(([k])=>'<td><input data-array="postings" data-index="'+i+'" data-key="'+k+'" value="'+esc(r[k])+'"></td>').join('')+'<td><button type="button" data-remove-posting="'+i+'">×</button></td></tr>').join('')+'</tbody></table></div><button type="button" id="addPosting">+ Add Posting Row</button>';
   html+='<h3>Approval / Receipt</h3><div class="form-grid">'+['checked','authorised','received'].map(k=>'<fieldset><legend>'+({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k])+'</legend>'+[['Name','name'],['Position','position'],['Date','date']].map(([l,field])=>'<label>'+l+'<input type="'+(field==='date'?'date':'text')+'" data-sign="'+k+'" data-sign-key="'+field+'" value="'+esc(state.signatures[k]?.[field]||'')+'"></label>').join('')+'</fieldset>').join('')+input('Received By — IC No.','receivedIc')+'</div>';
  }
- html+='<h3>Excel Controls</h3><div class="form-grid"><label>Conditional Formatting<select id="conditionalToggle"><option value="On" '+(state.highlight!==false?'selected':'')+'>On</option><option value="Off" '+(state.highlight===false?'selected':'')+'>Off</option></select></label><label>Last Edited<input readonly value="'+esc(state.lastEdited?new Date(state.lastEdited).toLocaleString('en-MY'):'Not saved yet')+'"></label></div>';
+ html+='<h3>Worksheet Settings</h3><div class="form-grid"><label>Conditional Formatting<select id="conditionalToggle"><option value="On" '+(state.highlight!==false?'selected':'')+'>On</option><option value="Off" '+(state.highlight===false?'selected':'')+'>Off</option></select></label><label>Last Edited<input readonly value="'+esc(state.lastEdited?new Date(state.lastEdited).toLocaleString('en-MY'):'Not saved yet')+'"></label></div>';
  $('formFields').innerHTML=html;
  $('formFields').classList.toggle('highlight-fields',state.highlight!==false);
 }
@@ -59,25 +61,29 @@ function renderDocument(){
  const v=sums(),co=currentBusiness(),head='<div class="document-head"><div class="company">'+slot('logo')+slot('name')+slot('details')+'</div><div class="document-right"><h1>'+title+'</h1><div class="ref">Reference No: '+esc(state.reference)+'</div>'+(slip?'<div>Month / Year: '+esc(new Date(2020,Number(state.month||1)-1,1).toLocaleString('en-GB',{month:'long'}))+' '+esc(state.year)+'</div>':'<div>Date: '+dateText(state.date)+'</div><div>Cheque No: '+esc(state.chequeNo)+'</div><div>Currency: '+esc(state.currency)+'</div>')+'</div></div>';
  let body;
  if(slip){
-  body='<div class="section-head">Employee Information</div><div class="info-grid">'+[['Full Name','fullName'],['IC No.','icNo'],['Department','department'],['Employee No.','employeeNo'],['EPF No.','epfNo']].map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(state[k])+'</span></div>').join('')+'</div>';
+  body='<section class="doc-section"><div class="section-head">Employee Information</div><div class="info-grid">'+[['Full Name','fullName'],['IC No.','icNo'],['Department','department'],['Employee No.','employeeNo'],['EPF No.','epfNo']] .map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(state[k])+'</span></div>').join('')+'</div></section>';
   const earning=[['a) Basic Salary','basicSalary'],['b) Over Time','overtime'],['c) Bonus','bonus'],['d) Commission','commission'],['e) Allowance','allowance'],['f) Other / Additional Earning','other']];
   const deduction=[['a) Employee EPF','epf'],['b) Employee Socso','socso'],['c) Employee EIS','eis'],['d) PCB','pcb'],['e) SKBBK','skbbk']];
   const rows=[tr(['1','<strong>Earning</strong>',''],'group'),...earning.map(([l,k])=>tr(['',esc(l),fmt(state.earnings[k])])),tr(['','<b>Gross Pay</b>','<b>'+fmt(v.gross)+'</b>'],'total'),tr(['2','<strong>Deduction</strong>',''],'group'),...deduction.map(([l,k])=>tr(['',esc(l),fmt(state.deductions[k])])),tr(['','<b>Total Deduction</b>','<b>'+fmt(v.ded)+'</b>'],'total'),tr(['','<b>Net Pay (RM)</b>','<b>'+fmt(v.net)+'</b>'],'net')];
-  body+=table(['No.','Description','Amount (RM)'],rows,'financial');
-  body+='<div class="section-head">Payment & Employer Contributions</div><div class="info-grid">'+[['Bank Account Name','bankAccountName'],['Bank Account No.','bankAccountNo'],['Employer EPF','employerEPF'],['Employer Socso','employerSocso'],['Employer EIS','employerEIS']].map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(k.startsWith('employer')?fmt(state[k]):state[k])+'</span></div>').join('')+'</div><p class="electronic-note">This document is generated electronically, no signature required</p>';
+  body+='<section class="doc-section"><div class="section-head">Earnings &amp; Deductions</div>'+table(['No.','Description','Amount (RM)'],rows,'financial excel-table')+'</section>';
+  body+='<section class="doc-section"><div class="section-head">Payment &amp; Employer Contributions</div><div class="info-grid">'+[['Bank Account Name','bankAccountName'],['Bank Account No.','bankAccountNo'],['Employer EPF','employerEPF'],['Employer Socso','employerSocso'],['Employer EIS','employerEIS']].map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(k.startsWith('employer')?fmt(state[k]):state[k])+'</span></div>').join('')+'</div><p class="electronic-note">This document is generated electronically, no signature required</p>';
  }else{
-  body='<div class="section-head">Payment Information</div><div class="pay-to"><b>Pay To:</b> '+esc(state.payTo)+'</div>';
-  body+=table(['No.','Description','Amount ('+esc(state.currency)+')'],state.items.map((r,i)=>tr([String(i+1),esc(r.description).replace(/\n/g,'<br>'),fmt(r.amount)])),'financial');
-  body+='<div class="totals"><b>Total ('+esc(state.currency)+')</b><b>'+fmt(v.total)+'</b></div><div class="amount-words"><b>Amount in Words:</b> '+esc(currencyAmountWords(v.total,state.currency))+'</div>';
-  body+='<div class="section-head">Posting To</div>'+table(['Debit Code','Debit Account Name','Amount','Credit Code','Credit Account Name','Amount'],state.postings.map(r=>tr([esc(r.debitCode),esc(r.debitAccount),fmt(r.debitAmount),esc(r.creditCode),esc(r.creditAccount),fmt(r.creditAmount)])),'postings');
+  body='<section class="doc-section"><div class="section-head">Payment Information</div><div class="pay-to"><b>Pay To:</b> '+esc(state.payTo)+'</div>';
+  body+=table(['No.','Description','Amount ('+esc(state.currency)+')'],state.items.map((r,i)=>tr([String(i+1),esc(r.description).replace(/\n/g,'<br>'),emptyNumber(r.amount)])),'financial excel-table');
+  body+='</section><section class="doc-section"><div class="totals"><b>Total ('+esc(state.currency)+')</b><b>'+fmt(v.total)+'</b></div><div class="amount-words"><b>Amount in Words:</b> '+esc(currencyAmountWords(v.total,state.currency))+'</div></section>';
+  body+='<section class="doc-section"><div class="section-head">Posting To</div>'+table(['Debit Code','Debit Account Name','Amount','Credit Code','Credit Account Name','Amount'],state.postings.map(r=>tr([esc(r.debitCode),esc(r.debitAccount),emptyNumber(r.debitAmount),esc(r.creditCode),esc(r.creditAccount),emptyNumber(r.creditAmount)])),'postings');
   const debit=state.postings.reduce((s,r)=>s+number(r.debitAmount),0),credit=state.postings.reduce((s,r)=>s+number(r.creditAmount),0);
-  body+='<div class="posting-totals"><span>Debit: '+fmt(debit)+'</span><span>Credit: '+fmt(credit)+'</span><span class="'+(Math.abs(debit-credit)<0.005?'balanced':'unbalanced')+'">'+(Math.abs(debit-credit)<0.005?'Balanced':'Not balanced')+'</span></div>';
-  body+='<div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),dateText(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
+  body+='<div class="posting-totals"><span>Debit: '+fmt(debit)+'</span><span>Credit: '+fmt(credit)+'</span><span class="'+(Math.abs(debit-credit)<0.005?'balanced':'unbalanced')+'">'+(Math.abs(debit-credit)<0.005?'Balanced':'Not balanced')+'</span></div></section>';
+  body+='<section class="doc-section"><div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),dateText(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
  }
  $('paper').innerHTML='<article class="paper">'+head+body+'</article>';
- $('pageCount').textContent='A4 print layout';
+ const pages=paginatePresetDocument($('paper'),{fit:'normal',bottomReserveMm:10});
+ $('pageCount').textContent=pages+' page(s)';
+ fitPreview();
 }
+function fitPreview(){const holder=document.querySelector('.preview-column'),root=$('paper');if(!holder||!root)return;const pageWidth=210*96/25.4,scale=Math.min(1,Math.max(.3,(holder.clientWidth-16)/pageWidth));root.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000))}
 function redraw(){renderForm();renderDocument();post('height',{height:document.documentElement.scrollHeight+8})}
+window.addEventListener('resize',()=>{fitPreview();post('height',{height:document.documentElement.scrollHeight+8})});
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!profile)return alert('Select a Business Profile');
