@@ -7,7 +7,7 @@ import {paginatePresetDocument} from './preset-pagination.js?v=20261114-pv-group
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
 import {refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js';
 const kind=new URLSearchParams(location.search).get('family')||document.body.dataset.family;
-const slip=kind==='pay-slip',family=slip?'pay-slip':'payment-voucher',title=slip?'SALARY PAYSLIP':'PAYMENT VOUCHER',code=slip?'SP':'PV';
+const slip=kind==='salary-payslip',family=slip?'salary-payslip':'payment-voucher',title=slip?'SALARY PAYSLIP':'PAYMENT VOUCHER',code=slip?'SP':'PV';
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
 const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search),embedded=params.get('embedded')==='1';
 if(embedded)document.body.classList.add('embedded');
