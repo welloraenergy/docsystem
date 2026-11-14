@@ -92,7 +92,11 @@ export async function saveDocument(){
 export async function loadDocs(){
   if(!user)return;
   const month=el("cloudMonth").value;
-  const q=month?query(collection(db,"documents"),where("date",">=",month+"-01"),where("date","<=",month+"-31"),orderBy("date","desc"),limit(150)):query(collection(db,"documents"),orderBy("date","desc"),limit(150));
+  const reference=String(el("cloudReferenceSearch")?.value||"").trim();
+  // Exact-reference searches bypass month and the 150-row list limit.
+  const q=reference?query(collection(db,"documents"),where("number","==",reference),limit(100)):
+   month?query(collection(db,"documents"),where("date",">=",month+"-01"),where("date","<=",month+"-31"),orderBy("date","desc"),limit(150)):
+   query(collection(db,"documents"),orderBy("date","desc"),limit(150));
   try{
     const snaps=await getDocs(q);
     const creators=new Map();
@@ -108,8 +112,8 @@ export async function loadDocs(){
       const canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
       return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType)+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
     }).join("");
-    notify("Online · "+snaps.size+" documents loaded");
-  }catch(e){notify("Document load failed: "+e.message)}
+    notify("Online · "+snaps.size+(reference?" matching documents":" documents")+" loaded"+(reference?" · "+reference:""));
+  }catch(e){notify("Document load failed: "+e.message);throw e}
 }
 export async function deleteDocument(id){
   if(!user)return;
@@ -238,4 +242,5 @@ document.addEventListener("click",e=>{
   if(e.target.id==="cloudUserAdd")addUser();
 });
 el("cloudMonth").value=new Date().toISOString().slice(0,7);
-el("cloudMonth").addEventListener("change",loadDocs);
+el("cloudMonth").addEventListener("change",()=>{if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
+el("cloudReferenceSearch")?.addEventListener("change",loadDocs);
