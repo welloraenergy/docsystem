@@ -234,12 +234,28 @@ export function paginatePresetDocument(root, options = {}) {
       }
     }
   }
-  for (const node of nodes) {
+  for (let index = 0; index < nodes.length; index++) {
+    const node = nodes[index];
     // A preset may mark its photo appendix (or any major section) to begin
     // on a fresh A4 page. This remains inside the one shared controller.
     if (node.hasAttribute('data-preset-new-page') && page.children.length) nextPage();
-    if (node.matches('section.excel-terms-section')) (requestedFit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
-    else if (node.matches('table.excel-table')) appendItemTable(node);
+    if (options.keepTableHeadings && node.matches('.section-head')) {
+      appendWhole(node);
+      const following = nodes[index + 1];
+      if (following?.matches('table.document-table, .pay-to')) {
+        // Measure the heading together with its following table, not separately.
+        // Otherwise an approval heading can remain alone at the page bottom.
+        const probe = following.cloneNode(true);
+        page.appendChild(probe);
+        const togetherFits = fits(probe);
+        probe.remove();
+        if (!togetherFits && page.children.length > 1) {
+          node.remove();
+          nextPage().appendChild(node);
+        }
+      }
+    } else if (node.matches('section.excel-terms-section')) (requestedFit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
+    else if (node.matches('table.excel-table') || (options.keepTableHeadings && node.matches('table.postings'))) appendItemTable(node);
     else appendWhole(node);
   }
   const pages = Array.from(root.querySelectorAll('article.paper'));
