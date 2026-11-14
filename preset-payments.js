@@ -3,7 +3,7 @@ import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js';
 import {currencyAmountWords} from './preset-amount-words.js';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261114-pv-heading-keep17';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261114-pv-group-tables18';
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
 import {refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js';
 const kind=new URLSearchParams(location.search).get('family')||document.body.dataset.family;
