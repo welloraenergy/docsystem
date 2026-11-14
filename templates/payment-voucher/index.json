@@ -1,0 +1,10 @@
+{
+  "family": "payment-voucher",
+  "templates": [
+    {
+      "id": "standard",
+      "name": "Standard Payment Voucher",
+      "editor": "preset-payment-voucher.html"
+    }
+  ]
+}
