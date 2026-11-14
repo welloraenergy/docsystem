@@ -866,7 +866,7 @@ function loadPresetConfigurator(copyId=null){
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','payment-voucher':'preset-payment-voucher.html','pay-slip':'preset-pay-slip.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-global-header13','preset-pay-slip.html':'20261114-pay-slip-no-worksheet8'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-words14','preset-pay-slip.html':'20261114-pay-slip-no-worksheet8'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -895,7 +895,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='invoice'?'preset-invoice.html?version=20261113-invoice-ref-pdf58':family==='returning-ticket'?'preset-return.html?version=20261113-ticket-address-compact42':family==='delivery-ticket'?'preset-do.html?version=20261113-ticket-address-compact42':family==='purchase-order'?'preset-po.html?version=20261113-po-short-sign-date57':family==='payment-voucher'?'preset-payment-voucher.html?version=20261114-payment-voucher-global-header13':family==='pay-slip'?'preset-pay-slip.html?version=20261114-pay-slip-no-worksheet8':'preset-quotation.html?version=20261113-quote-sign-center52';
+  const editor=family==='invoice'?'preset-invoice.html?version=20261113-invoice-ref-pdf58':family==='returning-ticket'?'preset-return.html?version=20261113-ticket-address-compact42':family==='delivery-ticket'?'preset-do.html?version=20261113-ticket-address-compact42':family==='purchase-order'?'preset-po.html?version=20261113-po-short-sign-date57':family==='payment-voucher'?'preset-payment-voucher.html?version=20261114-payment-voucher-words14':family==='pay-slip'?'preset-pay-slip.html?version=20261114-pay-slip-no-worksheet8':'preset-quotation.html?version=20261113-quote-sign-center52';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
