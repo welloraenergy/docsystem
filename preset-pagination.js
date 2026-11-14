@@ -234,26 +234,44 @@ export function paginatePresetDocument(root, options = {}) {
       }
     }
   }
+  // PV opt-in: a section heading and its table are one pagination unit.
+  // If the complete table exceeds one A4 page, preserve the heading beside
+  // the first row on each continuation page and split only between rows.
+  function appendHeadingTable(heading, original) {
+    const wrapper = document.createElement('section');
+    wrapper.className = 'payment-heading-table';
+    wrapper.append(heading, original);
+    appendWhole(wrapper);
+    if (fits(wrapper)) return;
+    const body = original.tBodies[0];
+    const rows = Array.from(body?.rows || []);
+    if (!rows.length) return;
+    body.replaceChildren();
+    const template = original.cloneNode(true);
+    let currentWrapper = wrapper;
+    let currentTable = original;
+    for (const row of rows) {
+      currentTable.tBodies[0].appendChild(row);
+      if (!fits(currentWrapper) && currentTable.tBodies[0].rows.length > 1) {
+        row.remove();
+        nextPage();
+        currentWrapper = document.createElement('section');
+        currentWrapper.className = 'payment-heading-table';
+        currentTable = template.cloneNode(true);
+        currentWrapper.append(heading.cloneNode(true), currentTable);
+        page.appendChild(currentWrapper);
+        currentTable.tBodies[0].appendChild(row);
+      }
+    }
+  }
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index];
     // A preset may mark its photo appendix (or any major section) to begin
     // on a fresh A4 page. This remains inside the one shared controller.
     if (node.hasAttribute('data-preset-new-page') && page.children.length) nextPage();
-    if (options.keepTableHeadings && node.matches('.section-head')) {
-      appendWhole(node);
-      const following = nodes[index + 1];
-      if (following?.matches('table.document-table, .pay-to')) {
-        // Measure the heading together with its following table, not separately.
-        // Otherwise an approval heading can remain alone at the page bottom.
-        const probe = following.cloneNode(true);
-        page.appendChild(probe);
-        const togetherFits = fits(probe);
-        probe.remove();
-        if (!togetherFits && page.children.length > 1) {
-          node.remove();
-          nextPage().appendChild(node);
-        }
-      }
+    if (options.keepTableHeadings && node.matches('.section-head') &&
+        nodes[index + 1]?.matches('table.document-table')) {
+      appendHeadingTable(node, nodes[++index]);
     } else if (node.matches('section.excel-terms-section')) (requestedFit === 'flow' ? appendTermsFlow(node) : appendTerms(node));
     else if (node.matches('table.excel-table') || (options.keepTableHeadings && node.matches('table.postings'))) appendItemTable(node);
     else appendWhole(node);
