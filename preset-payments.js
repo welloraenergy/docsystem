@@ -87,7 +87,7 @@ function renderDocument(){
  }else{
   body='<div class="section-head">Payment Information</div><div class="pay-to"><b>Pay To:</b> '+esc(state.payTo)+'</div>';
   body+=table(['No.','Description','Amount ('+esc(state.currency)+')'],state.items.map((r,i)=>tr([String(i+1),esc(r.description).replace(/\n/g,'<br>'),emptyNumber(r.amount)])),'financial excel-table');
-  body+='<div class="totals"><b>Total ('+esc(state.currency)+')</b><b>'+fmt(v.total)+'</b></div><div class="amount-words"><b>Amount in Words:</b> '+esc(currencyAmountWords(v.total,state.currency))+'</div>';
+  body+='<div class="totals"><b>Total ('+esc(state.currency)+')</b><b>'+fmt(v.total)+'</b></div><div class="amount-words">'+esc(currencyAmountWords(v.total,state.currency))+'</div>';
   body+='<div class="section-head">Posting To</div>'+table(['Debit Code','Debit Account Name','Amount','Credit Code','Credit Account Name','Amount'],state.postings.map(r=>tr([esc(r.debitCode),esc(r.debitAccount),emptyNumber(r.debitAmount),esc(r.creditCode),esc(r.creditAccount),emptyNumber(r.creditAmount)])),'postings');
   const debit=state.postings.reduce((s,r)=>s+number(r.debitAmount),0),credit=state.postings.reduce((s,r)=>s+number(r.creditAmount),0);
   body+='<div class="posting-totals"><span>Debit: '+fmt(debit)+'</span><span>Credit: '+fmt(credit)+'</span><span class="'+(Math.abs(debit-credit)<0.005?'balanced':'unbalanced')+'">'+(Math.abs(debit-credit)<0.005?'Balanced':'Not balanced')+'</span></div>';
