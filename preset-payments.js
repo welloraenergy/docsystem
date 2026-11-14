@@ -32,7 +32,7 @@ state=defaults();
 function currentBusiness(){
  const co=(profile?.company||{});return recordSnapshot||{id:profile?.id||'',name:co.name||'',logo:co.logo||'',info:typeof co.headerText==='string'&&co.headerText.trim()?co.headerText:(co.fields||[]).filter(x=>x.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),defaultCurrency:co.defaultCurrency||'MYR',placeholders:globalPlaceholders};
 }
-function slot(id){return sharedPresetSlot(id,{...currentBusiness(),documentTitle:title,documentNumber:state.reference,documentDate:state.date||''},profile?.presetHeader||headSnapshot||{},globalPlaceholders)}
+function slot(id){return sharedPresetSlot(id,{...currentBusiness(),documentTitle:title,documentNumber:state.reference,documentDate:slip?state.year+'-'+state.month+'-01':state.date||''},profile?.presetHeader||headSnapshot||{},globalPlaceholders)}
 function input(label,key,type='text',options=null){
  const v=state[key]??'',id='f-'+key;
  let el=type==='date'?dateEditor(v,'data-field="'+key+'"'):options?'<select data-field="'+key+'" id="'+id+'">'+options.map(o=>'<option value="'+esc(o.value||o)+'" '+(String(o.value||o)===String(v)?'selected':'')+'>'+esc(o.label||o)+'</option>').join('')+'</select>':'<input id="'+id+'" data-field="'+key+'" type="'+type+'" value="'+esc(v)+'">';
@@ -64,7 +64,7 @@ function tr(cells,cl=''){return '<tr class="'+cl+'">'+cells.map(x=>'<td>'+x+'</t
 function renderDocument(){
  const v=sums(),co=currentBusiness(),h=profile?.presetHeader||headSnapshot||{};
  // Both PV and Salary Payslip use Invoice's shared business-profile heading settings.
- const headerCompany={...co,documentTitle:title,documentNumber:state.reference,documentDate:state.date||''};
+ const headerCompany={...co,documentTitle:title,documentNumber:state.reference,documentDate:slip?state.year+'-'+state.month+'-01':state.date||''};
  const configuredFont=value=>['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(value)?value:'Arial';
  const configuredColor=(value,fallback)=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:fallback;
  const configuredAlign=value=>['left','center','right'].includes(value)?value:'right';
@@ -113,7 +113,7 @@ async function save(){
   if(hits.docs.some(x=>x.data().templateFamily===family&&x.data().profileId===co.id))return alert('This reference already exists for this Business Profile. Open the saved document instead.');
  }
  const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),old=await getDoc(ref);
- await setDoc(ref,{templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:slip?state.year+'-'+state.month+'-01':state.date,presetData:encodePreset(state),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(headSnapshot||profile?.presetHeader||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+ await setDoc(ref,{templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:slip?state.year+'-'+state.month+'-01':state.date,presetData:encodePreset(state),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(profile?.presetHeader||headSnapshot||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
  docId=ref.id;recordSnapshot=co;notice('Saved online: '+state.reference);reportPresetSaved(state.reference,docId);
  }catch(e){notice('Save failed: '+(e.code||e.message));reportPresetSaveError(e)}
 }
