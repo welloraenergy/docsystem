@@ -17,6 +17,7 @@ const emptyNumber=v=>String(v??'').trim()?fmt(number(v)):' ';
 const number=v=>{const n=Number(String(v??'').replace(/,/g,''));return Number.isFinite(n)?n:0};
 const today=()=>new Date().toLocaleDateString('en-CA').split('/').reverse().join('-');
 const dateText=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4):d||'';
+const shortSignatureDate=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(2,4):String(d||'').replace(/^(\d{2}\/\d{2}\/)(\d{4})$/,(_,prefix,year)=>prefix+year.slice(-2));
 function parseDateDisplay(value){const raw=String(value||'').trim();if(!raw)return '';const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);if(!m)return null;const day=+m[1],month=+m[2],year=+m[3],d=new Date(year,month-1,day);return d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day?String(year).padStart(4,'0')+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'):null}
 function dateEditor(value,attrs){return '<span class="payment-date-control"><input type="text" inputmode="numeric" placeholder="DD/MM/YYYY" data-payment-date-display '+attrs+' value="'+esc(dateText(value))+'"><button type="button" class="payment-date-trigger" data-payment-open-date aria-label="Choose date" title="Choose date">📅</button><input type="date" class="payment-native-date" tabindex="-1" data-payment-date-picker '+attrs+' value="'+esc(value||'')+'"></span>'}
 const notice=s=>{$('status').textContent=s;post('status',{status:s})};
@@ -79,7 +80,7 @@ function renderDocument(){
   body+='<div class="section-head">Posting To</div>'+table(['Debit Code','Debit Account Name','Amount','Credit Code','Credit Account Name','Amount'],state.postings.map(r=>tr([esc(r.debitCode),esc(r.debitAccount),emptyNumber(r.debitAmount),esc(r.creditCode),esc(r.creditAccount),emptyNumber(r.creditAmount)])),'postings');
   const debit=state.postings.reduce((s,r)=>s+number(r.debitAmount),0),credit=state.postings.reduce((s,r)=>s+number(r.creditAmount),0);
   body+='<div class="posting-totals"><span>Debit: '+fmt(debit)+'</span><span>Credit: '+fmt(credit)+'</span><span class="'+(Math.abs(debit-credit)<0.005?'balanced':'unbalanced')+'">'+(Math.abs(debit-credit)<0.005?'Balanced':'Not balanced')+'</span></div>';
-  body+='<div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),dateText(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
+  body+='<div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),shortSignatureDate(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
  }
  $('paper').innerHTML='<article class="paper">'+head+body+'</article>';
  const pages=paginatePresetDocument($('paper'),{fit:'normal',bottomReserveMm:10});
