@@ -105,6 +105,7 @@ async function save(){
  if(!profile)return alert('Select a Business Profile');
  if(!String(state.reference||'').trim()||state.reference===refPrefix(code,state.date||new Date().toISOString().slice(0,10)))return alert('Enter a complete reference number');
  if(slip&&!state.fullName.trim())return alert('Enter employee full name');
+ if(slip && (!state.reference.startsWith(refPrefix('SP',referenceDate())) || !state.reference.slice(refPrefix('SP',referenceDate()).length).trim()))return alert('Salary Payslip reference must use the WLR-SP(year)-number format');
  if(!slip&&(!state.payTo.trim()||!['MYR','USD'].includes(state.currency)))return alert('Enter Pay To and select a valid currency');
  try{
  const co=currentBusiness();
