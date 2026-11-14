@@ -137,7 +137,7 @@ export async function openDocument(id,duplicate=false){
     if(s.data().templateSource==="preset"){
       const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket',isInvoice=data.templateFamily==='invoice'||data.documentType==='Invoice';
       const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher')?'standard':isPo?'purchase-credit':'rental3'));
-      const family=data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=pay-slip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
+      const family=data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
       const saved=duplicate?'':(isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
       if(!duplicate && typeof window.DocSystemOpenPreset==='function'){
         window.DocSystemOpenPreset(data,id);
