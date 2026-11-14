@@ -3,4 +3,47 @@
 @media(max-width:1050px){.workspace{grid-template-columns:1fr}.paper{zoom:.8}}@media(max-width:740px){.workspace{padding:5px}.form-grid{grid-template-columns:1fr}.paper{zoom:.5}}
 @media print{@page{size:A4 portrait;margin:0}html,body{width:210mm!important;background:#fff!important}.toolbar,.editor,.preview-header{display:none!important}.workspace{display:block!important;width:210mm!important;padding:0!important;margin:0!important}.preview-column{width:210mm!important;overflow:visible!important}.paper{zoom:1!important;width:210mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}}
 body.embedded .toolbar{display:none}body.embedded{background:transparent}body.embedded .workspace{padding:0}body.printing .editor{display:none!important}body.printing .workspace{display:block!important}body.printing .preview-column{width:100%}
-</style></head><body data-family="pay-slip"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-2"></script></body></html>
+
+/* Invoice-aligned preset workspace: form and document remain independent. */
+@media screen{
+ body{background:#080808;color:#f5f5f5}
+ .toolbar,.panel{background:#101010;color:#f5f5f5;border-color:#393939}
+ .toolbar span,.preview-header{color:#cbd5e1}
+ .panel h3{color:#f0f0f0;border-color:#444;font-size:14px}
+ .editor .form-field{color:#f5f5f5}
+ .editor input,.editor select,.editor textarea{background:#f8fafc;color:#111827;border-color:#94a3b8}
+ .editor input:focus,.editor select:focus,.editor textarea:focus{outline:2px solid #d3af36;outline-offset:1px}
+ .editor fieldset{border:1px solid #414141;border-radius:6px}
+ .editor fieldset legend{color:#f5f5f5}
+ .editor .edit-table th{background:#272727;color:#fff;border-color:#555}
+ .editor .edit-table td{background:#121212;border-color:#444}
+ .editor button{background:#d3af36;color:#101010;border-color:#d3af36;font-weight:600}
+ .editor .highlight-fields input:not([readonly]):not([type=date]),.editor .highlight-fields textarea,.editor .highlight-fields select{background:#f3f5fa}
+}
+.paper{overflow:visible!important;font-size:8pt;line-height:1.3}
+.paper .document-head{min-height:43mm;align-items:start}
+.paper .document-right{display:flex;flex-direction:column;align-items:flex-end;gap:1mm}
+.paper .document-right h1{margin:0 0 7mm;white-space:normal;font-size:16pt}
+.paper .document-right .ref{overflow-wrap:anywhere}
+.paper .section-head{font:700 9pt Arial,sans-serif!important;text-transform:capitalize;break-after:avoid;page-break-after:avoid}
+.paper .doc-section{break-inside:avoid;page-break-inside:avoid}
+.paper .document-table tbody tr{height:8mm}
+.paper .document-table tbody td{height:8mm;line-height:1.25;vertical-align:middle}
+.paper .document-table th,.paper .document-table td{border:1px solid #666!important}
+.paper .document-table thead th{font:700 8pt/1.25 Arial,sans-serif!important;background:#080808!important;color:#fff!important}
+.paper .document-table tbody tr:nth-child(odd)>td{background:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.paper .document-table tbody tr:nth-child(even)>td{background:#f3f4f6!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.paper .financial tbody td:last-child,.paper .postings tbody td:nth-child(3),.paper .postings tbody td:nth-child(6){text-align:right;font-variant-numeric:tabular-nums}
+.paper .info-grid{width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.paper .info-grid>div{grid-template-columns:minmax(0,30mm) minmax(0,1fr)}
+.paper .amount-words{white-space:pre-wrap;overflow-wrap:anywhere}
+.paper .approval,.paper .electronic-note{break-inside:avoid;page-break-inside:avoid}
+.paper .totals{border:1px solid #666;justify-content:flex-end;gap:18mm;padding:2mm 3mm}
+.paper .approval tbody td:first-child{font-weight:bold}
+@media print{
+ .paper{zoom:1!important;transform:none!important;padding:13mm 13mm 15mm!important;box-shadow:none!important;margin:0!important;min-height:297mm!important;width:210mm!important;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ .paper:last-child{break-after:auto;page-break-after:auto}
+ .preview-column,#paper{overflow:visible!important;width:210mm!important;max-width:none!important}
+ .paper .section-head,.paper .document-table thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style></head><body data-family="pay-slip"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-invoice-layout3"></script></body></html>
