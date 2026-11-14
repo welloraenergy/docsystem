@@ -1,7 +1,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {sharedPresetSlot} from './preset-shared.js';
+import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js';
 import {currencyAmountWords} from './preset-amount-words.js';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261114-payment-layout1';
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
@@ -62,7 +62,20 @@ function sums(){const gross=Object.values(state.earnings||{}).reduce((a,b)=>a+nu
 function table(headers,rows,cls=''){return '<table class="document-table '+cls+'">'+(cls.includes('financial')?'<colgroup><col style="width:7%"><col style="width:71%"><col style="width:22%"></colgroup>':'')+'<thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
 function tr(cells,cl=''){return '<tr class="'+cl+'">'+cells.map(x=>'<td>'+x+'</td>').join('')+'</tr>'}
 function renderDocument(){
- const v=sums(),co=currentBusiness(),head='<div class="document-head"><div class="company">'+slot('logo')+slot('name')+slot('details')+'</div><div class="document-right"><h1>'+title+'</h1><div class="ref">Reference No: '+esc(state.reference)+'</div>'+(slip?'<div>Month / Year: '+esc(new Date(2020,Number(state.month||1)-1,1).toLocaleString('en-GB',{month:'long'}))+' '+esc(state.year)+'</div>':'<div>Date: '+dateText(state.date)+'</div><div>Cheque No: '+esc(state.chequeNo)+'</div><div>Currency: '+esc(state.currency)+'</div>')+'</div></div>';
+ const v=sums(),co=currentBusiness(),h=headSnapshot||profile?.presetHeader||{};
+ // PV follows the Invoice preset's business-profile header configuration.
+ // PS retains its existing fixed document heading.
+ const headerCompany={...co,documentTitle:title,documentNumber:state.reference,documentDate:state.date||''};
+ const configuredFont=value=>['Arial','Georgia','Verdana','Tahoma','Times New Roman','Courier New'].includes(value)?value:'Arial';
+ const configuredColor=(value,fallback)=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:fallback;
+ const configuredAlign=value=>['left','center','right'].includes(value)?value:'right';
+ const headingSource=slip?title:String(h.titleText??'{documentTitle}').replace(/\{documentTitle\}/gi,title);
+ const headingText=slip?esc(title):richPresetText(expandPresetText(headingSource,headerCompany,globalPlaceholders));
+ const headingStyle=slip?'':' style="color:'+configuredColor(h.titleColor,'#d6a900')+';font-size:'+Math.max(9,Math.min(36,Number(h.titleSize)||16))+'pt;font-family:'+configuredFont(h.titleFont)+';text-align:'+configuredAlign(h.titleAlign)+';white-space:pre-wrap;overflow-wrap:anywhere"';
+ const extraSource=slip?'':String(h.extraText??'{headingLines}').replace(/\{headingLines\}/gi,'');
+ const extraText=slip?'':richPresetText(expandPresetText(extraSource,headerCompany,globalPlaceholders));
+ const extraHtml=extraText.trim()?'<div class="payment-heading-extra" style="color:'+configuredColor(h.extraColor,'#111111')+';font-size:'+Math.max(6,Math.min(24,Number(h.extraSize)||9))+'pt;font-family:'+configuredFont(h.extraFont)+';text-align:'+configuredAlign(h.extraAlign)+';white-space:pre-wrap;overflow-wrap:anywhere;margin-top:1mm;width:100%">'+extraText+'</div>':'';
+ const head='<div class="document-head"><div class="company">'+slot('logo')+slot('name')+slot('details')+'</div><div class="document-right"><h1'+headingStyle+'>'+headingText+'</h1>'+extraHtml+'<div class="ref">Reference No: '+esc(state.reference)+'</div>'+(slip?'<div>Month / Year: '+esc(new Date(2020,Number(state.month||1)-1,1).toLocaleString('en-GB',{month:'long'}))+' '+esc(state.year)+'</div>':'<div>Date: '+dateText(state.date)+'</div><div>Cheque No: '+esc(state.chequeNo)+'</div><div>Currency: '+esc(state.currency)+'</div>')+'</div></div>';
  let body;
  if(slip){
   body='<section class="doc-section"><div class="section-head">Employee Information</div><div class="info-grid">'+[['Full Name','fullName'],['IC No.','icNo'],['Department','department'],['Employee No.','employeeNo'],['EPF No.','epfNo']] .map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(state[k])+'</span></div>').join('')+'</div></section>';
