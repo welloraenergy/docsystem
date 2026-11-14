@@ -1,7 +1,7 @@
 import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,startAfter,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 let db=null;
 let user=null, role=null, currentId=null, writeTimer=null, loading=false; const rank={user:1,staff:1,manager:2,superadmin:3};
 const el=id=>document.getElementById(id);
@@ -89,31 +89,62 @@ export async function saveDocument(){
     currentId=savedDoc.id;notify("Document saved online: "+num);await loadDocs();
   }catch(e){notify("Save failed: "+e.message);alert("Could not save document: "+e.message)}
 }
+// Saved Documents uses one month-scoped Firestore scan and client-side family /
+// natural document-number sorting; no extra composite Firestore indexes required.
+const documentNumberCollator=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
+function savedDocumentFamily(record){
+ const family=String(record.templateFamily||'');
+ if(family)return family;
+ if(record.templateSource==='preset'){
+  const known={'Quotation':'quotation','Purchase Order':'purchase-order','Delivery Ticket':'delivery-ticket','Return Ticket':'returning-ticket','Returning Ticket':'returning-ticket','Invoice':'invoice','Payment Voucher':'payment-voucher','Salary Payslip':'salary-payslip'};
+  return known[record.documentType]||'custom';
+ }
+ return 'custom';
+}
 export async function loadDocs(){
-  if(!user)return;
-  const month=el("cloudMonth").value;
-  const reference=String(el("cloudReferenceSearch")?.value||"").trim();
-  // Exact-reference searches bypass month and the 150-row list limit.
-  const q=reference?query(collection(db,"documents"),where("number","==",reference),limit(100)):
-   month?query(collection(db,"documents"),where("date",">=",month+"-01"),where("date","<=",month+"-31"),orderBy("date","desc"),limit(150)):
-   query(collection(db,"documents"),orderBy("date","desc"),limit(150));
-  try{
-    const snaps=await getDocs(q);
-    const creators=new Map();
-    for(const s of snaps.docs){
-      const d=s.data(),id=d.createdBy;
-      if(!d.creatorRole && id && id!==user.uid && !creators.has(id)){
-        try{const p=await getDoc(doc(db,"users",id));creators.set(id,p.exists()?p.data().role:null)}
-        catch{creators.set(id,null)}
-      }
-    }
-    el("cloudList").innerHTML=snaps.empty?"<p>No documents found.</p>":snaps.docs.map(s=>{
-      const d=s.data(),ownerRole=d.creatorRole||creators.get(d.createdBy);
-      const canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
-      return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType)+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
-    }).join("");
-    notify("Online · "+snaps.size+(reference?" matching documents":" documents")+" loaded"+(reference?" · "+reference:""));
-  }catch(e){notify("Document load failed: "+e.message);throw e}
+ if(!user)return;
+ const month=el("cloudMonth").value;
+ const reference=String(el("cloudReferenceSearch")?.value||"").trim();
+ const family=String(el("cloudFamily")?.value||"");
+ const sort=el("cloudNumberSort")?.value==="asc"?"asc":"desc";
+ // Load a complete monthly set in batches, rather than filtering families
+ // AFTER the first 150 records (which hid valid PV/SP documents).
+ const batchSize=250, maxRecords=3000;
+ const collectionRef=collection(db,"documents");
+ try{
+  const records=[];
+  let truncated=false;
+  if(reference){
+   const direct=await getDocs(query(collectionRef,where("number","==",reference),limit(100)));
+   records.push(...direct.docs);
+   truncated=direct.size===100;
+  }else{
+   let cursor=null;
+   do{
+    const queryParts=month
+     ?[where("date",">=",month+"-01"),where("date","<=",month+"-31"),orderBy("date","desc")]
+     :[orderBy("date","desc")];
+    if(cursor)queryParts.push(startAfter(cursor));
+    queryParts.push(limit(Math.min(batchSize,maxRecords-records.length)));
+    const page=await getDocs(query(collectionRef,...queryParts));
+    records.push(...page.docs);
+    if(page.empty||page.size<batchSize)break;
+    cursor=page.docs[page.docs.length-1];
+    if(records.length>=maxRecords){truncated=true;break}
+   }while(true);
+  }
+  const filtered=records.filter(s=>!family||savedDocumentFamily(s.data())===family);
+  filtered.sort((a,b)=>{
+   const result=documentNumberCollator.compare(String(a.data().number||''),String(b.data().number||''));
+   return (sort==="asc"?result:-result)||a.id.localeCompare(b.id);
+  });
+  el("cloudList").innerHTML=!filtered.length?"<p>No matching documents found.</p>":filtered.map(s=>{
+   const d=s.data(),canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
+  }).join("");
+  const scope=reference?" · Reference: "+reference:(month?" · "+month:" · Recent documents");
+  notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
+ }catch(e){notify("Document load failed: "+e.message);throw e}
 }
 export async function deleteDocument(id){
   if(!user)return;
@@ -243,4 +274,6 @@ document.addEventListener("click",e=>{
 });
 el("cloudMonth").value=new Date().toISOString().slice(0,7);
 el("cloudMonth").addEventListener("change",()=>{if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
+el("cloudFamily")?.addEventListener("change",loadDocs);
+el("cloudNumberSort")?.addEventListener("change",loadDocs);
 el("cloudReferenceSearch")?.addEventListener("change",loadDocs);
