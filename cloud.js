@@ -53,7 +53,7 @@ async function refreshDocumentsOnReturn(){
 }
 window.addEventListener('focus',()=>{refreshDocumentsOnReturn().catch(()=>{})});
 document.addEventListener('visibilitychange',()=>{refreshDocumentsOnReturn().catch(()=>{})});
-export function clearCloud(){user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
+export function clearCloud(){documentListRequest++;user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
 export function settingsChanged(){
   if(!user||!canManage()||loading)return;
   clearTimeout(writeTimer);
@@ -101,8 +101,10 @@ function savedDocumentFamily(record){
  }
  return 'custom';
 }
+let documentListRequest=0;
 export async function loadDocs(){
  if(!user)return;
+ const requestId=++documentListRequest;
  const month=el("cloudMonth").value;
  const reference=String(el("cloudReferenceSearch")?.value||"").trim();
  const family=String(el("cloudFamily")?.value||"");
@@ -133,6 +135,8 @@ export async function loadDocs(){
     if(records.length>=maxRecords){truncated=true;break}
    }while(true);
   }
+  // A previous month/search request must never overwrite a newer refresh.
+  if(requestId!==documentListRequest||!user)return;
   const filtered=records.filter(s=>!family||savedDocumentFamily(s.data())===family);
   filtered.sort((a,b)=>{
    const result=documentNumberCollator.compare(String(a.data().number||''),String(b.data().number||''));
@@ -144,7 +148,7 @@ export async function loadDocs(){
   }).join("");
   const scope=reference?" · Reference: "+reference:(month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
- }catch(e){notify("Document load failed: "+e.message);throw e}
+ }catch(e){if(requestId===documentListRequest)notify("Document load failed: "+e.message);throw e}
 }
 export async function deleteDocument(id){
   if(!user)return;
