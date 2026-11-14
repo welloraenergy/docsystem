@@ -32,7 +32,7 @@ state=defaults();
 function currentBusiness(){
  const co=(profile?.company||{});return recordSnapshot||{id:profile?.id||'',name:co.name||'',logo:co.logo||'',info:typeof co.headerText==='string'&&co.headerText.trim()?co.headerText:(co.fields||[]).filter(x=>x.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),defaultCurrency:co.defaultCurrency||'MYR',placeholders:globalPlaceholders};
 }
-function slot(id){return sharedPresetSlot(id,{...currentBusiness(),documentTitle:title,documentNumber:state.reference,documentDate:state.date||''},headSnapshot||profile?.presetHeader||{},globalPlaceholders)}
+function slot(id){return sharedPresetSlot(id,{...currentBusiness(),documentTitle:title,documentNumber:state.reference,documentDate:state.date||''},slip?(headSnapshot||profile?.presetHeader||{}):(profile?.presetHeader||headSnapshot||{}),globalPlaceholders)}
 function input(label,key,type='text',options=null){
  const v=state[key]??'',id='f-'+key;
  let el=type==='date'?dateEditor(v,'data-field="'+key+'"'):options?'<select data-field="'+key+'" id="'+id+'">'+options.map(o=>'<option value="'+esc(o.value||o)+'" '+(String(o.value||o)===String(v)?'selected':'')+'>'+esc(o.label||o)+'</option>').join('')+'</select>':'<input id="'+id+'" data-field="'+key+'" type="'+type+'" value="'+esc(v)+'">';
@@ -62,7 +62,7 @@ function sums(){const gross=Object.values(state.earnings||{}).reduce((a,b)=>a+nu
 function table(headers,rows,cls=''){return '<table class="document-table '+cls+'">'+(cls.includes('financial')?'<colgroup><col style="width:7%"><col style="width:71%"><col style="width:22%"></colgroup>':'')+'<thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
 function tr(cells,cl=''){return '<tr class="'+cl+'">'+cells.map(x=>'<td>'+x+'</td>').join('')+'</tr>'}
 function renderDocument(){
- const v=sums(),co=currentBusiness(),h=headSnapshot||profile?.presetHeader||{};
+ const v=sums(),co=currentBusiness(),h=slip?(headSnapshot||profile?.presetHeader||{}):(profile?.presetHeader||headSnapshot||{});
  // PV follows the Invoice preset's business-profile header configuration.
  // PS retains its existing fixed document heading.
  const headerCompany={...co,documentTitle:title,documentNumber:state.reference,documentDate:state.date||''};
