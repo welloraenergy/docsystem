@@ -847,6 +847,7 @@ function showDocPage(page){
  document.body.classList.toggle('preset-current',root==='create'&&document.getElementById('workspaceTemplateSource').value==='preset');
  // Only the Workspace may show the separate document preview.
  document.getElementById('docMain').classList.toggle('on-workspace-tab',root==='create');
+ if(root==='documents')window.DocSystemCloud?.loadDocs?.().catch(error=>{const status=document.getElementById('cloudStatus');if(status)status.textContent='Document load failed: '+error.message});
  if(root==='create'&&document.getElementById('workspaceTemplateSource').value==='custom')setWorkspaceView('working');
  if(root==='create')document.getElementById('workspaceStatus').textContent=activeWorkspacePreset()?'Preset document ready':'Custom document ready';
 }
@@ -958,11 +959,12 @@ window.addEventListener('message',e=>{
   document.getElementById('workspaceStatus').textContent='Saved and verified online: '+(e.data.number||'Document');
   const savedDate=String(e.data.date||'');
   if(/^\d{4}-\d{2}-\d{2}$/.test(savedDate))document.getElementById('cloudMonth').value=savedDate.slice(0,7);
-  // Find this exact document instead of relying on the monthly first-150 limit.
+  // Refresh the complete saved-document list, not a one-document search.
+  // Exact-reference searches are for explicit user searches only.
   const find=document.getElementById('cloudReferenceSearch');
-  if(find)find.value=String(e.data.number||'');
+  if(find)find.value='';
   const familyFilter=document.getElementById('cloudFamily');
-  if(familyFilter&&activeWorkspacePreset())familyFilter.value=document.getElementById('workspacePresetFamily').value;
+  if(familyFilter)familyFilter.value='';
   window.DocSystemCloud?.loadDocs?.().catch(error=>{document.getElementById('workspaceStatus').textContent='Document saved, but the list refresh failed: '+error.message});
   return;
  }
