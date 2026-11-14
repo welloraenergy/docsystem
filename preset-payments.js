@@ -14,6 +14,7 @@ if(embedded)document.body.classList.add('embedded');
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 const emptyNumber=v=>String(v??'').trim()?fmt(number(v)):' ';
+const defaultPayslipStatement='This document is generated electronically, no signature required';
 const number=v=>{const n=Number(String(v??'').replace(/,/g,''));return Number.isFinite(n)?n:0};
 const today=()=>new Date().toLocaleDateString('en-CA').split('/').reverse().join('-');
 const dateText=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4):d||'';
@@ -25,7 +26,7 @@ const post=(kind,extra={})=>{if(embedded&&window.parent!==window)window.parent.p
 let user,profile,profiles=[],role='user',docId=params.get('docId')||null,recordSnapshot=null,headSnapshot=null,globalPlaceholders={},state;
 function defaults(){
  const date=new Date(),month=String(date.getMonth()+1).padStart(2,'0');
- return slip?{reference:refPrefix(code,date.toISOString().slice(0,10)),month,year:String(date.getFullYear()),fullName:'',icNo:'',department:'',employeeNo:'',epfNo:'',earnings:{basicSalary:'',overtime:'',bonus:'',commission:'',allowance:'',other:''},deductions:{epf:'',socso:'',eis:'',pcb:'',skbbk:''},bankAccountName:'',bankAccountNo:'',employerEPF:'',employerSocso:'',employerEIS:''}
+ return slip?{reference:refPrefix(code,date.toISOString().slice(0,10)),month,year:String(date.getFullYear()),fullName:'',icNo:'',department:'',employeeNo:'',epfNo:'',earnings:{basicSalary:'',overtime:'',bonus:'',commission:'',allowance:'',other:''},deductions:{epf:'',socso:'',eis:'',pcb:'',skbbk:''},bankAccountName:'',bankAccountNo:'',employerEPF:'',employerSocso:'',employerEIS:'',statement:defaultPayslipStatement}
  :{reference:refPrefix(code,date.toISOString().slice(0,10)),date:date.toISOString().slice(0,10),chequeNo:'-',currency:'MYR',payTo:'',items:Array.from({length:5},()=>({description:'',amount:''})),postings:Array.from({length:5},()=>({debitCode:'',debitAccount:'',debitAmount:'',creditCode:'',creditAccount:'',creditAmount:''})),signatures:{checked:{},authorised:{},received:{}},receivedIc:''};
 }
 state=defaults();
@@ -49,6 +50,7 @@ function renderForm(){
   html+='<h3>Earnings (RM)</h3><div class="form-grid">'+[['Basic Salary','basicSalary'],['Over Time','overtime'],['Bonus','bonus'],['Commission','commission'],['Allowance','allowance'],['Other / Additional Earning','other']].map(([label,key])=>moneyField(label,'earnings',key)).join('')+'</div>';
   html+='<h3>Employee Deductions (RM)</h3><div class="form-grid">'+[['Employee EPF','epf'],['Employee Socso','socso'],['Employee EIS','eis'],['PCB','pcb'],['SKBBK','skbbk']].map(([label,key])=>moneyField(label,'deductions',key)).join('')+'</div>';
   html+='<h3>Employer Contributions (RM)</h3><div class="form-grid">'+[['Employer EPF','employerEPF'],['Employer Socso','employerSocso'],['Employer EIS','employerEIS']].map(([label,key])=>input(label,key,'number')).join('')+'</div>';
+   html+='<h3>Statement</h3><label class="form-field"><span class="field-label">Statement (printed centered)</span><textarea id="f-statement" data-field="statement" rows="3" placeholder="Optional statement">'+esc(state.statement??defaultPayslipStatement)+'</textarea></label>';
  }else{
   html+='<h3>Payee</h3>'+input('Pay To','payTo');
   html+='<h3>Payment Details</h3><div class="table-scroll"><table class="edit-table" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:62%"><col><col style="width:48px"></colgroup><thead><tr><th>No.</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td><textarea data-array="items" data-index="'+i+'" data-key="description">'+esc(r.description)+'</textarea></td><td><input inputmode="decimal" data-array="items" data-index="'+i+'" data-key="amount" value="'+esc(r.amount)+'"></td><td><button type="button" data-remove-item="'+i+'">×</button></td></tr>').join('')+'</tbody></table></div><button type="button" id="addItem">+ Add Item</button>';
@@ -82,7 +84,7 @@ function renderDocument(){
   const deduction=[['a) Employee EPF','epf'],['b) Employee Socso','socso'],['c) Employee EIS','eis'],['d) PCB','pcb'],['e) SKBBK','skbbk']];
   const rows=[tr(['1','<strong>Earning</strong>',''],'group'),...earning.map(([l,k])=>tr(['',esc(l),emptyNumber(state.earnings[k])])),tr(['','<b>Gross Pay</b>','<b>'+fmt(v.gross)+'</b>'],'total'),tr(['2','<strong>Deduction</strong>',''],'group'),...deduction.map(([l,k])=>tr(['',esc(l),emptyNumber(state.deductions[k])])),tr(['','<b>Total Deduction</b>','<b>'+fmt(v.ded)+'</b>'],'total'),tr(['','<b>Net Pay (RM)</b>','<b>'+fmt(v.net)+'</b>'],'net')];
   body+='<div class="section-head">Earnings &amp; Deductions</div>'+table(['No.','Description','Amount (RM)'],rows,'financial excel-table');
-  body+='<section class="doc-section"><div class="section-head">Payment &amp; Employer Contributions</div><div class="info-grid">'+[['Bank Account Name','bankAccountName'],['Bank Account No.','bankAccountNo'],['Employer EPF','employerEPF'],['Employer Socso','employerSocso'],['Employer EIS','employerEIS']] .map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(k.startsWith('employer')?emptyNumber(state[k]):state[k])+'</span></div>').join('')+'</div></section><p class="electronic-note">This document is generated electronically, no signature required</p>';
+  body+='<section class="doc-section"><div class="section-head">Payment &amp; Employer Contributions</div><div class="info-grid">'+[['Bank Account Name','bankAccountName'],['Bank Account No.','bankAccountNo'],['Employer EPF','employerEPF'],['Employer Socso','employerSocso'],['Employer EIS','employerEIS']] .map(([l,k])=>'<div><b>'+l+':</b> <span>'+esc(k.startsWith('employer')?emptyNumber(state[k]):state[k])+'</span></div>').join('')+'</div>'+(String(state.statement??defaultPayslipStatement).trim()?'<p class="electronic-note">'+esc(state.statement??defaultPayslipStatement).replace(/\n/g,'<br>')+'</p>':'')+'</section>';
  }else{
   body='<div class="section-head">Payment Information</div><div class="pay-to"><b>Pay To:</b> '+esc(state.payTo)+'</div>';
   body+=table(['No.','Description','Amount ('+esc(state.currency)+')'],state.items.map((r,i)=>tr([String(i+1),esc(r.description).replace(/\n/g,'<br>'),emptyNumber(r.amount)])),'financial excel-table');
