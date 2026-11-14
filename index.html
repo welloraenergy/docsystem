@@ -961,6 +961,8 @@ window.addEventListener('message',e=>{
   // Find this exact document instead of relying on the monthly first-150 limit.
   const find=document.getElementById('cloudReferenceSearch');
   if(find)find.value=String(e.data.number||'');
+  const familyFilter=document.getElementById('cloudFamily');
+  if(familyFilter&&activeWorkspacePreset())familyFilter.value=document.getElementById('workspacePresetFamily').value;
   window.DocSystemCloud?.loadDocs?.().catch(error=>{document.getElementById('workspaceStatus').textContent='Document saved, but the list refresh failed: '+error.message});
   return;
  }
@@ -1226,5 +1228,5 @@ if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset
  history.replaceState(null,'',location.pathname);
 }
 </script>
-<script type="module" src="auth.js?v=20261114-saved-search22"></script>
+<script type="module" src="auth.js?v=20261114-family-sort23"></script>
 </body></html>
