@@ -3,7 +3,7 @@ import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js';
 import {currencyAmountWords} from './preset-amount-words.js';
-import {paginatePresetDocument} from './preset-pagination.js?v=20261114-payment-layout1';
+import {paginatePresetDocument} from './preset-pagination.js?v=20261114-pv-heading-keep17';
 import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
 import {refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js';
 const kind=new URLSearchParams(location.search).get('family')||document.body.dataset.family;
@@ -94,7 +94,7 @@ function renderDocument(){
   body+='<div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),shortSignatureDate(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
  }
  $('paper').innerHTML='<article class="paper">'+head+body+'</article>';
- const pages=paginatePresetDocument($('paper'),{fit:'normal',bottomReserveMm:10});
+ const pages=paginatePresetDocument($('paper'),{fit:'normal',bottomReserveMm:10,keepTableHeadings:!slip});
  $('pageCount').textContent=pages+' page(s)';
  fitPreview();
 }
