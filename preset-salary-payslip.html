@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DocSystem Preset</title><style>
+*{box-sizing:border-box}body{font:13px Arial,sans-serif;color:#14263c;background:#eef2f6;margin:0}button,input,select,textarea{font:inherit}button{background:#fff;border:1px solid #bcc9d7;border-radius:5px;padding:8px 12px;cursor:pointer}button.primary{background:#193f72;color:#fff}.toolbar{padding:9px 14px;background:#fff;display:flex;gap:8px;align-items:center}.toolbar span{margin-left:auto;color:#475569}.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:12px;max-width:1800px;margin:auto}.editor,.preview-column{min-width:0}.panel{background:#fff;border:1px solid #d4dde8;border-radius:8px;padding:14px;margin-bottom:12px}.panel h3{font-size:14px;margin:20px 0 9px;border-bottom:1px solid #ddd;padding-bottom:7px}.panel h3:first-child{margin-top:0}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.form-grid fieldset{min-width:0}.form-grid label{display:flex;flex-direction:column;gap:5px}input,select,textarea{border:1px solid #cbd5e1;border-radius:4px;padding:7px;width:100%;min-width:0;background:#fff}textarea{min-height:35px;resize:vertical}.highlight-fields input:not([readonly]):not([type=date]),.highlight-fields textarea,.highlight-fields select{background:#f3f5fa}.table-scroll{overflow:auto}.edit-table{border-collapse:collapse;width:100%}.edit-table th,.edit-table td{border:1px solid #cbd5e1;padding:4px}.edit-table th{background:#eaf0f7}.edit-table input{min-width:70px}.preview-column{overflow:hidden}.paper{width:210mm;min-height:297mm;padding:13mm 13mm 15mm;position:relative;margin:0 auto 15px;background:#fff;box-shadow:0 4px 12px #0002;color:#111;font:8pt Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.document-head{display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);gap:0;min-height:43mm;width:100%;align-items:start}.document-head .company{min-width:0}.document-head .company .preset-header-slot{line-height:1.3}.document-head .company .preset-header-slot:nth-child(2){font-weight:700}.document-head .company img{display:block;max-height:23mm;object-fit:contain;max-width:100%}.document-right{display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;text-align:right;font-size:8pt;min-width:0;width:100%}.document-right h1{font-size:16pt;margin:0 0 8mm;color:#d6a900;font-weight:700;line-height:1.2;white-space:pre-wrap;overflow-wrap:anywhere;width:100%}.document-right .ref{font-weight:bold}.section-head{background:#080808;color:#fff;font:700 9pt Arial,sans-serif;padding:1.5mm;text-align:center;margin:3mm 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.info-grid{border:1px solid #777;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:2mm;gap:1.5mm 3mm}.info-grid>div{display:grid;grid-template-columns:28mm minmax(0,1fr);min-width:0}.info-grid span{white-space:pre-wrap;overflow-wrap:anywhere}.document-table{border-collapse:collapse;width:100%;table-layout:fixed}.document-table th,.document-table td{border:1px solid #777;padding:1.3mm 1.5mm;overflow-wrap:anywhere;vertical-align:middle;min-height:8mm}.document-table th{background:#080808;color:#fff;text-align:center;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}.document-table tbody tr:nth-child(odd)>td{background:#fff!important}.document-table tbody tr:nth-child(even)>td{background:#f3f4f6!important}.document-table tbody tr>td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.financial td:first-child{text-align:center;width:9%}.financial td:last-child{text-align:right;width:22%;font-variant-numeric:tabular-nums}.financial .group td{font-weight:700}.financial .total td{font-weight:700}.financial .net td{font-size:10pt;font-weight:700;border-top:2px solid #333}.pay-to{border:1px solid #777;border-top:0;padding:2mm;min-height:8mm;white-space:pre-wrap}.totals{display:flex;justify-content:flex-end;gap:12mm;border-bottom:1px solid #777;padding:2mm}.amount-words{padding:2mm;border:1px solid #777;min-height:8mm}.postings th,.postings td{font-size:7pt}.posting-totals{display:flex;justify-content:flex-end;gap:10mm;padding:2mm}.balanced{color:#185c36}.unbalanced{color:#a62222}.signature-space{height:10mm}.approval td:first-child{font-weight:bold}.received-ic{padding:3mm 0}.electronic-note{text-align:center;margin-top:15mm;font-size:8pt}.preview-header{margin-bottom:8px;color:#536175;font-size:12px}
+@media(max-width:1050px){.workspace{grid-template-columns:1fr}.paper{zoom:.8}}@media(max-width:740px){.workspace{padding:5px}.form-grid{grid-template-columns:1fr}.paper{zoom:.5}}
+@media print{@page{size:A4 portrait;margin:0}html,body{width:210mm!important;background:#fff!important}.toolbar,.editor,.preview-header{display:none!important}.workspace{display:block!important;width:210mm!important;padding:0!important;margin:0!important}.preview-column{width:210mm!important;overflow:visible!important}.paper{zoom:1!important;width:210mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}}
+body.embedded .toolbar{display:none}body.embedded{background:transparent}body.embedded .workspace{padding:0}body.printing .editor{display:none!important}body.printing .workspace{display:block!important}body.printing .preview-column{width:100%}
+
+/* Invoice-aligned preset workspace: form and document remain independent. */
+@media screen{
+ body{background:#080808;color:#f5f5f5}
+ .toolbar,.panel{background:#101010;color:#f5f5f5;border-color:#393939}
+ .toolbar span,.preview-header{color:#cbd5e1}
+ .panel h3{color:#f0f0f0;border-color:#444;font-size:14px}
+ .editor .form-field{color:#f5f5f5}
+ .editor input,.editor select,.editor textarea{background:#f8fafc;color:#111827;border-color:#94a3b8}
+ .editor input:focus,.editor select:focus,.editor textarea:focus{outline:2px solid #d3af36;outline-offset:1px}
+ .editor fieldset{border:1px solid #414141;border-radius:6px}
+ .editor fieldset legend{color:#f5f5f5}
+ .editor .edit-table th{background:#272727;color:#fff;border-color:#555}
+ .editor .edit-table td{background:#121212;border-color:#444}
+ .editor button{background:#d3af36;color:#101010;border-color:#d3af36;font-weight:600}
+ .editor .highlight-fields input:not([readonly]):not([type=date]),.editor .highlight-fields textarea,.editor .highlight-fields select{background:#f3f5fa}
+}
+.paper{overflow:visible!important;font-size:8pt;line-height:1.3}
+
+
+
+.paper .document-right .ref{overflow-wrap:anywhere}
+.paper .section-head{font:700 9pt Arial,sans-serif!important;text-transform:capitalize;break-after:avoid;page-break-after:avoid}
+.paper .doc-section{break-inside:avoid;page-break-inside:avoid}
+.paper .document-table tbody tr{height:8mm}
+.paper .document-table tbody td{height:8mm;line-height:1.25;vertical-align:middle}
+.paper .document-table th,.paper .document-table td{border:1px solid #666!important}
+.paper .document-table thead th{font:700 8pt/1.25 Arial,sans-serif!important;background:#080808!important;color:#fff!important}
+.paper .document-table tbody tr:nth-child(odd)>td{background:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.paper .document-table tbody tr:nth-child(even)>td{background:#f3f4f6!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.paper .financial tbody td:last-child,.paper .postings tbody td:nth-child(3),.paper .postings tbody td:nth-child(6){text-align:right;font-variant-numeric:tabular-nums}
+.paper .info-grid{width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.paper .info-grid>div{grid-template-columns:minmax(0,30mm) minmax(0,1fr)}
+.paper .amount-words{white-space:pre-wrap;overflow-wrap:anywhere}
+.paper .approval,.paper .electronic-note{break-inside:avoid;page-break-inside:avoid}
+.paper .totals{border:1px solid #666;justify-content:flex-end;gap:18mm;padding:2mm 3mm}
+.paper .approval tbody td:first-child{font-weight:bold}
+@media print{
+ .paper{zoom:1!important;transform:none!important;padding:13mm 13mm 15mm!important;box-shadow:none!important;margin:0!important;min-height:297mm!important;width:210mm!important;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ .paper:last-child{break-after:auto;page-break-after:auto}
+ .preview-column,#paper{overflow:visible!important;width:210mm!important;max-width:none!important}
+ .paper .section-head,.paper .document-table thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+
+/* PV/PS parity with Invoice: compact numbering, date control and centred approvals. */
+.paper .financial th:first-child,.paper .financial td:first-child{width:7%!important;max-width:7%!important;min-width:0!important;text-align:center!important;padding-left:.5mm!important;padding-right:.5mm!important}
+.paper .financial th:nth-child(2),.paper .financial td:nth-child(2){width:71%!important}
+.paper .financial th:last-child,.paper .financial td:last-child{width:22%!important}
+.editor .edit-table:has([data-array="items"]) th:first-child,.editor .edit-table:has([data-array="items"]) td:first-child{width:36px!important;min-width:36px!important;max-width:36px!important;text-align:center!important;padding:4px 2px!important}
+.paper .approval tbody td,.paper .approval thead th{text-align:center!important;vertical-align:middle!important}
+.paper .approval tbody td:first-child{text-align:center!important}
+.paper .approval tbody td:nth-child(2),.paper .approval tbody td:nth-child(3),.paper .approval tbody td:nth-child(4){text-align:center!important}
+.payment-date-control{display:flex;position:relative;align-items:center;gap:4px;min-width:0;width:100%}
+.payment-date-control>input[data-payment-date-display]{flex:1 1 auto;width:0!important;min-width:0!important}
+.payment-date-control .payment-date-trigger{flex:none!important;width:37px;padding:7px 5px!important;border-radius:5px!important;cursor:pointer}
+.payment-date-control .payment-native-date{position:absolute!important;right:0!important;bottom:0!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;padding:0!important;border:0!important}
+.editor .currency-settings{margin-bottom:4px}
+
+/* Invoice-style reference control: fixed prefix and editable suffix. */
+.editor .preset-reference-control{display:flex;align-items:stretch;width:100%;max-width:100%;min-width:0;border:1px solid #9baabe;border-radius:6px;overflow:hidden;background:#fff}
+.editor .preset-reference-prefix{display:flex;align-items:center;flex:none;padding:0 9px;white-space:nowrap;color:#202a37;background:#e8edf3;border-right:1px solid #b9c4d1;font:600 13px Arial,sans-serif}
+.editor .preset-reference-control input{flex:1 1 auto;min-width:0!important;width:0!important;max-width:100%!important;border:0!important;border-radius:0!important;background:#fff!important;padding:7px 9px!important}
+</style></head><body data-family="salary-payslip"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-salary-payslip-clean20"></script></body></html>
