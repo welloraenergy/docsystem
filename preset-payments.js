@@ -114,8 +114,14 @@ async function save(){
   if(hits.docs.some(x=>x.data().templateFamily===family&&x.data().profileId===co.id))return alert('This reference already exists for this Business Profile. Open the saved document instead.');
  }
  const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),old=await getDoc(ref);
- await setDoc(ref,{templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:slip?state.year+'-'+state.month+'-01':state.date,presetData:encodePreset(state),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(profile?.presetHeader||headSnapshot||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
- docId=ref.id;recordSnapshot=co;notice('Saved online: '+state.reference);reportPresetSaved(state.reference,docId);
+ const savedDate=slip?state.year+'-'+state.month+'-01':state.date;
+ await setDoc(ref,{templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:savedDate,presetData:encodePreset(state),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(profile?.presetHeader||headSnapshot||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+ // Do not claim online success until the same Firestore document can be read back.
+ const verified=await getDoc(ref);
+ if(!verified.exists()||verified.data().number!==state.reference||verified.data().templateFamily!==family)
+   throw Error('Save verification failed: the expected document was not found in Firebase.');
+ docId=ref.id;recordSnapshot=co;notice('Saved and verified online: '+state.reference);
+ reportPresetSaved(state.reference,docId,savedDate);
  }catch(e){notice('Save failed: '+(e.code||e.message));reportPresetSaveError(e)}
 }
 async function openSaved(){
