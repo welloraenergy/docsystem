@@ -23,9 +23,9 @@ export function decodePreset(value){
  }
  return value;
 }
-export function reportPresetSaved(number,id){
+export function reportPresetSaved(number,id,date=''){
  if(window.parent!==window){
-  window.parent.postMessage({type:'docsystem-preset-saved',number:String(number||''),id:String(id||'')},location.origin);
+  window.parent.postMessage({type:'docsystem-preset-saved',number:String(number||''),id:String(id||''),date:String(date||'')},location.origin);
  }
 }
 export function reportPresetSaveError(error){
