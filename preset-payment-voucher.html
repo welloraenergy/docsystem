@@ -14,7 +14,14 @@ body.embedded .toolbar{display:none}body.embedded{background:transparent}body.em
  .editor input,.editor select,.editor textarea{background:#f8fafc;color:#111827;border-color:#94a3b8}
  .editor input:focus,.editor select:focus,.editor textarea:focus{outline:2px solid #d3af36;outline-offset:1px}
  .editor fieldset{border:1px solid #414141;border-radius:6px}
- .editor fieldset legend{color:#f5f5f5}
+ .editor fieldset legend{color:#f5f5f5;font-weight:700}
+ /* Invoice signature form parity: one role card per row, full-width fields. */
+ .editor .pv-sign-editor{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+ .editor .pv-sign-editor fieldset{min-width:0;margin:0;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px}
+ .editor .pv-sign-editor .form-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+ .editor .pv-sign-editor .form-field input{max-width:100%}
+ .editor .pv-received-id{margin-top:12px;min-width:0}
+ .editor .pv-received-id .form-field{display:flex;flex-direction:column;gap:5px}
  .editor .edit-table th{background:#272727;color:#fff;border-color:#555}
  .editor .edit-table td{background:#121212;border-color:#444}
  .editor button{background:#d3af36;color:#101010;border-color:#d3af36;font-weight:600}
@@ -75,4 +82,4 @@ body.embedded .toolbar{display:none}body.embedded{background:transparent}body.em
 .paper .postings tbody td:nth-child(2),
 .paper .postings tbody td:nth-child(4),
 .paper .postings tbody td:nth-child(5){text-align:center!important;vertical-align:middle!important}
-</style></head><body data-family="payment-voucher"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-pv-description-cheque9"></script></body></html>
+</style></head><body data-family="payment-voucher"><div class="toolbar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261114-pv-signature-form10"></script></body></html>
