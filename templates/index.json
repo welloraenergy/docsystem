@@ -52,10 +52,10 @@
       "status": "native-browser-preset-integrated-pending-live-verification"
     },
     {
-      "id": "pay-slip",
+      "id": "salary-payslip",
       "name": "Salary Payslip",
-      "manifest": "pay-slip/index.json",
-      "editor": "preset-pay-slip.html",
+      "manifest": "salary-payslip/index.json",
+      "editor": "preset-salary-payslip.html",
       "templateCount": 1,
       "status": "native-browser-preset-integrated-pending-live-verification"
     }
