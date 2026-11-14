@@ -505,7 +505,7 @@ function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n
  if(event.detail?.ok&&activeWorkspacePreset()){
   const frame=document.getElementById('presetWorkspaceFrame');
   if(frame&&!frame.getAttribute('src'))setWorkspaceSource('preset',true);
-  else if(frame&&document.getElementById('workspacePresetFamily').['payment-voucher','pay-slip'].includes(document.getElementById('workspacePresetFamily').value))
+  else if(frame&&['payment-voucher','pay-slip'].includes(document.getElementById('workspacePresetFamily').value))
    frame.contentWindow?.postMessage({type:'docsystem-preset-command',action:'refresh-header'},location.origin);
  }
  const note=document.getElementById('customLayoutSaveStatus');
