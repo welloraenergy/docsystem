@@ -1,34 +1,109 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DocSystem — Commercial Invoice / Packing List</title>
 <link rel="stylesheet" href="./preset-typography.css?v=20261116-cipl1">
 <style>
-*{box-sizing:border-box}body{margin:0;font:13px Arial,sans-serif;color:#182538;background:#eef2f6}
-button,input,textarea,select{font:inherit}button{cursor:pointer;background:#fff;color:#182538;border:1px solid #b9c6d5;border-radius:6px;padding:8px 12px}
-input,textarea,select{width:100%;padding:8px;border:1px solid #bec9d7;border-radius:6px;background:#fff;color:#182538}
-textarea{resize:vertical;min-height:70px}.bar{background:#172e48;color:white;padding:9px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.bar button.primary{background:#d6ad33;color:#111;border-color:#d6ad33}.bar #status{margin-left:auto}
-.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:12px;max-width:1800px;margin:auto}
-.card{background:#fff;border:1px solid #d4dde8;border-radius:8px;padding:15px;margin-bottom:12px;min-width:0}.card h3{margin:0 0 14px;font-size:16px}
-.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-label{display:block;margin-bottom:10px;font-weight:600}label input,label textarea,label select{display:block;margin-top:5px;font-weight:400}
-.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%}#editorTable{min-width:1120px}#editorTable th{background:#172e48;color:#fff;font-size:12px}
-#editorTable td,#editorTable th{border:1px solid #9baab9;padding:5px}#editorTable td input,#editorTable td textarea{min-width:0;padding:6px;border:1px solid #e1e7ef}
-#editorTable td textarea{min-height:46px}#editorTable td input{width:100%}.actionbar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.preview-column{min-width:0;overflow:visible}.paper{width:210mm;min-height:297mm;margin:0 auto 15px;background:white;padding:10mm;box-shadow:0 2px 10px #0002;color:#111;font:8pt Arial,sans-serif;overflow:visible}
-.cipl-head{display:grid;grid-template-columns:1fr 1fr;gap:6mm;min-height:35mm;margin-bottom:3mm}.cipl-identity{min-width:0}.cipl-right{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end}.cipl-title{font-weight:700;margin-bottom:2mm;overflow-wrap:anywhere}
-.cipl-meta{margin:2mm 0 0 auto;width:100%;font-size:8pt}.cipl-meta-line{display:grid;grid-template-columns:39% 61%;gap:2mm;margin-bottom:1mm}.cipl-meta-line b{text-align:right}
-.cipl-section{break-inside:avoid;page-break-inside:avoid;margin:2mm 0 3mm}.cipl-section-title{background:#080808;color:white;text-align:center;font-weight:bold;padding:1.5mm;font-size:9pt;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-.cipl-info{width:100%;table-layout:fixed;font-size:8pt}.cipl-info th,.cipl-info td{border:1px solid #777;padding:1.4mm;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}
-.cipl-info th{width:24%;text-align:right;background:#fafafa}.cipl-info td{width:26%}
-.cipl-items{width:100%;table-layout:fixed;margin:2mm 0 1mm;font-size:7.6pt}.cipl-items th{background:#080808!important;color:#fff!important;font:700 7.6pt Arial,sans-serif!important;white-space:normal!important;overflow-wrap:anywhere;text-align:center!important;padding:1.3mm .5mm!important;border:1px solid #666!important}
-.cipl-items td{border:1px solid #777;padding:1.1mm .6mm;text-align:center;vertical-align:middle;white-space:pre-wrap;overflow-wrap:anywhere;font-size:7.6pt;height:8mm}
-.cipl-items td:nth-child(3){text-align:left}.cipl-items tbody tr{break-inside:avoid;page-break-inside:avoid}.cipl-items tbody tr:nth-child(even) td{background:#f3f4f6!important;print-color-adjust:exact}
-.cipl-totals{border:1px solid #777;display:grid;grid-template-columns:1fr 1fr;gap:0;font-size:8pt;break-inside:avoid}
-.cipl-totals>div{padding:2mm 3mm}.cipl-totals>div+div{border-left:1px solid #777}.cipl-bottom{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:4mm}
-.cipl-panel{border:1px solid #888;min-height:23mm;break-inside:avoid}.cipl-panel h4{margin:0;background:#111;color:white;padding:1.5mm;font-size:8pt}.cipl-panel p{white-space:pre-wrap;padding:2mm;margin:0;overflow-wrap:anywhere}
-.cipl-cert{margin-top:5mm;white-space:pre-wrap;line-height:1.4}.cipl-sign{margin-top:6mm;width:55%;break-inside:avoid}
-.cipl-sign strong{display:block;margin-bottom:7mm}.cipl-sign table{width:100%;font-size:8pt}.cipl-sign th,.cipl-sign td{border:1px solid #888;padding:2mm}.cipl-sign th{width:28%;text-align:right}
-@media(max-width:1000px){.workspace{grid-template-columns:1fr}.row,.triple{grid-template-columns:1fr}.preview-column{overflow-x:auto}}
-@media print{@page{size:A4;margin:0}body{background:white}.bar,.editor{display:none!important}.workspace{display:block!important;padding:0!important;max-width:none!important}.preview-column{display:block!important;overflow:visible!important}.paper{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important;zoom:1!important;break-after:page!important;page-break-after:always!important}.paper:last-child{break-after:auto!important;page-break-after:auto!important}}
+/* CIPL uses the same workspace and A4 design scale as Preset Invoice. */
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f6;color:#14263c;font:13px Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;padding:8px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:6px}
+button.primary{background:#183b67;color:#fff}
+input,select,textarea{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#14263c;padding:8px}
+textarea{resize:vertical;min-height:75px}
+.bar{padding:10px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff}
+.bar #status{margin-left:auto}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;max-width:1800px;margin:auto;padding:0 8px;align-items:start}
+.editor,.preview-column{min-width:0}
+.card{border:1px solid #dce3ea;background:#fff;border-radius:10px;padding:15px;margin:12px 0;min-width:0}
+.card h3{font-size:14px;margin:0 0 12px}
+label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
+.row,.triple{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse}
+#editorTable{min-width:1250px;table-layout:fixed}
+#editorTable th{background:#eaf0f6;color:#14263c;border:1px solid #aebcc9;font-size:11px;padding:6px;text-align:center}
+#editorTable td{border:1px solid #aebcc9;padding:4px}
+#editorTable td input,#editorTable td textarea{border:0;border-radius:0;min-width:0;padding:5px}
+#editorTable td textarea{min-height:50px}
+#editorTable button{padding:4px 7px}
+.actionbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.preview-column{overflow:hidden}
+.preview-header{display:flex;justify-content:space-between;align-items:center;padding:12px 3px;font-weight:700}
+.paper{width:210mm;min-height:297mm;padding:12mm 13mm 12mm;background:#fff;color:#000;margin:0 auto 16px;box-shadow:0 4px 15px #0002;font:7.6pt Arial,sans-serif}
+.cipl-head{display:grid;grid-template-columns:58% 42%;min-height:47mm;margin-bottom:0}
+.cipl-identity{min-width:0}
+.cipl-identity img{display:block;max-height:23mm;object-fit:contain}
+.cipl-identity .preset-header-slot{line-height:1.3}
+.cipl-identity .preset-header-slot:nth-child(2){font-weight:700}
+.cipl-right{display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;min-width:0}
+.cipl-title{font-size:16pt;font-weight:700;line-height:1.2;white-space:pre-wrap;overflow-wrap:anywhere}
+.cipl-meta{margin:8mm 0 0 auto;width:100%;font-size:7pt}
+.cipl-meta-line{display:grid;grid-template-columns:24mm minmax(0,1fr);gap:1mm;min-height:4mm;align-items:baseline}
+.cipl-meta-line b{text-align:right;white-space:nowrap}
+.cipl-meta-line span{overflow-wrap:anywhere}
+.cipl-section{border:1px solid #333;margin:2mm 0 3mm;break-inside:avoid;page-break-inside:avoid}
+.cipl-section-title{background:#000;color:#fff;text-align:center;font-weight:700;padding:1.1mm;font-size:7.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-info{width:100%;table-layout:auto;border-collapse:collapse;font:inherit;background:#fff}
+.cipl-info th,.cipl-info td{border:0;vertical-align:top;font-size:inherit;line-height:1.35;overflow-wrap:anywhere;background:#fff}
+.cipl-info th{width:1%!important;white-space:nowrap!important;text-align:right!important;font-weight:600;padding:1.1mm 2.5mm 1mm .7mm;border-right:1px solid #999!important}
+.cipl-info td{width:auto!important;white-space:pre-wrap!important;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm}
+.cipl-info tr{break-inside:avoid}
+.cipl-info tr+tr th,.cipl-info tr+tr td{border-top:0}
+.cipl-items{width:100%;table-layout:fixed;margin:2mm 0 0;font:7.2pt Arial,sans-serif}
+.cipl-items th{background:#000!important;color:#fff!important;font:700 7.2pt Arial,sans-serif!important;line-height:1.2!important;padding:.9mm .3mm!important;border:1px solid #444!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-items td{border:1px solid #777;height:8mm;padding:1mm .6mm;vertical-align:top;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-size:7.2pt}
+.cipl-items td:nth-child(3){text-align:left}
+.cipl-items td:nth-child(9),.cipl-items td:nth-child(10){text-align:right}
+.cipl-items tbody tr{break-inside:avoid;page-break-inside:avoid}
+.cipl-items tbody tr:nth-child(even) td{background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-totals{border:1px solid #777;display:grid;grid-template-columns:1fr 1fr;font-size:7.6pt;break-inside:avoid}
+.cipl-totals>div{padding:1.5mm 2mm;text-align:right}
+.cipl-totals>div+div{border-left:1px solid #777}
+.cipl-bottom{display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin-top:3mm}
+.cipl-panel{border:1px solid #777;min-height:23mm;break-inside:avoid}
+.cipl-panel h4{margin:0;background:#000;color:#fff;text-align:center;font-size:7.6pt;padding:1.1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-panel p{white-space:pre-wrap;overflow-wrap:anywhere;padding:2mm;margin:0;line-height:1.35;font-size:7.2pt}
+.cipl-cert{font-size:7.2pt;white-space:pre-wrap;line-height:1.35;margin:3mm 0}
+.cipl-sign{width:100%;margin:3mm 0;break-inside:avoid}
+.cipl-sign strong{display:block;background:#000;color:#fff;text-align:center;padding:1.1mm;font-size:7.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-sign table{width:100%;table-layout:fixed;font:7.6pt Arial,sans-serif}
+.cipl-sign th{background:#000;color:#fff;width:22%;border:1px solid #333;padding:1mm 2mm;text-align:center;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cipl-sign td{height:9mm;border:1px solid #777;padding:1mm;text-align:center;vertical-align:middle;white-space:pre-wrap}
+body.embedded .bar{display:none}
+body.embedded{background:transparent}
+@media screen{
+ :root{--we-gold:#d3af36;--we-green:#16a34a;--we-red:#dc2626}
+ html,body{background:#000;color:#fff}
+ .bar{background:#0e0e0e;color:#fff;border-color:#393939}
+ .card{background:#0d0d0d;color:#fff;border-color:#393939}
+ .card h3,.preview-header{color:#fff}
+ label{color:#e5e7eb}
+ .card input,.card select,.card textarea{background:#080808;color:#fff;border-color:#4b5563}
+ .card input:focus,.card select:focus,.card textarea:focus{outline:1px solid var(--we-gold);border-color:var(--we-gold)}
+ .card input::placeholder,.card textarea::placeholder{color:#a8a8a8}
+ button,.bar button{background:var(--we-gold);color:#000;border-color:var(--we-gold)}
+ #saveBtn{background:var(--we-green);color:#fff;border-color:var(--we-green)}
+ #removeRow,button[data-remove]{background:var(--we-red);color:#fff;border-color:var(--we-red)}
+ #editorTable th{background:#181818;color:#fff;border-color:#444}
+ #editorTable td{border-color:#454545}
+ #editorTable td input,#editorTable td textarea{background:#090909;color:#fff}
+ .paper{background:#fff;color:#000}
+}
+@media(max-width:1099px){
+ html,body{max-width:100%;overflow-x:hidden}
+ .workspace{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+ .workspace .card,.workspace input,.workspace textarea,.workspace select{max-width:100%}
+ .preview-column,#paper{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+ .paper{max-width:none!important;transform:none!important}
+}
+@media(max-width:690px){.row,.triple{grid-template-columns:1fr}}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ html,body{width:210mm!important;background:#fff!important}
+ .bar,.editor,.preview-header{display:none!important}
+ .workspace{display:block!important;margin:0!important;padding:0!important;width:210mm!important;max-width:none!important}
+ .preview-column,#paper{width:210mm!important;max-width:none!important;overflow:visible!important}
+ .paper{zoom:1!important;width:210mm!important;min-height:297mm!important;max-height:297mm!important;box-shadow:none!important;margin:0!important;break-after:page}
+ .paper:last-child{break-after:auto!important}
+}
 </style></head><body>
 <div class="bar"><strong>Commercial Invoice / Packing List</strong><button id="newBtn">New</button><button class="primary" id="saveBtn">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Ready</span></div>
 <div class="workspace"><div class="editor">
@@ -39,7 +114,7 @@ label{display:block;margin-bottom:10px;font-weight:600}label input,label textare
 <section class="card"><h3>Invoice & Packing Items</h3><div class="tablewrap"><table id="editorTable"></table></div><div class="actionbar"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div><p id="editorTotal"></p></section>
 <section class="card"><h3>Packing Details & Comments</h3><label>Packing Details<textarea data-field="packingDetails" rows="4"></textarea></label><label>Comments<textarea data-field="comments" rows="4"></textarea></label><label>Certification Statement<textarea data-field="certification" rows="3"></textarea></label></section>
 <section class="card"><h3>Signature — Prepared by Only</h3><div class="row" id="signatureFields"></div></section>
-</div><div class="preview-column"><div id="paper"></div><p id="pageCount" style="text-align:center"></p></div></div>
+</div><div class="preview-column"><div class="preview-header"><strong>Live A4 CIPL Preview</strong><span id="pageCount"></span></div><div id="paper"></div></div></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
@@ -90,7 +165,7 @@ function render(){
  const align=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
  const heading='<div class="cipl-title" style="color:'+color+';font-size:'+fontSize+'pt;font-family:'+font+';text-align:'+align+'">'+richPresetText(expandPresetText(titleText,head,globals))+'</div>';
  const extra=h.extraText?'<div style="font-size:'+Math.max(7,Number(h.extraSize)||9)+'pt;text-align:'+(['left','center','right'].includes(h.extraAlign)?h.extraAlign:'right')+'">'+richPresetText(expandPresetText(h.extraText,head,globals))+'</div>':'';
- const meta=[['Date Created',state.fields.date],['Invoice No.',state.fields.reference],['P.O. No.',state.fields.poNumber],['Delivery Note No.',state.fields.deliveryNote],['Job No.',state.fields.jobNumber]];
+ const meta=[['Date',state.fields.date],['Reference No.',state.fields.reference],['P.O. No.',state.fields.poNumber],['Delivery Note No.',state.fields.deliveryNote],['Job No.',state.fields.jobNumber]];
  const company='<div class="cipl-head"><div class="cipl-identity">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="cipl-right">'+heading+extra+'<div class="cipl-meta">'+meta.map(([k,v])=>'<div class="cipl-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
  const info='<div class="cipl-section"><div class="cipl-section-title">Consignee Information</div><table class="cipl-info"><tbody><tr><th>Consignee:</th><td style="width:76%" colspan="3">'+esc(expanded(state.consignee.company))+'</td></tr><tr><th>Address:</th><td colspan="3">'+esc(expanded(state.consignee.address))+'</td></tr><tr><th>Contact:</th><td>'+esc(state.consignee.contact)+'</td><th>Telephone:</th><td>'+esc(state.consignee.phone)+'</td></tr><tr><th>Email:</th><td colspan="3">'+esc(state.consignee.email)+'</td></tr></tbody></table></div>';
  const logistics='<div class="cipl-section"><div class="cipl-section-title">Delivery / Collection</div><table class="cipl-info"><tbody><tr><th style="width:18%">Delivery Address:</th><td style="width:32%">'+esc(expanded(state.delivery.address))+'</td><th style="width:18%">Collection Address:</th><td style="width:32%">'+esc(expanded(state.collection.address))+'</td></tr><tr><th>Freight Agent / Transport Company:</th><td colspan="3">'+esc(expanded(state.fields.freightAgent))+'</td></tr></tbody></table></div>';
