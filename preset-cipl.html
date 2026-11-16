@@ -17,6 +17,14 @@ textarea{resize:vertical;min-height:75px}
 .card h3{font-size:14px;margin:0 0 12px}
 label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .row,.triple{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.preset-settings-fields{width:100%;max-width:305px}
+.preset-settings-fields label{font-weight:600}
+#ciplBusinessProfileControl{margin-bottom:12px}
+#documentFields label,#consigneeFields label,#addresses label,#signatureFields label{font-weight:600}
+#documentFields label input,#consigneeFields label input,#addresses label textarea,#signatureFields label input{font-weight:400}
+#consigneeFields label:nth-child(2){grid-column:1/-1}
+#consigneeFields label:nth-child(2) textarea{height:80px;min-height:80px;max-height:80px;line-height:20px;overflow-y:hidden;resize:none}
+#signatureFields{max-width:680px}
 .tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse}
 #editorTable{min-width:1250px;table-layout:fixed}
 #editorTable th{background:#eaf0f6;color:#14263c;border:1px solid #aebcc9;font-size:11px;padding:6px;text-align:center}
@@ -67,7 +75,7 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .cipl-sign table{width:100%;table-layout:fixed;font:7.6pt Arial,sans-serif}
 .cipl-sign th{background:#000;color:#fff;width:22%;border:1px solid #333;padding:1mm 2mm;text-align:center;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .cipl-sign td{height:9mm;border:1px solid #777;padding:1mm;text-align:center;vertical-align:middle;white-space:pre-wrap}
-body.embedded .bar{display:none}
+body.embedded .bar,body.embedded #ciplBusinessProfileControl{display:none}
 body.embedded{background:transparent}
 @media screen{
  :root{--we-gold:#d3af36;--we-green:#16a34a;--we-red:#dc2626}
@@ -107,7 +115,8 @@ body.embedded{background:transparent}
 </style></head><body>
 <div class="bar"><strong>Commercial Invoice / Packing List</strong><button id="newBtn">New</button><button class="primary" id="saveBtn">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Ready</span></div>
 <div class="workspace"><div class="editor">
-<section class="card"><h3>Document Information</h3><label>Business Profile<select id="businessSelect"></select></label><div class="row" id="documentFields"></div></section>
+<section class="card preset-settings-card"><h3>Document Settings</h3><div class="preset-settings-fields" id="ciplCurrencyFields"></div></section>
+<section class="card"><h3>CIPL Details</h3><label id="ciplBusinessProfileControl">Business Profile<select id="businessSelect"></select></label><div class="row" id="documentFields"></div></section>
 <section class="card"><h3>Consignee</h3><div class="row" id="consigneeFields"></div></section>
 <section class="card"><h3>Delivery & Collection</h3><div class="row" id="addresses"></div></section>
 <section class="card"><h3>Freight / Transport</h3><label>Freight Agent / Transport Company<input data-field="freightAgent" placeholder="Client Appointed"></label></section>
@@ -127,6 +136,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
 const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search);
+if(params.get('embedded')==='1')document.body.classList.add('embedded');
 let user=null,role='user',profiles=[],profile=null,globals={},state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,saving=false;
 const posted=(kind,data={})=>{if(window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...data},location.origin)};
 const notify=t=>{$('status').textContent=t;posted('status',{status:t})};
@@ -144,7 +154,9 @@ function draw(){
  if(!state)return;
  $('businessSelect').innerHTML=profiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.company?.name||'Business')+'</option>').join('');
  $('businessSelect').value=profile?.id||'';$('businessSelect').disabled=!!docId;
- $('documentFields').innerHTML=valueInput('reference','CIPL No.',state.fields.reference)+valueInput('date','Date Created',state.fields.date)+valueInput('poNumber','P.O. No.',state.fields.poNumber)+valueInput('deliveryNote','Delivery Note No.',state.fields.deliveryNote)+valueInput('jobNumber','Job No.',state.fields.jobNumber)+valueInput('currency','Currency (USD / MYR)',state.fields.currency);
+ const currencies=[...new Set(['USD','MYR',...(state.fields.currency?[state.fields.currency]:[])])];
+ $('ciplCurrencyFields').innerHTML='<label>Currency<select data-group="fields" data-key="currency">'+currencies.map(code=>'<option value="'+esc(code)+'" '+(state.fields.currency===code?'selected':'')+'>'+esc(code)+'</option>').join('')+'</select></label>';
+ $('documentFields').innerHTML=valueInput('reference','CIPL No.',state.fields.reference)+valueInput('date','Date Created',state.fields.date)+valueInput('poNumber','P.O. No.',state.fields.poNumber)+valueInput('deliveryNote','Delivery Note No.',state.fields.deliveryNote)+valueInput('jobNumber','Job No.',state.fields.jobNumber);
  mountReferenceField($('documentFields').querySelector('[data-key="reference"]'),'CIPL',state.fields.date,state.fields.reference);
  $('consigneeFields').innerHTML=valueInput('company','Company',state.consignee.company,'consignee')+valueInput('address','Address',state.consignee.address,'consignee',true)+valueInput('contact','Contact Person',state.consignee.contact,'consignee')+valueInput('phone','Telephone',state.consignee.phone,'consignee')+valueInput('email','Email',state.consignee.email,'consignee');
  $('addresses').innerHTML=valueInput('address','Delivery Address',state.delivery.address,'delivery',true)+valueInput('address','Collection Address',state.collection.address,'collection',true);
