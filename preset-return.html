@@ -318,6 +318,7 @@ function fitPreview(){
  $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
 }
 function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('RT',state.fields.date);state.photos=Array(10).fill('')}draw();notify('New Return Ticket');ready()}
+function documentSaveMessage(reference,duplicate=false){return new Promise(resolve=>{const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px';const panel=document.createElement('div');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.style.cssText='background:white;color:#17212e;border-radius:12px;padding:24px;max-width:430px;width:100%;font:15px Arial,sans-serif;box-shadow:0 15px 45px #0005';const h=document.createElement('h3');h.style.margin='0 0 10px';h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=document.createElement('p');msg.textContent=duplicate?'Reference "'+reference+'" already exists. Overwrite the existing document or cancel?':'Document "'+reference+'" was saved online.';msg.style.cssText='line-height:1.5;overflow-wrap:anywhere';const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:20px';const done=v=>{document.removeEventListener('keydown',escape);veil.remove();resolve(v)};const escape=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};const button=(label,result,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:10px 20px;border:1px solid #9ca3af;border-radius:7px;cursor:pointer;background:'+(primary?'#183b67':'white')+';color:'+(primary?'white':'#17212e');b.onclick=()=>done(result);actions.append(b);return b};const cancel=duplicate?button('Cancel',false,false):null,okay=button(duplicate?'Overwrite':'OK',true,true);panel.append(h,msg,actions);veil.append(panel);document.body.append(veil);document.addEventListener('keydown',escape);(cancel||okay).focus()})}
 async function save(){
  if(saving)return;
  if(!user)return alert('Please sign in first');
@@ -326,7 +327,7 @@ async function save(){
  saving=true;
  const uploaded=[];
  try{
-  if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));if(q.docs.some(d=>d.data().templateFamily==='returning-ticket'&&d.data().profileId===business().id))return alert('This Return Ticket reference already exists for this Business Profile')}
+  if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='returning-ticket'||d.data().documentType==='Return Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const before=await getDoc(ref);
   const oldPhotos=Array.isArray(before.data()?.presetData?.photos)?before.data().presetData.photos:[];
@@ -355,7 +356,7 @@ async function save(){
     deleteObject(storageRef(storage,path)).catch(e=>console.warn('Old photo cleanup pending:',e));
    }
   }
-  draw();notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();
+  draw();notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
   for(const path of uploaded)deleteObject(storageRef(storage,path)).catch(()=>{});
