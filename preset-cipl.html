@@ -55,16 +55,18 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .cipl-info td{width:auto!important;white-space:pre-wrap!important;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm}
 .cipl-info tr{break-inside:avoid}
 .cipl-info tr+tr th,.cipl-info tr+tr td{border-top:0}
-.cipl-client{display:grid;grid-template-columns:56% 44%;min-height:27mm}
+.cipl-client{display:grid;grid-template-columns:56% 44%;align-items:stretch}
 .cipl-client>div{min-width:0}
 .cipl-client>div+div{border-left:1px solid #999}
-.cipl-client .cipl-info{height:auto;table-layout:auto}
+.cipl-client .cipl-info{height:100%;table-layout:auto}
 .cipl-client .cipl-info tr:first-child th,.cipl-client .cipl-info tr:first-child td{padding-top:1.2mm}
-.cipl-client .cipl-address-row th,.cipl-client .cipl-address-row td{height:16mm}
-.cipl-address-lines{display:block;white-space:pre-wrap;line-height:5mm;height:15mm;overflow:hidden}
+.cipl-client .cipl-address-row th,.cipl-client .cipl-address-row td{height:14mm}
+.cipl-address-lines{display:block;white-space:pre-wrap;line-height:4mm;height:12mm;overflow:hidden}
 .paper .cipl-info th{width:1%!important;white-space:nowrap!important;text-align:right!important;vertical-align:top!important;font-weight:600!important;padding:1mm 2.5mm 1mm .7mm!important;border-right:1px solid #999!important}
 .paper .cipl-info td{text-align:left!important;vertical-align:top!important;white-space:pre-wrap!important;padding:1mm 1.7mm 1mm 1.5mm!important}
-.cipl-client>div:nth-child(2) .cipl-info tr{height:auto}
+.cipl-client>div:nth-child(2) .cipl-info tr:not(.cipl-filler){height:4mm}
+.cipl-client .cipl-info .cipl-filler{height:100%}
+.cipl-client .cipl-info .cipl-filler th,.cipl-client .cipl-info .cipl-filler td{padding-top:0!important;padding-bottom:0!important}
 .cipl-client>div:nth-child(2) .cipl-info th,.cipl-client>div:nth-child(2) .cipl-info td{padding-top:1mm!important;padding-bottom:1mm!important}
 .cipl-items tbody td:nth-child(2){text-align:center!important;vertical-align:middle!important}
 .cipl-items{width:100%;table-layout:fixed;margin:2mm 0 0;font:7.2pt Arial,sans-serif}
@@ -194,7 +196,7 @@ function render(){
  const extra=h.extraText?'<div style="font-size:'+Math.max(7,Number(h.extraSize)||9)+'pt;text-align:'+(['left','center','right'].includes(h.extraAlign)?h.extraAlign:'right')+'">'+richPresetText(expandPresetText(h.extraText,head,globals))+'</div>':'';
  const meta=[['Date',state.fields.date],['Reference No.',state.fields.reference],['P.O. No.',state.fields.poNumber],['Delivery Note No.',state.fields.deliveryNote],['Job No.',state.fields.jobNumber]];
  const company='<div class="cipl-head"><div class="cipl-identity">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="cipl-right">'+heading+extra+'<div class="cipl-meta">'+meta.map(([k,v])=>'<div class="cipl-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
- const info='<div class="cipl-section"><div class="cipl-section-title">Consignee Information</div><div class="cipl-client"><div><table class="cipl-info"><tbody><tr><th>Consignee:</th><td>'+esc(expanded(state.consignee.company))+'</td></tr><tr class="cipl-address-row"><th>Address:</th><td><span class="cipl-address-lines">'+esc(expanded(state.consignee.address))+'</span></td></tr></tbody></table></div><div><table class="cipl-info"><tbody><tr><th>Contact:</th><td>'+esc(state.consignee.contact)+'</td></tr><tr><th>Telephone:</th><td>'+esc(state.consignee.phone)+'</td></tr><tr><th>Email:</th><td>'+esc(state.consignee.email)+'</td></tr></tbody></table></div></div></div>';
+ const info='<div class="cipl-section"><div class="cipl-section-title">Consignee Information</div><div class="cipl-client"><div><table class="cipl-info"><tbody><tr><th>Consignee:</th><td>'+esc(expanded(state.consignee.company))+'</td></tr><tr class="cipl-address-row"><th>Address:</th><td><span class="cipl-address-lines">'+esc(expanded(state.consignee.address))+'</span></td></tr></tbody></table></div><div><table class="cipl-info"><tbody><tr><th>Contact:</th><td>'+esc(state.consignee.contact)+'</td></tr><tr><th>Telephone:</th><td>'+esc(state.consignee.phone)+'</td></tr><tr><th>Email:</th><td>'+esc(state.consignee.email)+'</td></tr><tr class="cipl-filler"><th></th><td></td></tr></tbody></table></div></div></div>';
  const movement=state.movementType==='collection'?'collection':'delivery';
  const movementLabel=movement==='delivery'?'Delivery':'Collection';
  const movementAddress=movement==='delivery'?state.delivery.address:state.collection.address;
