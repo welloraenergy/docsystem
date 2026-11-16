@@ -823,7 +823,7 @@ function renderClauses(clauses){
  }).join('');
 }
 const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
-function quoteOrder(entries){const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.slice().sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+entries.indexOf(a):x)-(y<0?order.length+entries.indexOf(b):y)})}
+function quoteOrder(entries){const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.map((entry,index)=>({...entry,sortIndex:index})).sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+a.sortIndex:x)-(y<0?order.length+b.sortIndex:y)})}
 function quoteEntries(originals,extras){return quoteOrder([...originals.map(x=>({...x,orderKey:'o'+x.num,original:true})),...extras.map((x,i)=>({...x,orderKey:'e'+i,extraIndex:i,original:false}))])}
 function quoteOrderButtons(k){return '<span style="display:inline-flex;gap:5px;margin-right:8px"><button type="button" data-quote-order="'+k+'" data-delta="-1" title="Move up">↑</button><button type="button" data-quote-order="'+k+'" data-delta="1" title="Move down">↓</button></span>'}
 function activePresetClauses(){
@@ -833,9 +833,8 @@ function activePresetClauses(){
  const minDays=daysPhrase(state.minDays),paymentDays=daysPhrase(parseInt(state.payment,10)||30),validityDays=daysPhrase(parseInt(state.validity,10)||30);
  const tokens={minDays,paymentDays,validityDays,facilityAddress:state.facilityAddress||'',pickupAddress:state.pickupAddress||'',returnAddress:state.returnAddress||''};
  const resolve=body=>String(body||'').replace(/\{(minDays|paymentDays|validityDays|facilityAddress|pickupAddress|returnAddress)\}/g,(match,key)=>tokens[key]);
- const visible=originals.filter(x=>!omitted.includes(Number(x.num))).map(x=>({...x,body:resolve(replacements[x.num]||x.body)}));
- const extra=Array.isArray(state.extraTerms)?state.extraTerms.filter(x=>x&&x.enabled!==false&&(x.title||x.body)):[];
- return quoteEntries(visible,extra.map(x=>({title:x.title||'Additional Statement',body:resolve(x.body||'')}))).map((x,i)=>({...x,num:i+1}));
+ const extra=Array.isArray(state.extraTerms)?state.extraTerms:[];
+ return quoteEntries(originals,extra).filter(x=>x.original?!omitted.includes(Number(x.num)):x&&x.enabled!==false&&(x.title||x.body)).map((x,i)=>({...x,title:x.original?x.title:x.title||'Additional Statement',body:resolve(x.original?(replacements[x.num]||x.body):(x.body||'')),num:i+1}));
 }
 function activePresetClausesHtml(){return renderClauses(activePresetClauses())}
 function quoteTermsEditorMarkup(){
