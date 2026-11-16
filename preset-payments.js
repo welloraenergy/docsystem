@@ -102,6 +102,7 @@ function renderDocument(){
 function fitPreview(){const holder=document.querySelector('.preview-column'),root=$('paper');if(!holder||!root)return;const pageWidth=210*96/25.4,scale=Math.min(1,Math.max(.3,(holder.clientWidth-16)/pageWidth));root.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000))}
 function redraw(){renderForm();renderDocument();post('height',{height:document.documentElement.scrollHeight+8})}
 window.addEventListener('resize',()=>{fitPreview();post('height',{height:document.documentElement.scrollHeight+8})});
+function documentSaveMessage(reference,duplicate=false){return new Promise(resolve=>{const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px';const panel=document.createElement('div');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.style.cssText='background:white;color:#17212e;border-radius:12px;padding:24px;max-width:430px;width:100%;font:15px Arial,sans-serif;box-shadow:0 15px 45px #0005';const h=document.createElement('h3');h.style.margin='0 0 10px';h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=document.createElement('p');msg.textContent=duplicate?'Reference "'+reference+'" already exists. Overwrite the existing document or cancel?':'Document "'+reference+'" was saved online.';msg.style.cssText='line-height:1.5;overflow-wrap:anywhere';const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:20px';const done=v=>{document.removeEventListener('keydown',escape);veil.remove();resolve(v)};const escape=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};const button=(label,result,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:10px 20px;border:1px solid #9ca3af;border-radius:7px;cursor:pointer;background:'+(primary?'#183b67':'white')+';color:'+(primary?'white':'#17212e');b.onclick=()=>done(result);actions.append(b);return b};const cancel=duplicate?button('Cancel',false,false):null,okay=button(duplicate?'Overwrite':'OK',true,true);panel.append(h,msg,actions);veil.append(panel);document.body.append(veil);document.addEventListener('keydown',escape);(cancel||okay).focus()})}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!profile)return alert('Select a Business Profile');
@@ -113,7 +114,7 @@ async function save(){
  const co=currentBusiness();
  if(!docId){
   const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.reference.trim()),limit(100)));
-  if(hits.docs.some(x=>x.data().templateFamily===family&&x.data().profileId===co.id))return alert('This reference already exists for this Business Profile. Open the saved document instead.');
+  const duplicate=hits.docs.find(x=>x.data().profileId===co.id&&(x.data().templateFamily===family||x.data().documentType===(slip?'Salary Payslip':'Payment Voucher')));if(duplicate){if(!await documentSaveMessage(state.reference,true))return;docId=duplicate.id}
  }
  const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),old=await getDoc(ref);
  const savedDate=slip?state.year+'-'+state.month+'-01':state.date;
@@ -123,7 +124,7 @@ async function save(){
  if(!verified.exists()||verified.data().number!==state.reference||verified.data().templateFamily!==family)
    throw Error('Save verification failed: the expected document was not found in Firebase.');
  docId=ref.id;recordSnapshot=co;notice('Saved and verified online: '+state.reference);
- reportPresetSaved(state.reference,docId,savedDate);
+ reportPresetSaved(state.reference,docId,savedDate);await documentSaveMessage(state.reference);
  }catch(e){notice('Save failed: '+(e.code||e.message));reportPresetSaveError(e)}
 }
 async function openSaved(){
