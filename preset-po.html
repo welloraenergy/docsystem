@@ -630,6 +630,7 @@ async function save(){
  if(!business().id)return alert('Select a Business Profile first.');
  try{
   const snapshot=business();
+  if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.poNumber.trim())docId=null;}
   if(!docId){
    const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.poNumber.trim()),limit(100)));
    const duplicate=hits.docs.find(d=>d.data().documentType==='Purchase Order'&&d.data().profileId===snapshot.id);
