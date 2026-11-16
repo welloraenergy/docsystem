@@ -353,7 +353,7 @@ async function save(){
  saving=true;
  const uploaded=[];
  try{
-  if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.reference.trim())docId=null;}
+  if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.reference.trim()){docId=null;state.photos=Array(10).fill('');}}
   if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='returning-ticket'||d.data().documentType==='Return Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const before=await getDoc(ref);
