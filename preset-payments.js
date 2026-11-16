@@ -154,7 +154,7 @@ async function save(){
  }catch(e){notice('Save failed: '+(e.code||e.message));reportPresetSaveError(e)}
 }
 async function openSaved(){
- try{const snap=await getDoc(doc(db,'documents',docId));if(!snap.exists())throw Error('Document not found');const d=snap.data();if(d.templateFamily!==family)throw Error('Different document family');state=decodePreset(d.presetData);recordSnapshot=decodePreset(d.companySnapshot||null);headSnapshot=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;redraw();notice('Opened '+d.number);ready()}catch(e){notice('Cannot open saved document: '+e.message)}
+ try{const snap=await getDoc(doc(db,'documents',docId));if(!snap.exists())throw Error('Document not found');const d=snap.data();if(d.templateFamily!==family)throw Error('Different document family');state=decodePreset(d.presetData);recordSnapshot=decodePreset(d.companySnapshot||null);headSnapshot=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.reference=refPrefix(code,referenceDate());redraw();notice('Duplicate ready. Enter a new '+title+' reference.')}else{redraw();notice('Opened '+d.number)}ready()}catch(e){notice('Cannot open saved document: '+e.message)}
 }
 function ready(){post('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:currentBusiness().id,locked:!!docId,status:$('status').textContent})}
 function newDoc(){docId=null;recordSnapshot=null;headSnapshot=null;state=defaults();if(!slip)state.currency='USD';redraw();notice('New '+title);ready()}
