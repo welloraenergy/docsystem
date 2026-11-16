@@ -596,6 +596,7 @@ function fitPreview(){
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
 function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
+function documentSaveMessage(reference,duplicate=false){return new Promise(resolve=>{const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px';const panel=document.createElement('div');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.style.cssText='background:white;color:#17212e;border-radius:12px;padding:24px;max-width:430px;width:100%;font:15px Arial,sans-serif;box-shadow:0 15px 45px #0005';const h=document.createElement('h3');h.style.margin='0 0 10px';h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=document.createElement('p');msg.textContent=duplicate?'Reference "'+reference+'" already exists. Overwrite the existing document or cancel?':'Document "'+reference+'" was saved online.';msg.style.cssText='line-height:1.5;overflow-wrap:anywhere';const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:20px';const done=v=>{document.removeEventListener('keydown',escape);veil.remove();resolve(v)};const escape=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};const button=(label,result,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:10px 20px;border:1px solid #9ca3af;border-radius:7px;cursor:pointer;background:'+(primary?'#183b67':'white')+';color:'+(primary?'white':'#17212e');b.onclick=()=>done(result);actions.append(b);return b};const cancel=duplicate?button('Cancel',false,false):null,okay=button(duplicate?'Overwrite':'OK',true,true);panel.append(h,msg,actions);veil.append(panel);document.body.append(veil);document.addEventListener('keydown',escape);(cancel||okay).focus()})}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim()||state.fields.poNumber===refPrefix('PO',state.fields.poDate))return alert('Enter PO Reference Number before saving.');
@@ -606,12 +607,12 @@ async function save(){
   if(!docId){
    const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.poNumber.trim()),limit(100)));
    const duplicate=hits.docs.find(d=>d.data().documentType==='Purchase Order'&&d.data().profileId===snapshot.id);
-   if(duplicate){alert('A Purchase Order with this reference already exists for the selected Business Profile. Open the existing PO instead.');return}
+   if(duplicate){if(!await documentSaveMessage(state.fields.poNumber,true))return;docId=duplicate.id}
   }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
   const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
-  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);reportPresetSaved(state.fields.poNumber,docId);ready();
+  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);reportPresetSaved(state.fields.poNumber,docId);ready();await documentSaveMessage(state.fields.poNumber);
  }catch(error){notify('PO save failed: '+(error.code||error.message));reportPresetSaveError(error);alert('PO save failed: '+(error.code||error.message))}
 }
 async function loadSaved(id){
