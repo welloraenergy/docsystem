@@ -3,7 +3,7 @@
 
 /* Use consistent header typography; long rate headings wrap naturally. */
 .paper .excel-table thead th{font-size:8pt!important;line-height:1.2!important;white-space:normal!important;letter-spacing:normal!important}
-.paper .excel-table td:nth-child(6){white-space:nowrap!important;font-size:7pt!important}
+.paper .excel-table td:nth-child(6){white-space:normal!important;overflow-wrap:normal!important;font-size:8pt!important;line-height:1.2!important}
 .preset-item-editor input[data-key="lih"]{min-width:0!important;width:100%;box-sizing:border-box;white-space:nowrap;font-size:13px}
 </style><style id="excelA4Preset">
 /* Dedicated, workbook-derived page layout; independent of DocSystem custom page settings */
@@ -535,6 +535,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
   text-align:center!important;
   vertical-align:middle!important;
  }
+ .paper .excel-table tbody td:nth-child(6){font-size:8pt!important;line-height:1.2!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;}
  .paper .excel-table thead th .quote-rate-heading,
  .paper .excel-table thead th .quote-rate-unit {
   display:block!important;
