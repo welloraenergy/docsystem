@@ -818,6 +818,9 @@ function renderClauses(clauses){
  }).join('');
 }
 const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
+function quoteOrder(entries){const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.slice().sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+entries.indexOf(a):x)-(y<0?order.length+entries.indexOf(b):y)})}
+function quoteEntries(originals,extras){return quoteOrder([...originals.map(x=>({...x,orderKey:'o'+x.num,original:true})),...extras.map((x,i)=>({...x,orderKey:'e'+i,extraIndex:i,original:false}))])}
+function quoteOrderButtons(k){return '<span style="display:inline-flex;gap:5px;margin-right:8px"><button type="button" data-quote-order="'+k+'" data-delta="-1" title="Move up">↑</button><button type="button" data-quote-order="'+k+'" data-delta="1" title="Move down">↓</button></span>'}
 function activePresetClauses(){
  const omitted=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
  const replacements=state.clauseReplacements||{};
@@ -827,7 +830,7 @@ function activePresetClauses(){
  const resolve=body=>String(body||'').replace(/\{(minDays|paymentDays|validityDays|facilityAddress|pickupAddress|returnAddress)\}/g,(match,key)=>tokens[key]);
  const visible=originals.filter(x=>!omitted.includes(Number(x.num))).map(x=>({...x,body:resolve(replacements[x.num]||x.body)}));
  const extra=Array.isArray(state.extraTerms)?state.extraTerms.filter(x=>x&&x.enabled!==false&&(x.title||x.body)):[];
- return [...visible,...extra.map(x=>({title:x.title||'Additional Statement',body:resolve(x.body||'')}))].map((x,i)=>({...x,num:i+1}));
+ return quoteEntries(visible,extra.map(x=>({title:x.title||'Additional Statement',body:resolve(x.body||'')}))).map((x,i)=>({...x,num:i+1}));
 }
 function activePresetClausesHtml(){return renderClauses(activePresetClauses())}
 function quoteTermsEditorMarkup(){
@@ -848,6 +851,7 @@ function quoteTermsEditorMarkup(){
   if(n===(special?19:18))controls+=fieldFor('validity');
   return controls?'<div class="quote-clause-inputs" style="padding-top:9px;margin-top:9px;border-top:1px solid #e2e8f0;display:grid;gap:8px">'+controls+'</div>':'';
  };
+ const cards=quoteEntries(originals,extras).map(t=>{const i=t.extraIndex;if(!t.original)return '<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+quoteOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-extra-show="'+i+'" style="width:auto" '+(t.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label><label>Heading<input data-quote-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>';return '<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+quoteOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>Show · '+t.num+'. '+esc(t.title)+'</strong></label><div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+clauseInput(t)+(editingPresetTemplate?'<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label>':'')+'</div>'}).join('');
  const core=originals.map(t=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
  '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>Show · '+t.num+'. '+esc(t.title)+'</strong></label>'+
  '<div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+
@@ -858,9 +862,9 @@ function quoteTermsEditorMarkup(){
  '<label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label>'+
  '<button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>').join('');
  return '<p class="muted">Original clauses are protected and cannot be removed. Toggle Show/Hide for this document, then add your own statements below. These selections are saved with the document. Formula-driven wording stays linked.'+(editingPresetTemplate?' To use dynamic values in custom wording: {minDays}, {paymentDays}, {validityDays}.':'')+'</p>'+
- core+'<h4>Additional statements</h4>'+added+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
+ cards+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
 }
-function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
+function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],statementOrder:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
 function headingFormatControls(k){
  if(!['docTitle','headingLines'].includes(k))return '';
  return '<div class="panel-inline-tools" aria-label="Format '+(k==='docTitle'?'document heading':'additional lines')+'">'+
@@ -991,6 +995,7 @@ $('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'
  state[key]=field.value;field.focus();field.setSelectionRange(start+before.length,start+before.length+selected.length);render();
 });
 document.addEventListener('click',e=>{
+ const move=e.target.closest('[data-quote-order]');if(move){const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();const entries=quoteEntries(originals,state.extraTerms||[]);const keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.quoteOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}return}
  const action=e.target.closest('button[data-quote-add-row],button[data-quote-remove-row],button[data-quote-delete-row]');
  const addTable=action?.dataset.quoteAddRow,removeTable=action?.dataset.quoteRemoveRow,deleteTable=action?.dataset.quoteDeleteRow;
  const validTable=t=>t==='rental'||t==='consumables';
