@@ -405,7 +405,7 @@ async function chooseTemplate(id,clear=true){
  if(!response.ok)throw Error('Cannot load '+entry.path);
  template=await response.json();
  if(clear||!state){
-  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],termsFontSize:7,termsPageFit:"flow"};
+  state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],statementOrder:[],termsFontSize:7,termsPageFit:"flow"};
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
   state.fields.poNumber=refPrefix('PO',state.fields.poDate);
@@ -416,6 +416,8 @@ async function chooseTemplate(id,clear=true){
  draw();
  notify('PO template ready');
 }
+function poOrderedEntries(originals,extras){const entries=[...originals.map(t=>({...t,orderKey:'o'+t.number,additional:false})),...extras.map((t,i)=>({...t,sourceText:t.body||'',orderKey:'e'+i,extraIndex:i,additional:true}))];const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+entries.findIndex(v=>v.orderKey===a.orderKey):x)-(y<0?order.length+entries.findIndex(v=>v.orderKey===b.orderKey):y)})}
+function poOrderButtons(key){return '<span style="display:inline-flex;gap:5px;margin:5px"><button type="button" data-po-order="'+key+'" data-delta="-1" title="Move up" aria-label="Move up">↑</button><button type="button" data-po-order="'+key+'" data-delta="1" title="Move down" aria-label="Move down">↓</button></span>'}
 function draw(){
  if(!state||!template)return;
  $('poTemplate').value=state.poType;
@@ -440,9 +442,11 @@ function draw(){
  }
  mountReferenceField($('poReferenceFields').querySelector('[data-po-field="poNumber"]'),'PO',state.fields.poDate,state.fields.poNumber);
  drawRows();
- $('termsEditor').innerHTML=template.terms.map(t=>{
+ $('termsEditor').innerHTML=poOrderedEntries(template.terms,state.extraTerms||[]).map(t=>{
+ if(t.additional){const i=t.extraIndex;return '<div style="border:1px solid #d9e2eb;padding:10px;border-radius:6px;margin:8px 0">'+poOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-po-extra-show="'+i+'" '+(t.enabled===false?'':'checked')+'>Show statement '+(i+1)+'</label><label>Heading<input data-po-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Text<textarea data-po-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-po-extra-remove="'+i+'">Remove added statement</button></div>'}
+
   const hidden=Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number));
-  const toggle='<label style="display:flex;flex-direction:row;gap:8px;align-items:center;margin:10px 0 3px"><input type="checkbox" data-po-term-toggle="'+t.number+'" style="width:auto;flex:none" '+(hidden?'':'checked')+'><strong>Show · '+t.number+'. '+esc(t.title)+'</strong></label>';
+  const toggle=poOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;gap:8px;align-items:center;margin:10px 0 3px"><input type="checkbox" data-po-term-toggle="'+t.number+'" style="width:auto;flex:none" '+(hidden?'':'checked')+'><strong>Show · '+t.number+'. '+esc(t.title)+'</strong></label>';
   // The source field remains unchanged; only its editor moves under the clause it drives.
   const linkedKeys=t.number===2?[]:t.number===3?['fulfillmentDate']:[];
   const mode=state.fields.fulfillmentMode||'';
@@ -459,7 +463,7 @@ function draw(){
    return toggle+'<div class="po-terms-contact-editor"><strong>6. '+esc(t.title)+'</strong><div class="po-contact-edit-fields">'+contacts.map(([label,key,type])=>'<label>'+esc(label)+'<input type="'+type+'" data-po-field="'+key+'" value="'+esc(state.fields[key]||'')+'"></label>').join('')+'</div><label class="po-contact-notes">Additional notes (optional)<textarea data-term="6" rows="2" placeholder="Optional notes below a), b), c)">'+esc(state.termsOverrides?.[6]??'')+'</textarea></label></div>';
   }
   return toggle+'<div class="preset-locked-statement" style="border:1px solid #d9e2eb;border-radius:6px;padding:10px;margin-bottom:10px"><p class="muted" style="white-space:pre-wrap">'+esc(t.number===2?(mode==='pickup'?'Pick-up Address:':mode==='delivery'?'Delivery Address:':'Select Delivery or Pick-up below'):t.number===3?(mode==='pickup'?'Date of Collection:':'Date of Receipt at Delivery Address:'):t.number===4?(mode==='pickup'?'Vendor must have the ordered item(s) ready for collection from the specified Pick-up Address.':'Vendor must deliver the ordered item(s) to the specified Delivery Address.'):t.sourceText||'Original formula/field-linked clause')+'</p>'+linkedBox+(new URLSearchParams(location.search).get('configure')==='1'?'<label>Optional replacement clause text<textarea data-term="'+t.number+'" rows="3">'+esc(state.termsOverrides?.[t.number]??'')+'</textarea></label>':'')+'</div>';
- }).join('')+('<h4>Additional statements</h4>'+(state.extraTerms||[]).map((t,i)=>'<div style="border:1px solid #d9e2eb;padding:10px;border-radius:6px;margin:8px 0"><label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" style="width:auto" data-po-extra-show="'+i+'" '+(t.enabled===false?'':'checked')+'>Show statement '+(i+1)+'</label><label>Heading<input data-po-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Text<textarea data-po-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-po-extra-remove="'+i+'">Remove added statement</button></div>').join('')+'<button type="button" class="small" id="poAddStatement">+ Add Statement</button>');
+ }).join('')+'<button type="button" class="small" id="poAddStatement">+ Add Statement</button>';
  $('signatureFields').innerHTML=template.signatures.map(role=>'<fieldset class="po-signature-group"><legend>'+esc(role)+'</legend>'+['name','position','date'].map(k=>'<label>'+k[0].toUpperCase()+k.slice(1)+(k==='date'?poDateControl('data-sign="'+esc(role)+'" data-sign-key="'+k+'"',state.signatures?.[role]?.[k]||''):'<input type="text" data-sign="'+esc(role)+'" data-sign-key="'+k+'" value="'+esc(state.signatures?.[role]?.[k]||'')+'">')+'</label>').join('')+'</fieldset>').join('');
  render();
 }
@@ -547,7 +551,7 @@ function render(){
   }
   return '<div class="po-term excel-term"><span class="po-term-num term-num">'+(t.displayNumber||t.number)+'.</span><div class="term-text"><strong>'+esc(heading)+':</strong>'+(rendered.lettered?'':' ')+rendered.html+'</div></div>';
  };
- const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">Terms &amp; Conditions</div><div class="po-terms excel-terms" style="font-size:'+7+'pt">'+[...template.terms.filter(t=>!(Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number)))).map(t=>({ ...t,additional:false})),...(state.extraTerms||[]).filter(t=>t.enabled!==false&&(t.title||t.body)).map(t=>({title:t.title||'Additional Statement',sourceText:t.body||'',additional:true}))].map((t,i)=>t.additional?
+ const terms='<section class="po-terms-section excel-terms-section"><div class="po-terms-header excel-terms-header">Terms &amp; Conditions</div><div class="po-terms excel-terms" style="font-size:'+7+'pt">'+poOrderedEntries(template.terms,state.extraTerms||[]).filter(t=>t.additional?t.enabled!==false&&(t.title||t.body):!(Array.isArray(state.omittedTerms)&&state.omittedTerms.includes(Number(t.number)))).map((t,i)=>t.additional?
  '<div class="po-term excel-term"><span class="po-term-num term-num">'+(i+1)+'.</span><div class="term-text"><strong>'+esc(t.title)+':</strong>'+(poLetteredClauseHtml(poPresetValue(t.sourceText)).lettered?'<div class="po-lettered-lines">'+poLetteredClauseHtml(poPresetValue(t.sourceText)).html+'</div>':' '+esc(poPresetValue(t.sourceText)))+'</div></div>':clauseMarkup({...t,displayNumber:i+1})).join('')+'</div></section>';
  const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(poDateFormat(v.date).replace(/^(\d{2}\/\d{2}\/)(\d{4})$/,(_,prefix,year)=>prefix+year.slice(-2)))+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
  $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+'</article>';
@@ -690,7 +694,7 @@ if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-fi
  else if(d.term){state.termsOverrides[d.term]=e.target.value;render()}
  else if(d.sign){state.signatures[d.sign]??={};state.signatures[d.sign][d.signKey]=e.target.value;render()}
 });
-document.addEventListener('click',e=>{if(e.target.closest('[data-date-open]')){const picker=e.target.closest('span').querySelector('[data-date-picker]');if(picker.showPicker)picker.showPicker();else picker.click();return}if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.poExtraRemove),1);draw()}});
+document.addEventListener('click',e=>{const move=e.target.closest('[data-po-order]');if(move){const entries=poOrderedEntries(template.terms,state.extraTerms||[]),keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.poOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;draw();}return}if(e.target.closest('[data-date-open]')){const picker=e.target.closest('span').querySelector('[data-date-picker]');if(picker.showPicker)picker.showPicker();else picker.click();return}if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.poExtraRemove),1);draw()}});
 $('newBtn').onclick=newPo;$('saveBtn').onclick=save;$('printBtn').onclick=()=>window.printDoc();
 async function start(){
  try{
