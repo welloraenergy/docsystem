@@ -69,6 +69,7 @@ export function settingsChanged(){
   },900);
 }
 export function changedDocument(){currentId=null;}
+function documentSaveMessage(reference,duplicate=false){return new Promise(resolve=>{const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px';const panel=document.createElement('div');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.style.cssText='background:white;color:#17212e;border-radius:12px;padding:24px;max-width:430px;width:100%;font:15px Arial,sans-serif;box-shadow:0 15px 45px #0005';const h=document.createElement('h3');h.style.margin='0 0 10px';h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=document.createElement('p');msg.textContent=duplicate?'Reference "'+reference+'" already exists. Overwrite the existing document or cancel?':'Document "'+reference+'" was saved online.';msg.style.cssText='line-height:1.5;overflow-wrap:anywhere';const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:20px';const done=v=>{document.removeEventListener('keydown',escape);veil.remove();resolve(v)};const escape=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};const button=(label,result,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:10px 20px;border:1px solid #9ca3af;border-radius:7px;cursor:pointer;background:'+(primary?'#183b67':'white')+';color:'+(primary?'white':'#17212e');b.onclick=()=>done(result);actions.append(b);return b};const cancel=duplicate?button('Cancel',false,false):null,okay=button(duplicate?'Overwrite':'OK',true,true);panel.append(h,msg,actions);veil.append(panel);document.body.append(veil);document.addEventListener('keydown',escape);(cancel||okay).focus()})}
 export async function saveDocument(){
   if(!user)return;
   const payload=bridge().getDocument();
@@ -80,13 +81,13 @@ export async function saveDocument(){
       const matches=await getDocs(query(collection(db,"documents"),where("number","==",num),limit(100)));
       const existing=matches.docs.find(x=>x.data().profileId===payload.profileId && x.data().documentType===d.type);
       if(existing){
-        if(!confirm("Document "+num+" exists. Update it instead of creating another?"))return;
+        if(!await documentSaveMessage(num,true))return;
         savedDoc=doc(db,"documents",existing.id);
       }
     }
     const prior=await getDoc(savedDoc);
     await setDoc(savedDoc,{...encode(payload),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
-    currentId=savedDoc.id;notify("Document saved online: "+num);await loadDocs();
+    currentId=savedDoc.id;notify("Document saved online: "+num);await loadDocs();await documentSaveMessage(num);
   }catch(e){notify("Save failed: "+e.message);alert("Could not save document: "+e.message)}
 }
 // Saved Documents uses one month-scoped Firestore scan and client-side family /
