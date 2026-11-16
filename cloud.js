@@ -101,9 +101,11 @@ export async function saveDocument(){
   const payload=bridge().getDocument();
   const d=payload.doc, num=String(d.fieldValues?.docno||"").trim(), date=String(d.fieldValues?.date||"").slice(0,10);
   if(!num){alert("Enter a document number before saving.");return}
-  let savedDoc= currentId ? doc(db,"documents",currentId):doc(collection(db,"documents"));
   try{
-    if(!currentId){
+    const opened=currentId?await getDoc(doc(db,"documents",currentId)):null;
+    const newReference=!opened?.exists()||String(opened.data().number||"").trim()!==num;
+    let savedDoc=!newReference&&currentId?doc(db,"documents",currentId):doc(collection(db,"documents"));
+    if(newReference){
       const matches=await getDocs(query(collection(db,"documents"),where("number","==",num),limit(100)));
       const existing=matches.docs.find(x=>x.data().profileId===payload.profileId && x.data().documentType===d.type);
       if(existing){
