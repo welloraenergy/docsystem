@@ -416,7 +416,7 @@ async function chooseTemplate(id,clear=true){
  draw();
  notify('PO template ready');
 }
-function poOrderedEntries(originals,extras){const entries=[...originals.map(t=>({...t,orderKey:'o'+t.number,additional:false})),...extras.map((t,i)=>({...t,sourceText:t.body||'',orderKey:'e'+i,extraIndex:i,additional:true}))];const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+entries.findIndex(v=>v.orderKey===a.orderKey):x)-(y<0?order.length+entries.findIndex(v=>v.orderKey===b.orderKey):y)})}
+function poOrderedEntries(originals,extras){const entries=[...originals.map(t=>({...t,orderKey:'o'+t.number,additional:false})),...extras.map((t,i)=>({...t,sourceText:t.body||'',orderKey:'e'+i,extraIndex:i,additional:true}))];const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.map((item,index)=>({...item,sortIndex:index})).sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+a.sortIndex:x)-(y<0?order.length+b.sortIndex:y)})}
 function poOrderButtons(key){return '<span style="display:inline-flex;gap:5px;margin:5px"><button type="button" data-po-order="'+key+'" data-delta="-1" title="Move up" aria-label="Move up">↑</button><button type="button" data-po-order="'+key+'" data-delta="1" title="Move down" aria-label="Move down">↓</button></span>'}
 function draw(){
  if(!state||!template)return;
