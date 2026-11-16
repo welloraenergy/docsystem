@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogName": "DocSystem Preset Template Registry",
-  "updated": "2026-11-14",
+  "updated": "2026-11-16",
   "families": [
     {
       "id": "quotation",
@@ -42,6 +42,13 @@
       "editor": "preset-invoice.html",
       "templateCount": 1,
       "status": "integrated-pending-live-A4-and-Firebase-verification"
+    },
+    {
+      "id": "commercial-invoice-packing-list",
+      "name": "Commercial Invoice / Packing List (CIPL)",
+      "editor": "preset-cipl.html",
+      "templateCount": 1,
+      "status": "new-standalone-editor-integrated-pending-browser-and-firebase-verification"
     },
     {
       "id": "payment-voucher",
