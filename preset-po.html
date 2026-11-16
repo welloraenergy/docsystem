@@ -416,6 +416,7 @@ async function chooseTemplate(id,clear=true){
  draw();
  notify('PO template ready');
 }
+function shiftPresetExtraKeys(order,removed){return (Array.isArray(order)?order:[]).filter(key=>key!=='e'+removed).map(key=>/^e\d+$/.test(key)&&Number(key.slice(1))>removed?'e'+(Number(key.slice(1))-1):key)}
 function poOrderedEntries(originals,extras){const entries=[...originals.map(t=>({...t,orderKey:'o'+t.number,additional:false})),...extras.map((t,i)=>({...t,sourceText:t.body||'',orderKey:'e'+i,extraIndex:i,additional:true}))];const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.map((item,index)=>({...item,sortIndex:index})).sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+a.sortIndex:x)-(y<0?order.length+b.sortIndex:y)})}
 function poOrderButtons(key){return '<span style="display:inline-flex;gap:5px;margin:5px"><button type="button" data-po-order="'+key+'" data-delta="-1" title="Move up" aria-label="Move up">↑</button><button type="button" data-po-order="'+key+'" data-delta="1" title="Move down" aria-label="Move down">↓</button></span>'}
 function draw(){
@@ -694,7 +695,7 @@ if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-fi
  else if(d.term){state.termsOverrides[d.term]=e.target.value;render()}
  else if(d.sign){state.signatures[d.sign]??={};state.signatures[d.sign][d.signKey]=e.target.value;render()}
 });
-document.addEventListener('click',e=>{const move=e.target.closest('[data-po-order]');if(move){const entries=poOrderedEntries(template.terms,state.extraTerms||[]),keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.poOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;draw();}return}if(e.target.closest('[data-date-open]')){const picker=e.target.closest('span').querySelector('[data-date-picker]');if(picker.showPicker)picker.showPicker();else picker.click();return}if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.poExtraRemove),1);draw()}});
+document.addEventListener('click',e=>{const move=e.target.closest('[data-po-order]');if(move){const entries=poOrderedEntries(template.terms,state.extraTerms||[]),keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.poOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;draw();}return}if(e.target.closest('[data-date-open]')){const picker=e.target.closest('span').querySelector('[data-date-picker]');if(picker.showPicker)picker.showPicker();else picker.click();return}if(e.target.id==='poAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});draw();return}if(e.target.dataset.poExtraRemove!==undefined){const removed=Number(e.target.dataset.poExtraRemove);state.statementOrder=shiftPresetExtraKeys(state.statementOrder,removed);state.extraTerms.splice(removed,1);draw()}});
 $('newBtn').onclick=newPo;$('saveBtn').onclick=save;$('printBtn').onclick=()=>window.printDoc();
 async function start(){
  try{
