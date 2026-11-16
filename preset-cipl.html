@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DocSystem — Commercial Invoice / Packing List</title>
+<link rel="stylesheet" href="./preset-typography.css?v=20261116-cipl1">
+<style>
+*{box-sizing:border-box}body{margin:0;font:13px Arial,sans-serif;color:#182538;background:#eef2f6}
+button,input,textarea,select{font:inherit}button{cursor:pointer;background:#fff;color:#182538;border:1px solid #b9c6d5;border-radius:6px;padding:8px 12px}
+input,textarea,select{width:100%;padding:8px;border:1px solid #bec9d7;border-radius:6px;background:#fff;color:#182538}
+textarea{resize:vertical;min-height:70px}.bar{background:#172e48;color:white;padding:9px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar button.primary{background:#d6ad33;color:#111;border-color:#d6ad33}.bar #status{margin-left:auto}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:12px;max-width:1800px;margin:auto}
+.card{background:#fff;border:1px solid #d4dde8;border-radius:8px;padding:15px;margin-bottom:12px;min-width:0}.card h3{margin:0 0 14px;font-size:16px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;margin-bottom:10px;font-weight:600}label input,label textarea,label select{display:block;margin-top:5px;font-weight:400}
+.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%}#editorTable{min-width:1120px}#editorTable th{background:#172e48;color:#fff;font-size:12px}
+#editorTable td,#editorTable th{border:1px solid #9baab9;padding:5px}#editorTable td input,#editorTable td textarea{min-width:0;padding:6px;border:1px solid #e1e7ef}
+#editorTable td textarea{min-height:46px}#editorTable td input{width:100%}.actionbar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.preview-column{min-width:0;overflow:visible}.paper{width:210mm;min-height:297mm;margin:0 auto 15px;background:white;padding:10mm;box-shadow:0 2px 10px #0002;color:#111;font:8pt Arial,sans-serif;overflow:visible}
+.cipl-head{display:grid;grid-template-columns:1fr 1fr;gap:6mm;min-height:35mm;margin-bottom:3mm}.cipl-identity{min-width:0}.cipl-right{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end}.cipl-title{font-weight:700;margin-bottom:2mm;overflow-wrap:anywhere}
+.cipl-meta{margin:2mm 0 0 auto;width:100%;font-size:8pt}.cipl-meta-line{display:grid;grid-template-columns:39% 61%;gap:2mm;margin-bottom:1mm}.cipl-meta-line b{text-align:right}
+.cipl-section{break-inside:avoid;page-break-inside:avoid;margin:2mm 0 3mm}.cipl-section-title{background:#080808;color:white;text-align:center;font-weight:bold;padding:1.5mm;font-size:9pt;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.cipl-info{width:100%;table-layout:fixed;font-size:8pt}.cipl-info th,.cipl-info td{border:1px solid #777;padding:1.4mm;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}
+.cipl-info th{width:24%;text-align:right;background:#fafafa}.cipl-info td{width:26%}
+.cipl-items{width:100%;table-layout:fixed;margin:2mm 0 1mm;font-size:7.6pt}.cipl-items th{background:#080808!important;color:#fff!important;font:700 7.6pt Arial,sans-serif!important;white-space:normal!important;overflow-wrap:anywhere;text-align:center!important;padding:1.3mm .5mm!important;border:1px solid #666!important}
+.cipl-items td{border:1px solid #777;padding:1.1mm .6mm;text-align:center;vertical-align:middle;white-space:pre-wrap;overflow-wrap:anywhere;font-size:7.6pt;height:8mm}
+.cipl-items td:nth-child(3){text-align:left}.cipl-items tbody tr{break-inside:avoid;page-break-inside:avoid}.cipl-items tbody tr:nth-child(even) td{background:#f3f4f6!important;print-color-adjust:exact}
+.cipl-totals{border:1px solid #777;display:grid;grid-template-columns:1fr 1fr;gap:0;font-size:8pt;break-inside:avoid}
+.cipl-totals>div{padding:2mm 3mm}.cipl-totals>div+div{border-left:1px solid #777}.cipl-bottom{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:4mm}
+.cipl-panel{border:1px solid #888;min-height:23mm;break-inside:avoid}.cipl-panel h4{margin:0;background:#111;color:white;padding:1.5mm;font-size:8pt}.cipl-panel p{white-space:pre-wrap;padding:2mm;margin:0;overflow-wrap:anywhere}
+.cipl-cert{margin-top:5mm;white-space:pre-wrap;line-height:1.4}.cipl-sign{margin-top:6mm;width:55%;break-inside:avoid}
+.cipl-sign strong{display:block;margin-bottom:7mm}.cipl-sign table{width:100%;font-size:8pt}.cipl-sign th,.cipl-sign td{border:1px solid #888;padding:2mm}.cipl-sign th{width:28%;text-align:right}
+@media(max-width:1000px){.workspace{grid-template-columns:1fr}.row,.triple{grid-template-columns:1fr}.preview-column{overflow-x:auto}}
+@media print{@page{size:A4;margin:0}body{background:white}.bar,.editor{display:none!important}.workspace{display:block!important;padding:0!important;max-width:none!important}.preview-column{display:block!important;overflow:visible!important}.paper{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important;zoom:1!important;break-after:page!important;page-break-after:always!important}.paper:last-child{break-after:auto!important;page-break-after:auto!important}}
+</style></head><body>
+<div class="bar"><strong>Commercial Invoice / Packing List</strong><button id="newBtn">New</button><button class="primary" id="saveBtn">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Ready</span></div>
+<div class="workspace"><div class="editor">
+<section class="card"><h3>Document Information</h3><label>Business Profile<select id="businessSelect"></select></label><div class="row" id="documentFields"></div></section>
+<section class="card"><h3>Consignee</h3><div class="row" id="consigneeFields"></div></section>
+<section class="card"><h3>Delivery & Collection</h3><div class="row" id="addresses"></div></section>
+<section class="card"><h3>Freight / Transport</h3><label>Freight Agent / Transport Company<input data-field="freightAgent" placeholder="Client Appointed"></label></section>
+<section class="card"><h3>Invoice & Packing Items</h3><div class="tablewrap"><table id="editorTable"></table></div><div class="actionbar"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div><p id="editorTotal"></p></section>
+<section class="card"><h3>Packing Details & Comments</h3><label>Packing Details<textarea data-field="packingDetails" rows="4"></textarea></label><label>Comments<textarea data-field="comments" rows="4"></textarea></label><label>Certification Statement<textarea data-field="certification" rows="3"></textarea></label></section>
+<section class="card"><h3>Signature — Prepared by Only</h3><div class="row" id="signatureFields"></div></section>
+</div><div class="preview-column"><div id="paper"></div><p id="pageCount" style="text-align:center"></p></div></div>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import {getFirestore,doc,getDoc,setDoc,getDocs,collection,query,where,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js';
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
+import {refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js';
+import {paginatePresetDocument} from './preset-pagination.js';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
+const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search);
+let user=null,role='user',profiles=[],profile=null,globals={},state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,saving=false;
+const posted=(kind,data={})=>{if(window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...data},location.origin)};
+const notify=t=>{$('status').textContent=t;posted('status',{status:t})};
+const business=()=>{const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:typeof c.headerText==='string'&&c.headerText.trim()?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals}};
+const header=()=>savedHeader||profile?.presetHeader||{};
+const expanded=v=>expandPresetText(v,business(),globals);
+const today=()=>new Date().toISOString().slice(0,10);
+const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
+const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const cols=[['qty','Qty'],['description','Description'],['packedIn','Packed In'],['serial','Serial Number'],['weight','Net Weight (Kgs)'],['origin','Country of Origin'],['commodity','Customs Commodity Code'],['unitValue','Unit Value'],['totalValue','Total Value']];
+const emptyRow=()=>({qty:'',description:'',packedIn:'',serial:'',weight:'',origin:'',commodity:'',unitValue:''});
+function blank(){return {fields:{reference:refPrefix('CIPL',today()),date:today(),poNumber:'',deliveryNote:'',jobNumber:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:'I hereby certify that the above information is true and correct to the best of my knowledge and belief.'},consignee:{company:'',address:'',contact:'',phone:'',email:''},delivery:{address:''},collection:{address:''},items:Array.from({length:3},emptyRow),prepared:{name:'',position:'',date:''}}}
+function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'">'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
+function draw(){
+ if(!state)return;
+ $('businessSelect').innerHTML=profiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.company?.name||'Business')+'</option>').join('');
+ $('businessSelect').value=profile?.id||'';$('businessSelect').disabled=!!docId;
+ $('documentFields').innerHTML=valueInput('reference','CIPL No.',state.fields.reference)+valueInput('date','Date Created',state.fields.date)+valueInput('poNumber','P.O. No.',state.fields.poNumber)+valueInput('deliveryNote','Delivery Note No.',state.fields.deliveryNote)+valueInput('jobNumber','Job No.',state.fields.jobNumber)+valueInput('currency','Currency (USD / MYR)',state.fields.currency);
+ mountReferenceField($('documentFields').querySelector('[data-key="reference"]'),'CIPL',state.fields.date,state.fields.reference);
+ $('consigneeFields').innerHTML=valueInput('company','Company',state.consignee.company,'consignee')+valueInput('address','Address',state.consignee.address,'consignee',true)+valueInput('contact','Contact Person',state.consignee.contact,'consignee')+valueInput('phone','Telephone',state.consignee.phone,'consignee')+valueInput('email','Email',state.consignee.email,'consignee');
+ $('addresses').innerHTML=valueInput('address','Delivery Address',state.delivery.address,'delivery',true)+valueInput('address','Collection Address',state.collection.address,'collection',true);
+ document.querySelectorAll('[data-field]').forEach(e=>e.value=state.fields[e.dataset.field]||'');
+ $('signatureFields').innerHTML=valueInput('name','Name',state.prepared.name,'prepared')+valueInput('position','Position',state.prepared.position,'prepared')+valueInput('date','Date',state.prepared.date,'prepared');
+ drawRows();render();
+}
+function drawRows(){
+ $('editorTable').innerHTML='<thead><tr><th>Item</th>'+cols.map(c=>'<th>'+c[1]+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='totalValue'?fmt(amount(r.qty)*amount(r.unitValue)):(key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]||'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" value="'+esc(r[key]||'')+'">'))+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
+ $('editorTotal').textContent='Total Net Weight: '+fmt(state.items.reduce((a,r)=>a+amount(r.weight),0))+' Kgs · Total Value: '+fmt(state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0))+' '+(state.fields.currency||'USD');
+}
+function render(){
+ if(!state)return;
+ const co=business(),h=header(),head={...co,documentTitle:'COMMERCIAL INVOICE / PACKING LIST',documentNumber:state.fields.reference,documentDate:state.fields.date};
+ const titleText=h.titleText||'{doctype}',color=/^#[\da-fA-F]{6}$/.test(h.titleColor||'')?h.titleColor:'#d6a900';
+ const fontSize=Math.max(9,Math.min(36,Number(h.titleSize)||16));
+ const font=['Arial','Verdana','Georgia','Tahoma','Times New Roman'].includes(h.titleFont)?h.titleFont:'Arial';
+ const align=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
+ const heading='<div class="cipl-title" style="color:'+color+';font-size:'+fontSize+'pt;font-family:'+font+';text-align:'+align+'">'+richPresetText(expandPresetText(titleText,head,globals))+'</div>';
+ const extra=h.extraText?'<div style="font-size:'+Math.max(7,Number(h.extraSize)||9)+'pt;text-align:'+(['left','center','right'].includes(h.extraAlign)?h.extraAlign:'right')+'">'+richPresetText(expandPresetText(h.extraText,head,globals))+'</div>':'';
+ const meta=[['Date Created',state.fields.date],['Invoice No.',state.fields.reference],['P.O. No.',state.fields.poNumber],['Delivery Note No.',state.fields.deliveryNote],['Job No.',state.fields.jobNumber]];
+ const company='<div class="cipl-head"><div class="cipl-identity">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="cipl-right">'+heading+extra+'<div class="cipl-meta">'+meta.map(([k,v])=>'<div class="cipl-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
+ const info='<div class="cipl-section"><div class="cipl-section-title">Consignee Information</div><table class="cipl-info"><tbody><tr><th>Consignee:</th><td style="width:76%" colspan="3">'+esc(expanded(state.consignee.company))+'</td></tr><tr><th>Address:</th><td colspan="3">'+esc(expanded(state.consignee.address))+'</td></tr><tr><th>Contact:</th><td>'+esc(state.consignee.contact)+'</td><th>Telephone:</th><td>'+esc(state.consignee.phone)+'</td></tr><tr><th>Email:</th><td colspan="3">'+esc(state.consignee.email)+'</td></tr></tbody></table></div>';
+ const logistics='<div class="cipl-section"><div class="cipl-section-title">Delivery / Collection</div><table class="cipl-info"><tbody><tr><th style="width:18%">Delivery Address:</th><td style="width:32%">'+esc(expanded(state.delivery.address))+'</td><th style="width:18%">Collection Address:</th><td style="width:32%">'+esc(expanded(state.collection.address))+'</td></tr><tr><th>Freight Agent / Transport Company:</th><td colspan="3">'+esc(expanded(state.fields.freightAgent))+'</td></tr></tbody></table></div>';
+ const colWidths=[4,6,24,9,10,9,8,11,9,10];
+ const table='<table class="cipl-items"><colgroup>'+colWidths.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+['Item','Qty','Description','Packed In','Serial Number','Net Weight (Kgs)','Country of Origin','Customs Commodity Code','Unit Value ('+(state.fields.currency||'USD')+')','Total Value ('+(state.fields.currency||'USD')+')'].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(expanded(r.description||''))+'</td><td>'+esc(r.packedIn||'')+'</td><td>'+esc(r.serial||'')+'</td><td>'+esc(r.weight||'')+'</td><td>'+esc(r.origin||'')+'</td><td>'+esc(r.commodity||'')+'</td><td>'+esc(String(r.unitValue||'').trim()?fmt(amount(r.unitValue)):'')+'</td><td>'+fmt(amount(r.qty)*amount(r.unitValue))+'</td></tr>').join('')+'</tbody></table>';
+ const weight=state.items.reduce((a,r)=>a+amount(r.weight),0),total=state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0);
+ const totals='<div class="cipl-totals"><div><strong>Total Weight (KGS):</strong> '+fmt(weight)+'</div><div><strong>Total Value in '+esc(state.fields.currency||'USD')+':</strong> '+fmt(total)+'</div></div>';
+ const bottom='<div class="cipl-bottom"><div class="cipl-panel"><h4>PACKING DETAILS</h4><p>'+esc(expanded(state.fields.packingDetails))+'</p></div><div class="cipl-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
+ const sign='<div class="cipl-cert">'+esc(expanded(state.fields.certification))+'</div><div class="cipl-sign"><strong>Prepared by</strong><table><tbody><tr><th>Name:</th><td>'+esc(state.prepared.name||'')+'</td></tr><tr><th>Position:</th><td>'+esc(state.prepared.position||'')+'</td></tr><tr><th>Date:</th><td>'+esc(state.prepared.date||'')+'</td></tr><tr><th>Signature:</th><td style="height:15mm"></td></tr></tbody></table></div>';
+ $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
+ paginatePresetDocument($('paper'),{fit:'normal'});
+ $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
+ fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
+}
+function fitPreview(){const holder=document.querySelector('.preview-column'),width=holder?.clientWidth||window.innerWidth;const zoom=Math.min(1,Math.max(.15,(width-24)/(210*96/25.4)));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
+function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:profile?.id||'',locked:!!docId,status:$('status').textContent})}
+function fresh(){docId=null;savedCompany=null;savedHeader=null;state=blank();draw();notify('New CIPL ready');ready()}
+async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Document not found');const data=snap.data();if(data.templateFamily!=='commercial-invoice-packing-list')throw Error('Not a CIPL');docId=id;state=decodePreset(data.presetData);savedCompany=decodePreset(data.companySnapshot||null);savedHeader=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('CIPL',state.fields.date);notify('Duplicate ready; enter a new CIPL number')}else notify('Opened '+data.number);draw();ready()}
+function dialog(reference,duplicate){return new Promise(resolve=>{let host=document;try{if(window.top!==window&&window.top.document?.body)host=window.top.document}catch(e){}const veil=host.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px';const card=host.createElement('div');card.style.cssText='background:#192321;color:#fff;padding:24px;border-radius:14px;max-width:540px;width:100%;box-shadow:0 15px 40px #0008;font:15px Arial';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');const h=host.createElement('h3');h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=host.createElement('p');msg.textContent=duplicate?'CIPL '+reference+' already exists. Overwrite it?':'CIPL '+reference+' saved online.';const actions=host.createElement('div');actions.style.cssText='display:flex;gap:9px;justify-content:flex-end;margin-top:24px';const done=v=>{veil.remove();resolve(v)};for(const [label,value] of (duplicate?[['Cancel',false],['Overwrite',true]]:[['OK',true]])){const b=host.createElement('button');b.textContent=label;b.style.cssText='background:#83d9cc;color:#102d2a;border:0;border-radius:18px;padding:10px 20px';b.onclick=()=>done(value);actions.append(b)}card.append(h,msg,actions);veil.append(card);host.body.append(veil)})}
+async function save(){if(saving||!user)return;const reference=String(state.fields.reference||'').trim();if(!reference||reference===refPrefix('CIPL',state.fields.date))return alert('Enter the CIPL reference');if(!business().id)return alert('Select Business Profile');saving=true;try{
+ if(docId){const old=await getDoc(doc(db,'documents',docId));if(!old.exists()||old.data().number!==reference)docId=null}
+ if(!docId){const matches=await getDocs(query(collection(db,'documents'),where('number','==',reference),limit(100)));const existing=matches.docs.find(x=>x.data().profileId===business().id&&x.data().documentType==='Commercial Invoice / Packing List');if(existing){if(!await dialog(reference,true))return;docId=existing.id}}
+ const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));const prior=await getDoc(ref),snapshot=business();
+ await setDoc(ref,{templateSource:'preset',templateFamily:'commercial-invoice-packing-list',templateId:'standard',templateVersion:1,documentType:'Commercial Invoice / Packing List',number:reference,date:state.fields.date,presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(header()),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+ docId=ref.id;savedCompany=snapshot;notify('Saved online: '+reference);reportPresetSaved(reference,docId,state.fields.date);ready();await dialog(reference,false)
+ }catch(e){notify('Save failed: '+e.message);reportPresetSaveError(e);alert('Save failed: '+e.message)}finally{saving=false}}
+window.printDoc=()=>{const old=document.title,ref=String(state.fields.reference||'').replace(/[\\/:*?"<>|]/g,'-');document.title=ref||'CIPL';if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=document.title;window.addEventListener('afterprint',()=>window.parent.document.title=parentTitle,{once:true})}render();window.print();window.addEventListener('afterprint',()=>document.title=old,{once:true})};
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.group){const obj=state[d.group];if(!obj)return;if(d.group==='fields'&&d.key==='reference'&&d.referenceSuffix!==undefined)obj.reference=fullReference(refPrefix('CIPL',state.fields.date),e.target.value);else if(d.group==='fields'&&d.key==='date'){obj.date=e.target.value;obj.reference=updateReferenceYear(obj.reference,'CIPL',obj.date);syncReferenceField($('documentFields'),'CIPL',obj.date,obj.reference)}else obj[d.key]=e.target.value;drawRows();render()}else if(d.field){state.fields[d.field]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;const focus=e.target;const sel=focus.selectionStart;drawRows();const replacement=document.querySelector('[data-row="'+d.row+'"][data-col="'+d.col+'"]');if(replacement){replacement.focus();if(sel!==null)replacement.setSelectionRange(sel,sel)}render()}});
+document.addEventListener('click',e=>{const remove=e.target.closest('[data-remove]');if(remove){state.items.splice(Number(remove.dataset.remove),1);if(!state.items.length)state.items.push(emptyRow());drawRows();render();return}if(e.target.id==='addRow'){state.items.push(emptyRow());drawRows();render()}else if(e.target.id==='removeRow'){if(state.items.length>1)state.items.pop();drawRows();render()}else if(e.target.id==='newBtn')fresh();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc()});
+$('businessSelect').addEventListener('change',e=>{if(docId)return;profile=profiles.find(p=>p.id===e.target.value)||profile;draw();ready()});
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')fresh();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business'&&!docId){profile=profiles.find(p=>p.id===e.data.profileId)||profile;draw();ready()}else if(a==='view')render()});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in from DocSystem first');return}try{const usr=await getDoc(doc(db,'users',u.uid));role=usr.data()?.role||'user'}catch(e){}try{const settingsSnap=await getDoc(doc(db,'appSettings','main'));const settings=settingsSnap.data()?.settings||{};profiles=(settings.profiles||[]).filter(p=>p?.company);globals=settings.globalPlaceholders||{};profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;state=blank();if(docId)await loadSaved(docId);else{draw();notify('CIPL ready');ready()}}catch(e){notify('CIPL load failed: '+e.message)}});
+window.addEventListener('resize',fitPreview);
+</script></body></html>
