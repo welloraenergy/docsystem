@@ -878,7 +878,7 @@ function loadPresetConfigurator(copyId=null){
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','payment-voucher':'preset-payment-voucher.html','salary-payslip':'preset-salary-payslip.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-shared-module23','preset-salary-payslip.html':'20261114-salary-payslip-editable-statement23'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'');
+ frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-shared-module23','preset-salary-payslip.html':'20261114-salary-payslip-editable-statement23'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -890,7 +890,7 @@ function fillPresetTypes(preserve=false){
  select.innerHTML=choices.map(([id,label])=>'<option value="'+id+'">'+esc(label)+'</option>').join('');
  if(preserve&&choices.some(([id])=>id===previous))select.value=previous;
 }
-function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
+function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,duplicate=false){
  const preset=source==='preset',main=document.getElementById('docMain');
  document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
  document.getElementById('workspacePresetChoice').hidden=!preset;
@@ -919,7 +919,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null){
 }
 // Open an existing Firebase preset inside the active workspace, without
 // navigating/reloading the login/authentication page.
-window.DocSystemOpenPreset=(record,id)=>{
+window.DocSystemOpenPreset=(record,id,duplicate=false)=>{
  const family=record.templateFamily||
   (record.documentType==='Purchase Order'?'purchase-order':
    record.documentType==='Delivery Ticket'?'delivery-ticket':
@@ -933,7 +933,7 @@ window.DocSystemOpenPreset=(record,id)=>{
  const selector=document.getElementById('workspacePresetSelect');
  const preferred=record.templateId||(family==='quotation'?'rental3':family==='purchase-order'?'rental':'standard');
  if(Array.from(selector.options).some(o=>o.value===preferred))selector.value=preferred;
- setWorkspaceSource('preset',true,id);
+ setWorkspaceSource('preset',true,id,null,duplicate);
  showDocPage('create');
  window.scrollTo({top:0,behavior:'instant'});
 };
