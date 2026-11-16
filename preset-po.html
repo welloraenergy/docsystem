@@ -409,7 +409,7 @@ async function chooseTemplate(id,clear=true){
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
   state.fields.poNumber=refPrefix('PO',state.fields.poDate);
-  state.fields.currency=business().defaultCurrency||'MYR';
+  state.fields.currency='USD';
   state.items=Array.from({length:3},()=>Object.fromEntries(template.items.columns.filter(c=>c.type!=='calculated').map(c=>[c.key,''])));
  }
  $('poTemplate').value=entry.id;
@@ -595,7 +595,7 @@ function fitPreview(){
  const available=mobileA4AvailableWidth(holder),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
-function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
+function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);state.fields.currency='USD';chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -648,7 +648,7 @@ async function loadSaved(id){
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
 async function chooseBusiness(id){
- if(docId){ready();return}const picked=profiles.find(p=>p.id===id);if(!picked)return;profile=picked;state.fields.currency=business().defaultCurrency||'MYR';draw();ready()
+ if(docId){ready();return}const picked=profiles.find(p=>p.id===id);if(!picked)return;profile=picked;state.fields.currency='USD';draw();ready()
 }
 window.printDoc=()=>{const reference=String(state.fields.poNumber||'').trim();const pdfName=(reference||'Purchase Order').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}document.body.classList.add('printing');render();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
@@ -745,7 +745,7 @@ onAuthStateChanged(auth,async u=>{
  try{const profileSnap=await getDoc(doc(db,'users',u.uid));role=profileSnap.data()?.role||'user'}catch{}
  try{const snap=await getDoc(doc(db,'appSettings','main'));const settings=snap.data()?.settings||{};globalPlaceholders=settings.globalPlaceholders&&typeof settings.globalPlaceholders==='object'?settings.globalPlaceholders:{};profiles=Array.isArray(settings.profiles)?settings.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;
  if(!loaded)await start();
- if(docId)await loadSaved(docId);else if(params.get('copyId'))await openSavedPresetCopy();else{state.fields.currency=business().defaultCurrency||'MYR';draw();notify('PO ready');ready()}
+ if(docId)await loadSaved(docId);else if(params.get('copyId'))await openSavedPresetCopy();else{state.fields.currency='USD';draw();notify('PO ready');ready()}
  }catch(e){notify('Business profile loading failed: '+e.message)}
 });
 if(typeof ResizeObserver!=='undefined'){
