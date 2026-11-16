@@ -204,10 +204,10 @@ export async function openDocument(id,duplicate=false){
       const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket',isInvoice=data.templateFamily==='invoice'||data.documentType==='Invoice';
       const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher')?'standard':isPo?'purchase-credit':'rental3'));
       const family=data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
-      const saved=duplicate?'':(isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
-      if(!duplicate && typeof window.DocSystemOpenPreset==='function'){
-        window.DocSystemOpenPreset(data,id);
-        notify("Opening saved document: "+(data.number||id));
+      const saved=duplicate?'&docId='+encodeURIComponent(id)+'&duplicate=1':(isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      if(typeof window.DocSystemOpenPreset==='function'){
+        window.DocSystemOpenPreset(data,id,duplicate);
+        notify((duplicate?'Duplicate ready — enter a new reference: ':'Opening saved document: ')+(data.number||id));
         return;
       }
       // Legacy fallback for duplication or an older workspace without the in-place handler.
@@ -220,8 +220,10 @@ export async function openDocument(id,duplicate=false){
       sourcePicker.value="custom";
       sourcePicker.dispatchEvent(new Event("change",{bubbles:true}));
     }
-    bridge().setDocument(decode(s.data()));currentId=duplicate?null:id;
-    if(duplicate)notify("Duplicate ready: change document number and save");
+    const payload=decode(s.data());
+    if(duplicate&&payload.doc?.fieldValues)payload.doc.fieldValues.docno='';
+    bridge().setDocument(payload);currentId=duplicate?null:id;
+    if(duplicate)notify('Duplicate ready: enter a new document number (for example, add -R2) and save');
     else notify("Document opened: "+(s.data().number||""));
     document.querySelector('[data-tab="create"]').click();
   }catch(e){notify("Open failed: "+e.message)}
