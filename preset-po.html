@@ -643,7 +643,7 @@ async function save(){
 }
 async function loadSaved(id){
  if(!user||!id)return;
- try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=decodePreset(data.presetData);savedSnapshot=decodePreset(data.companySnapshot||null);savedHeaderSnapshot=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);notify('Opened PO '+data.number);ready()}
+ try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=decodePreset(data.presetData);savedSnapshot=decodePreset(data.companySnapshot||null);savedHeaderSnapshot=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);if(params.get('duplicate')==='1'){docId=null;state.fields.poNumber=refPrefix('PO',state.fields.poDate);draw();notify('Duplicate ready. Enter a new PO reference.')}else notify('Opened PO '+data.number);ready()}
  catch(e){notify('Cannot open PO: '+e.message)}
 }
 function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
