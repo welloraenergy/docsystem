@@ -138,6 +138,7 @@ async function save(){
  if(!slip&&(!state.payTo.trim()||!['MYR','USD'].includes(state.currency)))return alert('Enter Pay To and select a valid currency');
  try{
  const co=currentBusiness();
+ if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.reference.trim())docId=null;}
  if(!docId){
   const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.reference.trim()),limit(100)));
   const duplicate=hits.docs.find(x=>x.data().profileId===co.id&&(x.data().templateFamily===family||x.data().documentType===(slip?'Salary Payslip':'Payment Voucher')));if(duplicate){if(!await documentSaveMessage(state.reference,true))return;docId=duplicate.id}
