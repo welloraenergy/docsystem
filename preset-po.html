@@ -596,7 +596,33 @@ function fitPreview(){
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
 function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
-function documentSaveMessage(reference,duplicate=false){return new Promise(resolve=>{const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px';const panel=document.createElement('div');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.style.cssText='background:white;color:#17212e;border-radius:12px;padding:24px;max-width:430px;width:100%;font:15px Arial,sans-serif;box-shadow:0 15px 45px #0005';const h=document.createElement('h3');h.style.margin='0 0 10px';h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=document.createElement('p');msg.textContent=duplicate?'Reference "'+reference+'" already exists. Overwrite the existing document or cancel?':'Document "'+reference+'" was saved online.';msg.style.cssText='line-height:1.5;overflow-wrap:anywhere';const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:20px';const done=v=>{document.removeEventListener('keydown',escape);veil.remove();resolve(v)};const escape=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};const button=(label,result,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:10px 20px;border:1px solid #9ca3af;border-radius:7px;cursor:pointer;background:'+(primary?'#183b67':'white')+';color:'+(primary?'white':'#17212e');b.onclick=()=>done(result);actions.append(b);return b};const cancel=duplicate?button('Cancel',false,false):null,okay=button(duplicate?'Overwrite':'OK',true,true);panel.append(h,msg,actions);veil.append(panel);document.body.append(veil);document.addEventListener('keydown',escape);(cancel||okay).focus()})}
+function documentSaveMessage(reference,duplicate=false){
+ return new Promise(resolve=>{
+  // Preset editors run in same-origin iframes. Mount in the top document so
+  // the dialog stays in the visible browser viewport, not the scrolled form.
+  let host=document;
+  try{if(window.top&&window.top!==window&&window.top.document?.body)host=window.top.document}catch(e){}
+  const previous=host.activeElement;
+  const veil=host.createElement('div');
+  veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.52);display:flex;justify-content:center;align-items:flex-start;padding:clamp(24px,12vh,110px) 16px 16px;box-sizing:border-box;overflow-y:auto';
+  const panel=host.createElement('div');
+  panel.setAttribute('role','alertdialog');
+  panel.setAttribute('aria-modal','true');
+  panel.setAttribute('aria-labelledby','doc-save-dialog-title');
+  panel.setAttribute('aria-describedby','doc-save-dialog-text');
+  panel.style.cssText='background:#192321;color:#ecf6f2;border:1px solid #334942;border-radius:14px;padding:24px;max-width:570px;width:100%;box-shadow:0 18px 48px #0007;font:15px Arial,sans-serif;box-sizing:border-box';
+  const title=host.createElement('h3');title.id='doc-save-dialog-title';title.textContent=duplicate?'Document Already Exists':'Saved Successfully';title.style.cssText='font-size:18px;font-weight:700;margin:0 0 14px';
+  const message=host.createElement('p');message.id='doc-save-dialog-text';message.textContent=duplicate?'Document '+reference+' already exists. Overwrite the existing document?':'Document '+reference+' has been saved online successfully.';message.style.cssText='font-size:15px;line-height:1.5;margin:0;overflow-wrap:anywhere';
+  const actions=host.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;margin-top:26px;flex-wrap:wrap';
+  let closed=false;
+  const finish=value=>{if(closed)return;closed=true;host.removeEventListener('keydown',onKey,true);veil.remove();if(previous&&previous.isConnected)previous.focus?.();resolve(value)};
+  const onKey=e=>{if(e.key==='Escape'){e.preventDefault();finish(false)}else if(e.key==='Tab'){const buttons=[...actions.querySelectorAll('button')];if(!buttons.length)return;const index=buttons.indexOf(host.activeElement);if(e.shiftKey&&index<=0){e.preventDefault();buttons[buttons.length-1].focus()}else if(!e.shiftKey&&index===buttons.length-1){e.preventDefault();buttons[0].focus()}}};
+  const button=(label,value,primary)=>{const element=host.createElement('button');element.type='button';element.textContent=label;element.style.cssText='border:0;border-radius:24px;padding:11px 22px;min-height:42px;min-width:90px;cursor:pointer;font:600 14px Arial,sans-serif;background:'+(primary?'#88dcd0':'#005c55')+';color:'+(primary?'#10352f':'#e6fffa');element.addEventListener('click',()=>finish(value));actions.append(element);return element};
+  const cancel=duplicate?button('Cancel',false,false):null;
+  const okay=button(duplicate?'Overwrite':'OK',true,true);
+  panel.append(title,message,actions);veil.append(panel);host.body.append(veil);host.addEventListener('keydown',onKey,true);(cancel||okay).focus();
+ })
+}
 async function save(){
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim()||state.fields.poNumber===refPrefix('PO',state.fields.poDate))return alert('Enter PO Reference Number before saving.');
