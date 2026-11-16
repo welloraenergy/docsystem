@@ -587,7 +587,7 @@ function availableCurrencies(company){
 }
 function preferredCurrency(company,current){
  const list=availableCurrencies(company).map(x=>x.code);
- return list.includes(current)?current:list.includes(company?.defaultCurrency)?company.defaultCurrency:list[0];
+ return list.includes(current)?current:(current&&/^[A-Z]{3}$/.test(current)?current:'USD');
 }
 function profileSnapshot(profile){
  const co=profile?.company||{};
@@ -639,7 +639,7 @@ function choosePresetBusiness(profileId){
  if(id){announcePresetReady();return}
  const selected=businessProfiles.find(p=>p.id===profileId);
  if(!selected){announcePresetReady();return}
- businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;
+ businessProfile=selected;state.currency='USD';initialCurrencySet=true;
  renderBusinessSelector();drawFieldsOnly();render();announcePresetReady();
 }
 
@@ -866,7 +866,7 @@ function quoteTermsEditorMarkup(){
  return '<p class="muted">Original clauses are protected and cannot be removed. Toggle Show/Hide for this document, then add your own statements below. These selections are saved with the document. Formula-driven wording stays linked.'+(editingPresetTemplate?' To use dynamic values in custom wording: {minDays}, {paymentDays}, {validityDays}.':'')+'</p>'+
  cards+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
 }
-function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:preferredCurrency(businessProfile?.company,null),client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],statementOrder:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
+function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:'USD',client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],statementOrder:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
 function headingFormatControls(k){
  if(!['docTitle','headingLines'].includes(k))return '';
  return '<div class="panel-inline-tools" aria-label="Format '+(k==='docTitle'?'document heading':'additional lines')+'">'+
@@ -1004,7 +1004,7 @@ if(document.body.classList.contains('embedded-preset')){
  const statusNode=$('status');
  new MutationObserver(()=>informWorkspace('status',{status:statusNode.textContent||'Ready'})).observe(statusNode,{childList:true,subtree:true,characterData:true});
 }
-$('preset').innerHTML=presets.filter(p=>!p.legacy).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency=preferredCurrency(selected.company,null);initialCurrencySet=true;drawFieldsOnly();render();announcePresetReady();};
+$('preset').innerHTML=presets.filter(p=>!p.legacy).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency='USD';initialCurrencySet=true;drawFieldsOnly();render();announcePresetReady();};
 $('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'))fresh(e.target.value);else e.target.value=state.preset};function finishquoteDrag(from,to){const keys=quoteEntries(isSpecialTkr()?specialTkrTerms():rental3Terms(),state.extraTerms||[]).map(x=>x.orderKey),a=keys.indexOf(from),b=keys.indexOf(to);if(a<0||b<0||a===b)return;keys.splice(b,0,keys.splice(a,1)[0]);state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}
 let quoteDragSession=null;
 document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-quote-drag]');if(!handle||e.button>0)return;const card=handle.closest('[data-order-card]');if(!card)return;quoteDragSession={id:e.pointerId,from:handle.dataset.quoteDrag,card,target:null,handle};handle.setPointerCapture?.(e.pointerId);card.style.opacity='.6';handle.style.cursor='grabbing';e.preventDefault()});
