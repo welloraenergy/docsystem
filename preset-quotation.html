@@ -522,7 +522,29 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .paper .excel-ref .ref-line span:first-child{text-align:right!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;font-weight:600!important}
  .paper .excel-ref .ref-line span:last-child{text-align:left!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;overflow:visible!important;overflow-wrap:normal!important;background:transparent!important}
 }
-</style></head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
+</style><style id="quotationEqualTableHeaders">
+/* Final cascade rule: all six A4 quotation table headings share one font size. */
+@media screen,print {
+ .paper .excel-table thead th {
+  font-family:Arial,sans-serif!important;
+  font-size:8pt!important;
+  font-weight:700!important;
+  line-height:1.18!important;
+  white-space:normal!important;
+  letter-spacing:normal!important;
+  text-align:center!important;
+  vertical-align:middle!important;
+ }
+ .paper .excel-table thead th .quote-rate-heading,
+ .paper .excel-table thead th .quote-rate-unit {
+  display:block!important;
+  font-size:inherit!important;
+  line-height:inherit!important;
+  white-space:nowrap!important;
+ }
+}
+</style>
+</head><body><header><h2>DocSystem / Ready-Made Quotations</h2><small>Excel-inspired quotation forms · saved separately from custom templates</small></header>
 <div class="bar"><a href="./">← DocSystem</a><select id="preset"></select><label class="preset-business-choice">Business Profile <select id="businessProfileSelect" aria-label="Business Profile"><option value="">Loading…</option></select></label><button id="working" class="active" onclick="view(false)">Working Form</button><button id="previewButton" onclick="view(true)">Preview</button><button onclick="save()">Save Online</button><button onclick="load()">Open Saved</button><button onclick="printDoc()">Print / PDF</button><span id="status" class="muted"></span></div>
 <main class="wrap"><div class="form-only"><div class="card preset-settings-card"><h3>Document Settings</h3><div class="preset-settings-fields" id="quotationCurrencyFields"></div></div><div class="card"><h3>Quotation Information</h3><div class="grid" id="quotationInfoFields"></div></div><div class="card"><h3>Client Information</h3><div class="grid" id="clientInfoFields"></div><div class="grid" id="operationalInfoFields" style="margin-top:12px"></div></div><div class="card" id="rentalWrap"><h3>Rental Equipment</h3><div class="table-wrap" id="rental"></div><div class="line-actions"><button type="button" class="preset-add-item" data-quote-add-row="rental">+ Add Item</button><button type="button" class="preset-remove-last" data-quote-remove-row="rental">Remove Last</button></div></div><div class="card" id="consWrap"><h3>Consumables</h3><div class="table-wrap" id="consumables"></div><div class="line-actions"><button type="button" class="preset-add-item" data-quote-add-row="consumables">+ Add Item</button><button type="button" class="preset-remove-last" data-quote-remove-row="consumables">Remove Last</button></div></div><div class="card"><h3>Terms &amp; Conditions</h3><div class="grid preset-term-settings" id="presetTermSettings"></div><div class="preset-terms-fitting"><label>Page fitting<select id="termsPageFit"><option value="flow">Continue across pages (complete lines) — Default</option><option value="normal">Normal size / add page</option></select></label></div><div id="rental3TermsControls" hidden><p class="muted">Original clauses remain protected. Use Show/Hide and enter any clause-specific values directly beneath the relevant statement; the wording updates automatically.</p><div id="rental3TermsReadOnly" class="preset-terms-list"></div></div><div id="otherPresetTerms"><p class="muted">Enter the applicable quotation terms. These are saved with the document.</p><textarea id="terms" rows="12" style="width:100%"></textarea></div></div><div class="card"><h3>Signatures</h3><div class="grid" id="signatures"></div></div></div><div class="preview-only"><div class="notice">Preview of the dedicated preset document.</div><div id="paper"></div></div></main>
 <script type="module">
@@ -909,7 +931,7 @@ function render(){
   const filled=r=>Object.values(r).some(v=>String(v??'').trim()!=='');
   if(!arr.length)return '';
   const rental=key==='rental',columns=rental?['No','Description','Unit','Qty','Daily Rental Rate ('+state.currency+'/Day/Unit)','LIH/DBR ('+state.currency+'/Unit)']:['No','Description','Unit','Qty','Amount ('+state.currency+'/Unit)','Total Amount ('+state.currency+')'];
-  return (state.preset==='rentcon53'||state.preset==='rentcon105'?'<h4 class="quote-item-section-title">'+(rental?'A) Rental':'B) Consumable')+'</h4>':'')+'<table class="excel-table"><colgroup><col style="width:5%"><col style="width:35%"><col style="width:8%"><col style="width:8%"><col style="width:22%"><col style="width:22%"></colgroup><thead><tr>'+columns.map((t,i)=>'<th>'+(rental&&i===4?'Daily Rental Rate<br>('+esc(state.currency)+'/Day/Unit)':rental&&i===5?'LIH/DBR<br>('+esc(state.currency)+'/Unit)':esc(t))+'</th>').join('')+'</tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+esc(r.no||'')+'</td><td>'+esc(r.description||'')+'</td><td>'+esc(r.unit||'')+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(String(r.rate??'').trim()?fmt(Number(String(r.rate).replace(/,/g,''))):'')+'</td><td>'+(rental?esc(quoteLihDisplay(r.lih)):(filled(r)?fmt((Number(String(r.qty).replace(/,/g,''))||0)*(Number(String(r.rate).replace(/,/g,''))||0)):'') )+'</td></tr>').join('')+'</tbody></table>';
+  return (state.preset==='rentcon53'||state.preset==='rentcon105'?'<h4 class="quote-item-section-title">'+(rental?'A) Rental':'B) Consumable')+'</h4>':'')+'<table class="excel-table"><colgroup><col style="width:5%"><col style="width:35%"><col style="width:8%"><col style="width:8%"><col style="width:22%"><col style="width:22%"></colgroup><thead><tr>'+columns.map((t,i)=>'<th>'+(rental&&i===4?'<span class="quote-rate-heading">Daily Rental Rate</span><span class="quote-rate-unit">('+esc(state.currency)+'/Day/Unit)</span>':rental&&i===5?'<span class="quote-rate-heading">LIH/DBR</span><span class="quote-rate-unit">('+esc(state.currency)+'/Unit)</span>':esc(t))+'</th>').join('')+'</tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+esc(r.no||'')+'</td><td>'+esc(r.description||'')+'</td><td>'+esc(r.unit||'')+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(String(r.rate??'').trim()?fmt(Number(String(r.rate).replace(/,/g,''))):'')+'</td><td>'+(rental?esc(quoteLihDisplay(r.lih)):(filled(r)?fmt((Number(String(r.qty).replace(/,/g,''))||0)*(Number(String(r.rate).replace(/,/g,''))||0)):'') )+'</td></tr>').join('')+'</tbody></table>';
  };
  const intro=state.rfqDate?'With reference to your Request for Quotation (RFQ), dated '+esc(formatExcelDate(state.rfqDate))+', we are pleased to quote you the following item(s), subject to our terms and conditions:':'';
  const terms=usesStandardRentalTerms()?activePresetClausesHtml():String(state.terms||'').trim()?String(state.terms||'').split(/\n(?=\d+[.)]\s)/).map((x,i)=>'<div class="excel-term"><span class="term-num">'+(i+1)+'.</span><div class="term-text">'+quoteClauseHtml(x.replace(/^\d+[.)]\s*/,'' )).html+'</div></div>').join(''):'';
