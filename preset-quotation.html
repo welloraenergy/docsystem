@@ -823,6 +823,7 @@ function renderClauses(clauses){
  }).join('');
 }
 const editingPresetTemplate=new URLSearchParams(location.search).get('configure')==='1';
+function shiftPresetExtraKeys(order,removed){return (Array.isArray(order)?order:[]).filter(key=>key!=='e'+removed).map(key=>/^e\d+$/.test(key)&&Number(key.slice(1))>removed?'e'+(Number(key.slice(1))-1):key)}
 function quoteOrder(entries){const order=Array.isArray(state.statementOrder)?state.statementOrder:[];return entries.map((entry,index)=>({...entry,sortIndex:index})).sort((a,b)=>{const x=order.indexOf(a.orderKey),y=order.indexOf(b.orderKey);return (x<0?order.length+a.sortIndex:x)-(y<0?order.length+b.sortIndex:y)})}
 function quoteEntries(originals,extras){return quoteOrder([...originals.map(x=>({...x,orderKey:'o'+x.num,original:true})),...extras.map((x,i)=>({...x,orderKey:'e'+i,extraIndex:i,original:false}))])}
 function quoteOrderButtons(k){return '<span style="display:inline-flex;gap:5px;margin-right:8px"><button type="button" data-quote-order="'+k+'" data-delta="-1" title="Move up">↑</button><button type="button" data-quote-order="'+k+'" data-delta="1" title="Move down">↓</button></span>'}
@@ -1011,7 +1012,7 @@ document.addEventListener('click',e=>{
  if(validTable(deleteTable)){const index=Number(action.dataset.row);if(!Number.isInteger(index)||index<0||index>=state[deleteTable].length)return;
  state[deleteTable].splice(index,1);if(!state[deleteTable].length)state[deleteTable].push(emptyRow(deleteTable));renumber(deleteTable);redrawTable(deleteTable);return}
  if(e.target.id==='quoteAddStatement'){state.extraTerms??=[];state.extraTerms.push({title:'',body:'',enabled:true});$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render();return}
- if(e.target.dataset.quoteExtraRemove!==undefined){state.extraTerms.splice(Number(e.target.dataset.quoteExtraRemove),1);$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render();return}
+ if(e.target.dataset.quoteExtraRemove!==undefined){const removed=Number(e.target.dataset.quoteExtraRemove);state.statementOrder=shiftPresetExtraKeys(state.statementOrder,removed);state.extraTerms.splice(removed,1);$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render();return}
 });
 document.addEventListener('focusout',e=>{
  if(e.target?.dataset?.table&&e.target.dataset.key==='rate'){
