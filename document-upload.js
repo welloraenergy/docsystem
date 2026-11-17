@@ -1,6 +1,19 @@
 // PDF upload module: Base64 bytes are stored separately from document-list metadata.
 import {doc,getDoc,setDoc,deleteDoc,collection,query,where,limit,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 const MAX_PDF_BYTES=100*1024;
+// Display dates as dd/mm/yy; retain ISO YYYY-MM-DD in Firestore for date filtering.
+export function displayDocumentDate(value){
+ const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||""));
+ return match?match[3]+"/"+match[2]+"/"+match[1].slice(-2):String(value||"");
+}
+export function uploadDateToIso(value){
+ const match=/^(\d{2})\/(\d{2})\/(\d{2})$/.exec(String(value||"").trim());
+ if(!match)throw Error("Enter document date as dd/mm/yy (e.g. 17/11/26).");
+ const year=2000+Number(match[3]),month=Number(match[2]),day=Number(match[1]);
+ const date=new Date(Date.UTC(year,month-1,day));
+ if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw Error("Enter a valid document date as dd/mm/yy.");
+ return String(year)+"-"+match[2]+"-"+match[1];
+}
 const fileRecord=id=>({collection:"documentFiles",id});
 const asBase64=bytes=>{let out="";for(let i=0;i<bytes.length;i+=8192)out+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(out)};
 const fromBase64=s=>{const binary=atob(s);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes};
