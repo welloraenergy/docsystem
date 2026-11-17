@@ -21,9 +21,10 @@
 .paper .dt-name-position span{min-height:0;padding:.7mm .5mm;overflow-wrap:anywhere;white-space:pre-wrap;flex:1;min-width:0}
 .paper .dt-sign td.dt-sign-company{
  font-family:Arial,sans-serif!important;
- font-size:6pt!important;
- letter-spacing:-.1px;
- white-space:nowrap!important;
+ font-size:8pt!important;
+ letter-spacing:normal;
+ white-space:pre-wrap!important;
+ overflow-wrap:anywhere;
  text-align:center;
  vertical-align:middle!important;
  padding:.5mm!important;
