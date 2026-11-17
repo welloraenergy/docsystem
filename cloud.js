@@ -134,7 +134,11 @@ let documentListRequest=0;
 export async function loadDocs(){
  if(!user)return;
  const requestId=++documentListRequest;
+ const period=el("cloudPeriod").value==="year"?"year":"month";
+ const year=String(el("cloudYear").value||"").trim();
  const month=el("cloudMonth").value;
+ const dateStart=period==="year"?year+"-01-01":month+"-01";
+ const dateEnd=period==="year"?year+"-12-31":month+"-31";
  const reference=String(el("cloudReferenceSearch")?.value||"").trim();
  const family=String(el("cloudFamily")?.value||"");
  const sort=el("cloudNumberSort")?.value==="asc"?"asc":"desc";
@@ -152,8 +156,8 @@ export async function loadDocs(){
   }else{
    let cursor=null;
    do{
-    const queryParts=month
-     ?[where("date",">=",month+"-01"),where("date","<=",month+"-31"),orderBy("date","desc")]
+    const queryParts=dateStart&&dateEnd
+     ?[where("date",">=",dateStart),where("date","<=",dateEnd),orderBy("date","desc")]
      :[orderBy("date","desc")];
     if(cursor)queryParts.push(startAfter(cursor));
     queryParts.push(limit(Math.min(batchSize,maxRecords-records.length)));
@@ -175,7 +179,7 @@ export async function loadDocs(){
    const d=s.data(),canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
    return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
   }).join("");
-  const scope=reference?" · Reference: "+reference:(month?" · "+month:" · Recent documents");
+  const scope=reference?" · Reference: "+reference:(period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
  }catch(e){if(requestId===documentListRequest)notify("Document load failed: "+e.message);throw e}
 }
@@ -307,8 +311,24 @@ document.addEventListener("click",e=>{
   if(e.target.id==="cloudSave")saveDocument();
   if(e.target.id==="cloudUserAdd")addUser();
 });
-el("cloudMonth").value=new Date().toISOString().slice(0,7);
-el("cloudMonth").addEventListener("change",()=>{if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
+const initialDate=new Date();
+el("cloudYear").value=String(initialDate.getFullYear());
+el("cloudMonth").value=String(initialDate.getFullYear())+"-"+String(initialDate.getMonth()+1).padStart(2,"0");
+const updatePeriodControls=()=>{
+ const fullYear=el("cloudPeriod").value==="year";
+ el("cloudMonth").disabled=fullYear;
+ el("cloudMonthLabel").hidden=fullYear;
+};
+el("cloudPeriod").addEventListener("change",()=>{updatePeriodControls();if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
+el("cloudYear").addEventListener("change",()=>{
+ const year=Number(el("cloudYear").value);
+ if(!Number.isInteger(year)||year<2000||year>2100){el("cloudYear").value=String(new Date().getFullYear());return}
+ if(el("cloudPeriod").value==="month")el("cloudMonth").value=year+"-"+(el("cloudMonth").value.slice(5)||String(new Date().getMonth()+1).padStart(2,"0"));
+ if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";
+ loadDocs();
+});
+el("cloudMonth").addEventListener("change",()=>{if(el("cloudMonth").value)el("cloudYear").value=el("cloudMonth").value.slice(0,4);if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
+updatePeriodControls();
 el("cloudFamily")?.addEventListener("change",loadDocs);
 el("cloudNumberSort")?.addEventListener("change",loadDocs);
 el("cloudReferenceSearch")?.addEventListener("change",loadDocs);
