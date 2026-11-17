@@ -1,4 +1,6 @@
 import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
+import {uploadPdfDocument,viewPdfDocument,removePdfPayload} from "./document-upload.js?v=20261117-upload1";
+import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261117-lock1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,startAfter,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
@@ -176,32 +178,49 @@ export async function loadDocs(){
    return (sort==="asc"?result:-result)||a.id.localeCompare(b.id);
   });
   el("cloudList").innerHTML=!filtered.length?"<p>No matching documents found.</p>":filtered.map(s=>{
-   const d=s.data(),canDelete=canAdmin()||role==="manager"||d.createdBy===user.uid;
-   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(d.date)+" · "+escape(d.profileName)+'</div></div><div class="actions"><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>'+(canDelete?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'')+'</div></div>';
+   const d=s.data(),uploaded=d.templateSource==="uploaded-pdf",locked=isDocumentLocked(d),manager=mayManageLocks(role);
+   const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
+   const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
+   const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(d.date||"")+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':'')+' · '+(locked?'Locked':'Unlocked')+'</div></div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
   const scope=reference?" · Reference: "+reference:(period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
  }catch(e){if(requestId===documentListRequest)notify("Document load failed: "+e.message);throw e}
 }
 export async function deleteDocument(id){
-  if(!user)return;
-  try{
-    const ref=doc(db,"documents",id),snap=await getDoc(ref);
-    if(!snap.exists())return alert("Document no longer exists.");
-    const record=snap.data();
-    if(!canAdmin()&&role!=="manager"&&record.createdBy!==user.uid){
-      alert("Only the document creator, a manager, or a superadmin can delete this document.");return;
-    }
-    if(!confirm("Permanently delete "+(record.number||id)+"? This cannot be undone."))return;
-    await deleteDoc(ref);
-    if(currentId===id)currentId=null;
-    notify("Document deleted");await loadDocs();
-  }catch(error){
-    if(error.code==="permission-denied"){
-      alert("Delete denied by Firestore security rules. The document was not deleted. Firebase rules must grant this operation to your role.");
-    }else alert("Delete failed: "+(error.code||error.message));
+ if(!user)return;
+ try{
+  const record=await confirmDeleteUnlocked({db,id,user,role});
+  if(!record)return;
+  await deleteDoc(doc(db,"documents",id));
+  if(record.templateSource==="uploaded-pdf"){
+   try{await removePdfPayload(db,record.fileId||id)}catch(error){notify("Document removed but PDF cleanup failed: "+error.message)}
   }
+  if(currentId===id)currentId=null;
+  await loadDocs();
+ }catch(error){alert("Delete failed: "+(error.code||error.message))}
 }
+async function toggleDocumentLock(id,locked){
+ try{
+  await setDocumentLocked({db,id,user,role,locked});
+  await loadDocs();
+ }catch(error){alert("Lock update failed: "+(error.code||error.message))}
+}
+async function uploadDocumentFromForm(){
+ const btn=el("cloudUploadSubmit"),status=el("cloudUploadStatus");
+ if(btn.disabled||!user)return;
+ btn.disabled=true;status.textContent="Validating and uploading PDF...";
+ try{
+  const result=await uploadPdfDocument({db,user,reference:el("cloudUploadReference").value,date:el("cloudUploadDate").value,family:el("cloudUploadFamily").value,file:el("cloudUploadFile").files[0]});
+  status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
+  el("cloudUploadForm").reset();
+  el("cloudYear").value=el("cloudUploadDate").value.slice(0,4)||el("cloudYear").value;
+  await loadDocs();
+ }catch(error){status.textContent="Upload failed: "+(error.code||error.message)}
+ finally{btn.disabled=false}
+}
+
 export async function openDocument(id,duplicate=false){
   try{
     const s=await getDoc(doc(db,"documents",id));
@@ -302,8 +321,11 @@ export async function loadSavedPresetCopies(){
  }
 }
 
+el("cloudUploadForm").addEventListener("submit",e=>{e.preventDefault();uploadDocumentFromForm()});
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-open-doc]");if(a)openDocument(a.dataset.openDoc);
+  const pdf=e.target.closest("[data-view-pdf]");if(pdf)viewPdfDocument(db,pdf.dataset.viewPdf).catch(error=>alert("PDF open failed: "+error.message));
+  const lock=e.target.closest("[data-toggle-lock]");if(lock)toggleDocumentLock(lock.dataset.toggleLock,lock.dataset.nextLock==="true");
   const del=e.target.closest("[data-delete-doc]");if(del)deleteDocument(del.dataset.deleteDoc);
   const b=e.target.closest("[data-copy-doc]");if(b)openDocument(b.dataset.copyDoc,true);
   const c=e.target.closest("[data-user-save]");if(c)saveUser(c.dataset.userSave);
