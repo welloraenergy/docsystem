@@ -86,20 +86,16 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .cipl-panel h4{margin:0;background:#000;color:#fff;text-align:center;font-size:7.6pt;padding:1.1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .cipl-panel p{white-space:pre-wrap;overflow-wrap:anywhere;padding:2mm;margin:0;line-height:1.35;font-size:7.2pt}
 .cipl-cert{font-size:7.2pt;white-space:pre-wrap;line-height:1.35;margin:3mm 0}
-.cipl-signatures{display:grid;gap:2mm;margin:3mm 0;break-inside:avoid;page-break-inside:avoid}
-.cipl-sign{min-width:0;margin:0;break-inside:avoid}
-.cipl-signatures[data-count="1"]{grid-template-columns:1fr}
-.cipl-signatures[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
-.cipl-signatures[data-count="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cipl-signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3.5mm;margin:3mm 0;break-inside:avoid;page-break-inside:avoid}
+.cipl-sign{min-height:35mm;min-width:0}
+.cipl-sigtitle{font-weight:700;min-height:12mm;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.cipl-sigline{margin-top:18mm;border-top:1px solid #555;padding-top:3px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
 .signature-choices{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .signature-choices label{display:flex;flex-direction:row;align-items:center;gap:6px;cursor:pointer}
 .signature-choices input{width:auto}
 .cipl-sign-fields{border:1px solid #454545;padding:10px;margin-bottom:10px;border-radius:7px}
 .cipl-sign-fields h4{margin:0 0 8px}
-.cipl-sign strong{display:block;background:#000;color:#fff;text-align:center;padding:1.1mm;font-size:7.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.cipl-sign table{width:100%;table-layout:fixed;font:7.6pt Arial,sans-serif}
-.cipl-sign th{background:#000;color:#fff;width:22%;border:1px solid #333;padding:1mm 2mm;text-align:center;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.cipl-sign td{height:9mm;border:1px solid #777;padding:1mm;text-align:center;vertical-align:middle;white-space:pre-wrap}
+.cipl-sign-fields textarea{min-height:68px;white-space:pre-wrap}
 body.embedded .bar,body.embedded #ciplBusinessProfileControl{display:none}
 body.embedded{background:transparent}
 @media screen{
@@ -173,7 +169,7 @@ const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
 const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 const cols=[['qty','Qty'],['description','Description'],['packedIn','Packed In'],['serial','Serial Number'],['weight','Net Weight (Ton)'],['origin','Country of Origin'],['commodity','Customs Commodity Code'],['unitValue','Unit Value'],['totalValue','Total Value']];
 const emptyRow=()=>({qty:'',description:'',packedIn:'',serial:'',weight:'',origin:'',commodity:'',unitValue:''});
-function blank(){return {fields:{reference:refPrefix('CIPL',today()),date:today(),poNumber:'',deliveryNote:'',jobNumber:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:'I hereby certify that the above information is true and correct to the best of my knowledge and belief.'},consignee:{company:'',address:'',contact:'',phone:'',email:''},delivery:{address:''},collection:{address:''},movementType:'delivery',items:Array.from({length:3},emptyRow),weightUnit:'Ton',signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:''},reviewed:{name:'',position:'',date:''},approved:{name:'',position:'',date:''}}}
+function blank(){return {fields:{reference:refPrefix('CIPL',today()),date:today(),poNumber:'',deliveryNote:'',jobNumber:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:'I hereby certify that the above information is true and correct to the best of my knowledge and belief.'},consignee:{company:'',address:'',contact:'',phone:'',email:''},delivery:{address:''},collection:{address:''},movementType:'delivery',items:Array.from({length:3},emptyRow),weightUnit:'Ton',signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Prepared by',belowLine:'Signature / Name'},reviewed:{name:'',position:'',date:'',title:'Reviewed by',belowLine:'Signature / Name'},approved:{name:'',position:'',date:'',title:'Approved by',belowLine:'Signature / Name'}}}
 function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'"'+(key==='address'?' data-address-max-lines="3"':'')+'>'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
 function draw(){
  if(!state)return;
@@ -190,7 +186,7 @@ function draw(){
  document.querySelectorAll('[data-field]').forEach(e=>e.value=state.fields[e.dataset.field]||'');
  const signatureTypes=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
  $('signatureChoices').innerHTML=signatureTypes.map(([key,label])=>'<label><input type="checkbox" data-signature-visible="'+key+'" '+(state.signatureVisibility[key]?'checked':'')+'>'+label+'</label>').join('');
- $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4><div class="row">'+valueInput('name','Name',state[key].name,key)+valueInput('position','Position',state[key].position,key)+valueInput('date','Date',state[key].date,key)+'</div></div>').join('');
+ $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[key].title,key,true)+valueInput('belowLine','Text below signature line (optional)',state[key].belowLine,key,true)+'</div>').join('');
  drawRows();render();
 }
 function drawRows(){
@@ -218,8 +214,8 @@ function render(){
  const weight=state.items.reduce((a,r)=>a+amount(r.weight),0),total=state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0);
  const totals='<table class="cipl-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Weight (Ton)</th><td>'+fmt(weight)+'</td></tr><tr><th scope="row">Total Value ('+esc(state.fields.currency||'USD')+')</th><td>'+fmt(total)+'</td></tr></tbody></table>';
  const bottom='<div class="cipl-bottom"><div class="cipl-panel"><h4>PACKING DETAILS</h4><p>'+esc(expanded(state.fields.packingDetails))+'</p></div><div class="cipl-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
- const selected=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']].filter(([key])=>state.signatureVisibility[key]);
- const sign='<div class="cipl-cert">'+esc(expanded(state.fields.certification))+'</div>'+(selected.length?'<div class="cipl-signatures" data-count="'+selected.length+'">'+selected.map(([key,label])=>'<div class="cipl-sign"><strong>'+label+'</strong><table><tbody><tr><th>Name:</th><td>'+esc(state[key].name||'')+'</td></tr><tr><th>Position:</th><td>'+esc(state[key].position||'')+'</td></tr><tr><th>Date:</th><td>'+esc(state[key].date||'')+'</td></tr><tr><th>Signature:</th><td style="height:15mm"></td></tr></tbody></table></div>').join('')+'</div>':'');
+ const signatureSlots=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
+ const sign='<div class="cipl-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="cipl-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="cipl-sign"><div class="cipl-sigtitle">'+esc(expanded(state[key].title??label))+'</div><div class="cipl-sigline">'+esc(expanded(state[key].belowLine??'Signature / Name'))+'</div></div>':'<div class="cipl-sign" aria-hidden="true"></div>').join('')+'</div>':'');
  $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
  paginatePresetDocument($('paper'),{fit:'normal'});
  $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
@@ -232,8 +228,17 @@ async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(
  // Pre-existing CIPL records recorded kilograms; normalize only in-memory for the new Ton schema.
  if(!state.weightUnit){state.items=(state.items||[]).map(row=>({...row,weight:String(row.weight??'').trim()?String(amount(row.weight)/1000):''}));state.weightUnit='Ton'}
  state.signatureVisibility={prepared:true,reviewed:false,approved:false,...(state.signatureVisibility||{})};
+ state.prepared=state.prepared||{name:'',position:'',date:''};
  state.reviewed=state.reviewed||{name:'',position:'',date:''};
  state.approved=state.approved||{name:'',position:'',date:''};
+ for(const [key,label] of [['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']]){
+  const sig=state[key];
+  if(sig.title===undefined)sig.title=label;
+  if(sig.belowLine===undefined){
+   const legacyLines=[sig.name||'',sig.position||'',sig.date||''].filter(Boolean);
+   sig.belowLine=legacyLines.length?legacyLines.join('\n'):'Signature / Name';
+  }
+ }
  if(!['delivery','collection'].includes(state.movementType))state.movementType=state.collection?.address&&!state.delivery?.address?'collection':'delivery';savedCompany=decodePreset(data.companySnapshot||null);savedHeader=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('CIPL',state.fields.date);notify('Duplicate ready; enter a new CIPL number')}else notify('Opened '+data.number);draw();ready()}
 function dialog(reference,duplicate){return new Promise(resolve=>{let host=document;try{if(window.top!==window&&window.top.document?.body)host=window.top.document}catch(e){}const veil=host.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px';const card=host.createElement('div');card.style.cssText='background:#192321;color:#fff;padding:24px;border-radius:14px;max-width:540px;width:100%;box-shadow:0 15px 40px #0008;font:15px Arial';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');const h=host.createElement('h3');h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=host.createElement('p');msg.textContent=duplicate?'CIPL '+reference+' already exists. Overwrite it?':'CIPL '+reference+' saved online.';const actions=host.createElement('div');actions.style.cssText='display:flex;gap:9px;justify-content:flex-end;margin-top:24px';const done=v=>{veil.remove();resolve(v)};for(const [label,value] of (duplicate?[['Cancel',false],['Overwrite',true]]:[['OK',true]])){const b=host.createElement('button');b.textContent=label;b.style.cssText='background:#83d9cc;color:#102d2a;border:0;border-radius:18px;padding:10px 20px';b.onclick=()=>done(value);actions.append(b)}card.append(h,msg,actions);veil.append(card);host.body.append(veil)})}
 async function save(){if(saving||!user)return;const reference=String(state.fields.reference||'').trim();if(!reference||reference===refPrefix('CIPL',state.fields.date))return alert('Enter the CIPL reference');if(!business().id)return alert('Select Business Profile');saving=true;try{
@@ -247,7 +252,7 @@ window.printDoc=()=>{const old=document.title,ref=String(state.fields.reference|
 document.addEventListener('input',e=>{const d=e.target.dataset;if(d.addressMaxLines!==undefined){const lines=e.target.value.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){const start=e.target.selectionStart;e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(Math.min(start,e.target.value.length),Math.min(start,e.target.value.length))}}if(d.group){const obj=state[d.group];if(!obj)return;if(d.group==='fields'&&d.key==='reference'&&d.referenceSuffix!==undefined)obj.reference=fullReference(refPrefix('CIPL',state.fields.date),e.target.value);else if(d.group==='fields'&&d.key==='date'){obj.date=e.target.value;obj.reference=updateReferenceYear(obj.reference,'CIPL',obj.date);syncReferenceField($('documentFields'),'CIPL',obj.date,obj.reference)}else obj[d.key]=e.target.value;drawRows();render()}else if(d.field){state.fields[d.field]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;if(d.col==='weight'){render();return}const focus=e.target;const sel=focus.selectionStart;drawRows();const replacement=document.querySelector('[data-row="'+d.row+'"][data-col="'+d.col+'"]');if(replacement){replacement.focus();if(sel!==null)replacement.setSelectionRange(sel,sel)}render()}});
 $('movementType').addEventListener('change',e=>{state.movementType=e.target.value==='collection'?'collection':'delivery';const movement=state.movementType;$('addresses').innerHTML=valueInput('address',movement==='delivery'?'Delivery Address':'Collection Address',movement==='delivery'?state.delivery.address:state.collection.address,movement,true);render()});
 document.addEventListener('focusout',e=>{if(e.target.dataset.col!=='weight')return;const val=String(e.target.value||'').trim();if(val)e.target.value=fmt(amount(val));},true);
-document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4><div class="row">'+valueInput('name','Name',state[name].name,name)+valueInput('position','Position',state[name].position,name)+valueInput('date','Date',state[name].date,name)+'</div></div>').join('');render()});
+document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[name].title,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
 document.addEventListener('click',e=>{const remove=e.target.closest('[data-remove]');if(remove){state.items.splice(Number(remove.dataset.remove),1);if(!state.items.length)state.items.push(emptyRow());drawRows();render();return}if(e.target.id==='addRow'){state.items.push(emptyRow());drawRows();render()}else if(e.target.id==='removeRow'){if(state.items.length>1)state.items.pop();drawRows();render()}else if(e.target.id==='newBtn')fresh();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc()});
 $('businessSelect').addEventListener('change',e=>{if(docId)return;profile=profiles.find(p=>p.id===e.target.value)||profile;draw();ready()});
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')fresh();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business'&&!docId){profile=profiles.find(p=>p.id===e.data.profileId)||profile;draw();ready()}else if(a==='view')render()});
