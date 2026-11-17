@@ -1,5 +1,5 @@
 import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
-import {uploadPdfDocument,viewPdfDocument,removePdfPayload} from "./document-upload.js?v=20261117-upload1";
+import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,uploadDateToIso} from "./document-upload.js?v=20261117-date-compact";
 import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261117-lock1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
@@ -182,7 +182,7 @@ export async function loadDocs(){
    const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
-   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(d.date||"")+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':'')+' · '+(locked?'Locked':'Unlocked')+'</div></div><div class="actions">'+open+lock+del+'</div></div>';
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':'')+' · '+(locked?'Locked':'Unlocked')+'</div></div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
   const scope=reference?" · Reference: "+reference:(period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
@@ -212,8 +212,8 @@ async function uploadDocumentFromForm(){
  if(btn.disabled||!user)return;
  btn.disabled=true;status.textContent="Validating and uploading PDF...";
  try{
-  const result=await uploadPdfDocument({db,user,reference:el("cloudUploadReference").value,date:el("cloudUploadDate").value,family:el("cloudUploadFamily").value,file:el("cloudUploadFile").files[0]});
-  const originalDate=el("cloudUploadDate").value;
+  const originalDate=uploadDateToIso(el("cloudUploadDate").value);
+  const result=await uploadPdfDocument({db,user,reference:el("cloudUploadReference").value,date:originalDate,family:el("cloudUploadFamily").value,file:el("cloudUploadFile").files[0]});
   status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
   el("cloudUploadForm").reset();
   el("cloudYear").value=originalDate.slice(0,4);
