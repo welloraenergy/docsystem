@@ -141,7 +141,7 @@ body.embedded{background:transparent}
 <section class="card"><h3>Consignee</h3><div class="row" id="consigneeFields"></div></section>
 <section class="card"><h3>Delivery Information</h3><label style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="showDelivery" style="width:auto;min-width:0"> Show separate Delivery Address (different from Consignee)</label><div id="deliveryFields"></div></section>
 <section class="card"><h3>Collection Information</h3><label style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="showCollection" style="width:auto;min-width:0"> Show Collection Information</label><div id="collectionFields"></div></section>
-<section class="card"><h3>Freight / Transport</h3><label>Freight Agent / Transport Company<input data-field="freightAgent" placeholder="Client Appointed"></label></section>
+
 <section class="card"><h3>Invoice & Packing Items</h3><div class="tablewrap"><table id="editorTable"></table></div><div class="actionbar"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div><p id="editorTotal"></p></section>
 <section class="card"><h3>Packing Details & Comments</h3><label>Packing Details<textarea data-field="packingDetails" rows="4"></textarea></label><label>Comments<textarea data-field="comments" rows="4"></textarea></label><label>Notes<textarea data-field="certification" rows="3"></textarea></label></section>
 <section class="card"><h3>Signature Blocks</h3><div class="signature-choices" id="signatureChoices"></div><div id="signatureFields"></div></section>
@@ -170,7 +170,7 @@ const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
 const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 const cols=[['qty','Qty'],['description','Description'],['weight','Net Weight (Ton)'],['origin','Country of Origin'],['commodity','Customs Commodity Code'],['unitValue','Unit Value'],['totalValue','Total Value']];
 const emptyRow=()=>({qty:'',description:'',weight:'',origin:'',commodity:'',unitValue:''});
-function blank(){return {fields:{reference:refPrefix('CIPL',today()),date:today(),poNumber:'',deliveryNote:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:''},consignee:{company:'',address:'',contact:'',phone:'',email:''},delivery:{address:''},collection:{address:''},showDelivery:false,showCollection:false,items:Array.from({length:3},emptyRow),weightUnit:'Ton',signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Prepared by',belowLine:'Signature / Name'},reviewed:{name:'',position:'',date:'',title:'Reviewed by',belowLine:'Signature / Name'},approved:{name:'',position:'',date:'',title:'Approved by',belowLine:'Signature / Name'}}}
+function blank(){return {fields:{reference:refPrefix('CIPL',today()),date:today(),poNumber:'',deliveryNote:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:''},consignee:{company:'',address:'',contact:'',phone:'',email:''},delivery:{address:''},collection:{address:''},showDelivery:false,showCollection:false,items:Array.from({length:3},emptyRow),weightUnit:'Ton',signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Signature 1',belowLine:'Signature / Name'},reviewed:{name:'',position:'',date:'',title:'Signature 2',belowLine:'Signature / Name'},approved:{name:'',position:'',date:'',title:'Signature 3',belowLine:'Signature / Name'}}}
 function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'"'+(key==='address'?' data-address-max-lines="3"':'')+'>'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
 function draw(){
  if(!state)return;
@@ -184,9 +184,9 @@ function draw(){
  $('showDelivery').checked=!!state.showDelivery;
  $('showCollection').checked=!!state.showCollection;
  $('deliveryFields').innerHTML=state.showDelivery?valueInput('address','Delivery Address',state.delivery.address,'delivery',true):'';
- $('collectionFields').innerHTML=state.showCollection?valueInput('address','Collection Address',state.collection.address,'collection',true):'';
+ $('collectionFields').innerHTML=state.showCollection?valueInput('address','Collection Address',state.collection.address,'collection',true)+valueInput('freightAgent','Freight Agent / Transport Company',state.fields.freightAgent,'fields',false):'';
  document.querySelectorAll('[data-field]').forEach(e=>e.value=state.fields[e.dataset.field]||'');
- const signatureTypes=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
+ const signatureTypes=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
  $('signatureChoices').innerHTML=signatureTypes.map(([key,label])=>'<label><input type="checkbox" data-signature-visible="'+key+'" '+(state.signatureVisibility[key]?'checked':'')+'>'+label+'</label>').join('');
  $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[key].title,key,true)+valueInput('belowLine','Text below signature line (optional)',state[key].belowLine,key,true)+'</div>').join('');
  drawRows();render();
@@ -211,14 +211,14 @@ function render(){
  const freightRow='<tr><th>Freight Agent / Transport Company:</th><td>'+esc(expanded(state.fields.freightAgent))+'</td></tr>';
  const deliveryInfo=state.showDelivery?'<div class="cipl-section"><div class="cipl-section-title">Delivery Information</div><table class="cipl-info"><tbody><tr><th>Delivery Address:</th><td><span class="cipl-address-lines">'+esc(expanded(state.delivery.address))+'</span></td></tr></tbody></table></div>':'';
  const collectionInfo=state.showCollection?'<div class="cipl-section"><div class="cipl-section-title">Collection Information</div><table class="cipl-info"><tbody><tr><th>Collection Address:</th><td><span class="cipl-address-lines">'+esc(expanded(state.collection.address))+'</span></td></tr>'+freightRow+'</tbody></table></div>':'';
- const transportInfo=!state.showCollection&&String(state.fields.freightAgent||'').trim()?'<div class="cipl-section"><div class="cipl-section-title">Freight / Transport</div><table class="cipl-info"><tbody>'+freightRow+'</tbody></table></div>':'';
+ const transportInfo='';
  const logistics=deliveryInfo+collectionInfo+transportInfo;
  const colWidths=[5,6,35,11,9,12,10,12];
  const table='<table class="excel-table cipl-items"><colgroup>'+colWidths.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+['Item','Qty','Description','Net Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')','Country of Origin','Customs Commodity Code','Unit Value ('+(state.fields.currency||'USD')+')','Total Value ('+(state.fields.currency||'USD')+')'].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(expanded(r.description||''))+'</td><td>'+esc(String(r.weight??'').trim()?fmt(amount(r.weight)):'')+'</td><td>'+esc(r.origin||'')+'</td><td>'+esc(r.commodity||'')+'</td><td>'+esc(String(r.unitValue||'').trim()?fmt(amount(r.unitValue)):'')+'</td><td>'+fmt(amount(r.qty)*amount(r.unitValue))+'</td></tr>').join('')+'</tbody></table>';
  const weight=state.items.reduce((a,r)=>a+amount(r.weight),0),total=state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0);
  const totals='<table class="cipl-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')</th><td>'+fmt(weight)+'</td></tr><tr><th scope="row">Total Value ('+esc(state.fields.currency||'USD')+')</th><td>'+fmt(total)+'</td></tr></tbody></table>';
  const bottom='<div class="cipl-bottom"><div class="cipl-panel"><h4>PACKING DETAILS</h4><p>'+esc(expanded(state.fields.packingDetails))+'</p></div><div class="cipl-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
- const signatureSlots=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
+ const signatureSlots=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
  const sign='<div class="cipl-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="cipl-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="cipl-sign"><div class="cipl-sigtitle">'+esc(expanded(state[key].title??label))+'</div><div class="cipl-sigline">'+esc(expanded(state[key].belowLine??'Signature / Name'))+'</div></div>':'<div class="cipl-sign" aria-hidden="true"></div>').join('')+'</div>':'');
  $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
  paginatePresetDocument($('paper'),{fit:'normal'});
@@ -235,7 +235,8 @@ async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(
  state.prepared=state.prepared||{name:'',position:'',date:''};
  state.reviewed=state.reviewed||{name:'',position:'',date:''};
  state.approved=state.approved||{name:'',position:'',date:''};
- for(const [key,label] of [['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']]){
+ for(const [key,label] of [['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']]){
+  if(['Prepared by','Reviewed by','Approved by'].includes(state[key]?.title))state[key].title=label;
   const sig=state[key];
   if(sig.title===undefined)sig.title=label;
   if(sig.belowLine===undefined){
@@ -264,7 +265,7 @@ $('ciplCurrencyFields').addEventListener('change',e=>{if(e.target.id!=='ciplWeig
 $('showDelivery').addEventListener('change',e=>{state.showDelivery=e.target.checked;$('deliveryFields').innerHTML=state.showDelivery?valueInput('address','Delivery Address',state.delivery.address,'delivery',true):'';render()});
 $('showCollection').addEventListener('change',e=>{state.showCollection=e.target.checked;$('collectionFields').innerHTML=state.showCollection?valueInput('address','Collection Address',state.collection.address,'collection',true):'';render()});
 document.addEventListener('focusout',e=>{if(e.target.dataset.col!=='weight')return;const val=String(e.target.value||'').trim();if(val)e.target.value=fmt(amount(val));},true);
-document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[name].title,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
+document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="cipl-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[name].title,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
 document.addEventListener('click',e=>{const remove=e.target.closest('[data-remove]');if(remove){state.items.splice(Number(remove.dataset.remove),1);if(!state.items.length)state.items.push(emptyRow());drawRows();render();return}if(e.target.id==='addRow'){state.items.push(emptyRow());drawRows();render()}else if(e.target.id==='removeRow'){if(state.items.length>1)state.items.pop();drawRows();render()}else if(e.target.id==='newBtn')fresh();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc()});
 $('businessSelect').addEventListener('change',e=>{if(docId)return;profile=profiles.find(p=>p.id===e.target.value)||profile;draw();ready()});
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')fresh();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business'&&!docId){profile=profiles.find(p=>p.id===e.data.profileId)||profile;draw();ready()}else if(a==='view')render()});
