@@ -26,11 +26,11 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 #consigneeFields label:nth-child(2) textarea,#addresses textarea{height:80px;min-height:80px;max-height:80px;line-height:20px;overflow-y:hidden;resize:none}
 #signatureFields{max-width:680px}
 .tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse}
-#editorTable{min-width:1130px;table-layout:fixed}
+#editorTable{min-width:1250px;table-layout:fixed}
 #editorTable th{background:#eaf0f6;color:#14263c;border:1px solid #aebcc9;font-size:11px;padding:6px;text-align:center}
 #editorTable td{border:1px solid #aebcc9;padding:4px}
 #editorTable td input,#editorTable td textarea{border:0;border-radius:0;min-width:0;padding:5px}
-#editorTable td textarea{min-height:50px}
+#editorTable td textarea{width:100%;min-height:72px;resize:vertical}
 #editorTable button{padding:4px 7px}
 .actionbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .preview-column{overflow:hidden}
@@ -190,7 +190,7 @@ function draw(){
  drawRows();render();
 }
 function drawRows(){
- $('editorTable').innerHTML='<thead><tr><th>Item</th>'+cols.map(c=>'<th>'+(c[0]==='weight'?'Net Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')':c[1])+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='totalValue'?fmt(amount(r.qty)*amount(r.unitValue)):(key==='weight'?'<input data-row="'+i+'" data-col="weight" inputmode="decimal" value="'+esc(String(r.weight??'').trim()?fmt(amount(r.weight)):'')+'">':key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]||'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" value="'+esc(r[key]||'')+'">'))+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
+ $('editorTable').innerHTML='<colgroup>'+[5,7,34,10,11,12,9,9,3].map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr><th>Item</th>'+cols.map(c=>'<th>'+(c[0]==='weight'?'Net Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')':c[1])+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='totalValue'?fmt(amount(r.qty)*amount(r.unitValue)):(key==='weight'?'<input data-row="'+i+'" data-col="weight" inputmode="decimal" value="'+esc(String(r.weight??'').trim()?fmt(amount(r.weight)):'')+'">':key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]||'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" value="'+esc(r[key]||'')+'">'))+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
  $('editorTotal').textContent='Total Net Weight: '+fmt(state.items.reduce((a,r)=>a+amount(r.weight),0))+' '+(state.weightUnit==='Kgs'?'Kgs':'Ton')+' · Total Value: '+fmt(state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0))+' '+(state.fields.currency||'USD');
 }
 function render(){
