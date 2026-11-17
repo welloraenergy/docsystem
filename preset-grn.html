@@ -1,0 +1,269 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DocSystem — Goods Received Note</title>
+<link rel="stylesheet" href="./preset-typography.css?v=20261116-grn1">
+<style>
+/* GRN uses the same workspace and A4 design scale as Preset Invoice. */
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f6;color:#14263c;font:13px Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;padding:8px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:6px}
+button.primary{background:#183b67;color:#fff}
+input,select,textarea{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#14263c;padding:8px}
+textarea{resize:vertical;min-height:75px}
+.bar{padding:10px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff}
+.bar #status{margin-left:auto}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;max-width:1800px;margin:auto;padding:0 8px;align-items:start}
+.editor,.preview-column{min-width:0}
+.card{border:1px solid #dce3ea;background:#fff;border-radius:10px;padding:15px;margin:12px 0;min-width:0}
+.card h3{font-size:14px;margin:0 0 12px}
+label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
+.row,.triple{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.preset-settings-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:620px}
+.preset-settings-fields label{font-weight:600}
+#grnBusinessProfileControl{margin-bottom:12px}
+#documentFields label,#deliveryToFields label,#addresses label,#signatureFields label{font-weight:600}
+#documentFields label input,#deliveryToFields label input,#addresses label textarea,#signatureFields label input{font-weight:400}
+#deliveryToFields label:nth-child(2){grid-column:1/-1}
+#deliveryToFields label:nth-child(2) textarea,#addresses textarea{height:80px;min-height:80px;max-height:80px;line-height:20px;overflow-y:hidden;resize:none}
+#signatureFields{max-width:680px}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse}
+#editorTable{min-width:1250px;table-layout:fixed}
+#editorTable th{background:#eaf0f6;color:#14263c;border:1px solid #aebcc9;font-size:11px;padding:6px;text-align:center}
+#editorTable td{border:1px solid #aebcc9;padding:4px}
+#editorTable td input,#editorTable td textarea{border:0;border-radius:0;min-width:0;padding:5px}
+#editorTable td textarea{width:100%;min-height:72px;resize:vertical}
+#editorTable button{padding:4px 7px}
+.actionbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.preview-column{overflow:hidden}
+.preview-header{display:flex;justify-content:space-between;align-items:center;padding:12px 3px;font-weight:700}
+.paper{width:210mm;min-height:297mm;padding:12mm 13mm 12mm;background:#fff;color:#000;margin:0 auto 16px;box-shadow:0 4px 15px #0002;font:7.6pt Arial,sans-serif}
+.grn-head{display:grid;grid-template-columns:58% 42%;min-height:47mm;margin-bottom:0}
+.grn-identity{min-width:0}
+.grn-identity img{display:block;max-height:23mm;object-fit:contain}
+.grn-identity .preset-header-slot{line-height:1.3}
+.grn-identity .preset-header-slot:nth-child(2){font-weight:700}
+.grn-right{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;min-width:0;text-align:right}
+.grn-title{font-size:16pt;font-weight:700;line-height:1.2;white-space:pre-wrap;overflow-wrap:anywhere}
+.grn-meta{display:grid;grid-template-columns:max-content max-content;column-gap:1.5mm;grid-auto-rows:minmax(4.2mm,auto);margin:0 2mm 4mm auto;width:max-content;min-width:0;max-width:100%;padding:0;align-self:flex-end;font-size:7.1pt;line-height:1.3}
+.grn-meta-line{display:contents}
+.grn-meta-line b{text-align:right;white-space:nowrap;align-self:baseline;font-weight:600}
+.grn-meta-line span{text-align:left;white-space:nowrap;align-self:baseline;overflow-wrap:normal}
+.grn-section{border:1px solid #333;margin:2mm 0 3mm;break-inside:avoid;page-break-inside:avoid}
+.grn-section-title{background:#000;color:#fff;text-align:center;font-weight:700;padding:1.1mm;font-size:7.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grn-info{width:100%;table-layout:auto;border-collapse:collapse;font:inherit;background:#fff}
+.grn-info th,.grn-info td{border:0;vertical-align:top;font-size:inherit;line-height:1.35;overflow-wrap:anywhere;background:#fff}
+.grn-info th{width:1%!important;white-space:nowrap!important;text-align:right!important;font-weight:600;padding:1.1mm 2.5mm 1mm .7mm;border-right:1px solid #999!important}
+.grn-info td{width:auto!important;white-space:pre-wrap!important;text-align:left!important;padding:1.1mm 1.7mm 1mm 1.5mm}
+.grn-info tr{break-inside:avoid}
+.grn-info tr+tr th,.grn-info tr+tr td{border-top:0}
+.grn-client{display:grid;grid-template-columns:56% 44%;align-items:stretch}
+.grn-client>div{min-width:0}
+.grn-client>div+div{border-left:1px solid #999}
+.grn-client .grn-info{height:100%;table-layout:auto}
+.grn-client .grn-info tr:first-child th,.grn-client .grn-info tr:first-child td{padding-top:1.2mm}
+.grn-client .grn-address-row th,.grn-client .grn-address-row td{height:14mm}
+.grn-address-lines{display:block;white-space:pre-wrap;line-height:4mm;height:12mm;overflow:hidden}
+.paper .grn-info th{width:1%!important;white-space:nowrap!important;text-align:right!important;vertical-align:top!important;font-weight:600!important;padding:1mm 2.5mm 1mm .7mm!important;border-right:1px solid #999!important}
+.paper .grn-info td{text-align:left!important;vertical-align:top!important;white-space:pre-wrap!important;padding:1mm 1.7mm 1mm 1.5mm!important}
+.grn-client>div:nth-child(2) .grn-info tr:not(.grn-filler){height:4mm}
+.grn-client .grn-info .grn-filler{height:100%}
+.grn-client .grn-info .grn-filler th,.grn-client .grn-info .grn-filler td{padding-top:0!important;padding-bottom:0!important}
+.grn-client>div:nth-child(2) .grn-info th,.grn-client>div:nth-child(2) .grn-info td{padding-top:1mm!important;padding-bottom:1mm!important}
+.paper .excel-table.grn-items tbody td:nth-child(2),.paper .excel-table.grn-items tbody td:nth-child(4),.paper .excel-table.grn-items tbody td:nth-child(5){text-align:center!important;vertical-align:middle!important}
+.grn-items{width:100%;table-layout:fixed;margin:2mm 0 0;font:7.2pt Arial,sans-serif}
+.grn-items th{background:#000!important;color:#fff!important;font:700 7.2pt Arial,sans-serif!important;line-height:1.2!important;padding:.9mm .3mm!important;border:1px solid #444!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grn-items td{border:1px solid #777;height:8mm;padding:1mm .6mm;vertical-align:top;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-size:7.2pt}
+.grn-items td:nth-child(3){text-align:left!important}
+.paper .excel-table.grn-items tbody td:nth-child(3){text-align:left!important}
+.paper .excel-table.grn-items tbody td:nth-child(7),.paper .excel-table.grn-items tbody td:nth-child(8){text-align:right!important}
+.grn-items tbody tr{break-inside:avoid;page-break-inside:avoid}
+.grn-items tbody tr:nth-child(even) td{background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grn-totals{width:76mm;max-width:100%;table-layout:fixed;border-collapse:collapse;margin:1mm 0 3mm auto;font-size:7.6pt;break-inside:avoid}
+.grn-totals th,.grn-totals td{border:1px solid #777;padding:1.3mm 1mm;background:#fff;color:#111;line-height:1.25}
+.grn-totals th{width:70%;text-align:right;font-weight:700;white-space:nowrap}
+.grn-totals td{width:30%;text-align:right;font-variant-numeric:tabular-nums}
+.grn-bottom{display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin-top:3mm}
+.grn-panel{border:1px solid #777;min-height:23mm;break-inside:avoid}
+.grn-panel h4{margin:0;background:#000;color:#fff;text-align:center;font-size:7.6pt;padding:1.1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grn-panel p{white-space:pre-wrap;overflow-wrap:anywhere;padding:2mm;margin:0;line-height:1.35;font-size:7.2pt}
+.grn-cert{font-size:7.2pt;white-space:pre-wrap;line-height:1.35;margin:3mm 0}
+.grn-signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3.5mm;margin:3mm 0;break-inside:avoid;page-break-inside:avoid}
+.grn-sign{min-height:35mm;min-width:0}
+.grn-sigtitle{font-weight:700;min-height:12mm;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.grn-sigline{margin-top:18mm;border-top:1px solid #555;padding-top:3px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.signature-choices{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.signature-choices label{display:flex;flex-direction:row;align-items:center;gap:6px;cursor:pointer}
+.signature-choices input{width:auto}
+.grn-sign-fields{border:1px solid #454545;padding:10px;margin-bottom:10px;border-radius:7px}
+.grn-sign-fields h4{margin:0 0 8px}
+.grn-sign-fields textarea{min-height:68px;white-space:pre-wrap}
+body.embedded .bar,body.embedded #grnBusinessProfileControl{display:none}
+body.embedded{background:transparent}
+@media screen{
+ :root{--we-gold:#d3af36;--we-green:#16a34a;--we-red:#dc2626}
+ html,body{background:#000;color:#fff}
+ .bar{background:#0e0e0e;color:#fff;border-color:#393939}
+ .card{background:#0d0d0d;color:#fff;border-color:#393939}
+ .card h3,.preview-header{color:#fff}
+ label{color:#e5e7eb}
+ .card input,.card select,.card textarea{background:#080808;color:#fff;border-color:#4b5563}
+ .card input:focus,.card select:focus,.card textarea:focus{outline:1px solid var(--we-gold);border-color:var(--we-gold)}
+ .card input::placeholder,.card textarea::placeholder{color:#a8a8a8}
+ button,.bar button{background:var(--we-gold);color:#000;border-color:var(--we-gold)}
+ #saveBtn{background:var(--we-green);color:#fff;border-color:var(--we-green)}
+ #removeRow,button[data-remove]{background:var(--we-red);color:#fff;border-color:var(--we-red)}
+ #editorTable th{background:#181818;color:#fff;border-color:#444}
+ #editorTable td{border-color:#454545}
+ #editorTable td input,#editorTable td textarea{background:#090909;color:#fff}
+ .paper{background:#fff;color:#000}
+}
+@media(max-width:1099px){
+ html,body{max-width:100%;overflow-x:hidden}
+ .workspace{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+ .workspace .card,.workspace input,.workspace textarea,.workspace select{max-width:100%}
+ .preview-column,#paper{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+ .paper{max-width:none!important;transform:none!important}
+}
+@media(max-width:690px){.row,.triple{grid-template-columns:1fr}}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ html,body{width:210mm!important;background:#fff!important}
+ .bar,.editor,.preview-header{display:none!important}
+ .workspace{display:block!important;margin:0!important;padding:0!important;width:210mm!important;max-width:none!important}
+ .preview-column,#paper{width:210mm!important;max-width:none!important;overflow:visible!important}
+ .paper{zoom:1!important;width:210mm!important;min-height:297mm!important;max-height:297mm!important;box-shadow:none!important;margin:0!important;break-after:page}
+ .paper:last-child{break-after:auto!important}
+}
+</style></head><body>
+<div class="bar"><strong>Goods Received Note</strong><button id="newBtn">New</button><button class="primary" id="saveBtn">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Ready</span></div>
+<div class="workspace"><div class="editor">
+<section class="card preset-settings-card"><h3>Document Settings</h3><div class="preset-settings-fields" id="grnCurrencyFields"></div></section>
+<section class="card"><h3>GRN Details</h3><label id="grnBusinessProfileControl">Business Profile<select id="businessSelect"></select></label><div class="row" id="documentFields"></div></section>
+<section class="card"><h3>Delivery To</h3><div class="row" id="deliveryToFields"></div></section>
+<section class="card"><h3>Collection Address</h3><div id="collectionFields"></div></section>
+<section class="card"><h3>Bill To</h3><label style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="showBillTo" style="width:auto;min-width:0"> Show Bill To Information</label><div class="row" id="billToFields"></div></section>
+<section class="card"><h3>Freight / Transport</h3><label>Freight Agent / Transport Company<input data-field="freightAgent" placeholder="Client Appointed"></label></section>
+<section class="card"><h3>Invoice & Packing Items</h3><div class="tablewrap"><table id="editorTable"></table></div><div class="actionbar"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div><p id="editorTotal"></p></section>
+<section class="card"><h3>Packing Details & Comments</h3><label>Packing Details<textarea data-field="packingDetails" rows="4"></textarea></label><label>Comments<textarea data-field="comments" rows="4"></textarea></label><label>Notes<textarea data-field="certification" rows="3"></textarea></label></section>
+<section class="card"><h3>Signature Blocks</h3><div class="signature-choices" id="signatureChoices"></div><div id="signatureFields"></div></section>
+</div><div class="preview-column"><div class="preview-header"><strong>Live A4 GRN Preview</strong><span id="pageCount"></span></div><div id="paper"></div></div></div>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import {getFirestore,doc,getDoc,setDoc,getDocs,collection,query,where,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js';
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js';
+import {refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js';
+import {paginatePresetDocument} from './preset-pagination.js';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
+const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search);
+if(params.get('embedded')==='1')document.body.classList.add('embedded');
+let user=null,role='user',profiles=[],profile=null,globals={},state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,saving=false;
+const posted=(kind,data={})=>{if(window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...data},location.origin)};
+const notify=t=>{$('status').textContent=t;posted('status',{status:t})};
+const business=()=>{const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:typeof c.headerText==='string'&&c.headerText.trim()?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals}};
+const header=()=>savedHeader||profile?.presetHeader||{};
+const expanded=v=>expandPresetText(v,business(),globals);
+const today=()=>new Date().toISOString().slice(0,10);
+const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
+const fmt=n=>Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const cols=[['qty','Qty'],['description','Description'],['weight','Net Weight (Ton)'],['origin','Country of Origin'],['commodity','Customs Commodity Code'],['unitValue','Unit Value'],['totalValue','Total Value']];
+const emptyRow=()=>({qty:'',description:'',weight:'',origin:'',commodity:'',unitValue:''});
+function blank(){return {fields:{reference:refPrefix('GRN',today()),date:today(),poNumber:'',deliveryNote:'',currency:'USD',freightAgent:'Client Appointed',packingDetails:'',comments:'',certification:''},deliveryTo:{company:'',address:'',contact:'',phone:'',email:''},collection:{address:''},billTo:{company:'',address:'',contact:'',phone:'',email:''},showBillTo:false,items:Array.from({length:3},emptyRow),weightUnit:'Ton',signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Prepared by',belowLine:'Signature / Name'},reviewed:{name:'',position:'',date:'',title:'Reviewed by',belowLine:'Signature / Name'},approved:{name:'',position:'',date:'',title:'Approved by',belowLine:'Signature / Name'}}}
+function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'"'+(key==='address'?' data-address-max-lines="3"':'')+'>'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
+function draw(){
+ if(!state)return;
+ $('businessSelect').innerHTML=profiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.company?.name||'Business')+'</option>').join('');
+ $('businessSelect').value=profile?.id||'';$('businessSelect').disabled=!!docId;
+ const currencies=[...new Set(['USD','MYR',...(state.fields.currency?[state.fields.currency]:[])])];
+ $('grnCurrencyFields').innerHTML='<label>Currency<select data-group="fields" data-key="currency">'+currencies.map(code=>'<option value="'+esc(code)+'" '+(state.fields.currency===code?'selected':'')+'>'+esc(code)+'</option>').join('')+'</select></label><label>Weight Unit<select id="grnWeightUnit"><option value="Ton" '+(state.weightUnit!=='Kgs'?'selected':'')+'>Ton</option><option value="Kgs" '+(state.weightUnit==='Kgs'?'selected':'')+'>Kgs</option></select></label>';
+ $('documentFields').innerHTML=valueInput('reference','GRN No.',state.fields.reference)+valueInput('date','Date Created',state.fields.date)+valueInput('poNumber','Purchase Order No.',state.fields.poNumber)+valueInput('deliveryNote','Delivery Ticket No.',state.fields.deliveryNote);
+ mountReferenceField($('documentFields').querySelector('[data-key="reference"]'),'GRN',state.fields.date,state.fields.reference);
+ $('deliveryToFields').innerHTML=valueInput('company','Company',state.deliveryTo.company,'deliveryTo')+valueInput('address','Address',state.deliveryTo.address,'deliveryTo',true)+valueInput('contact','Contact Person',state.deliveryTo.contact,'deliveryTo')+valueInput('phone','Telephone',state.deliveryTo.phone,'deliveryTo')+valueInput('email','Email',state.deliveryTo.email,'deliveryTo');
+ $('collectionFields').innerHTML=valueInput('address','Collection Address',state.collection.address,'collection',true);
+ $('showBillTo').checked=!!state.showBillTo;
+ $('billToFields').innerHTML=state.showBillTo?valueInput('company','Company',state.billTo.company,'billTo')+valueInput('address','Address',state.billTo.address,'billTo',true)+valueInput('contact','Contact Person',state.billTo.contact,'billTo')+valueInput('phone','Telephone',state.billTo.phone,'billTo')+valueInput('email','Email',state.billTo.email,'billTo'):'';
+ document.querySelectorAll('[data-field]').forEach(e=>e.value=state.fields[e.dataset.field]||'');
+ const signatureTypes=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
+ $('signatureChoices').innerHTML=signatureTypes.map(([key,label])=>'<label><input type="checkbox" data-signature-visible="'+key+'" '+(state.signatureVisibility[key]?'checked':'')+'>'+label+'</label>').join('');
+ $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[key].title,key,true)+valueInput('belowLine','Text below signature line (optional)',state[key].belowLine,key,true)+'</div>').join('');
+ drawRows();render();
+}
+function drawRows(){
+ $('editorTable').innerHTML='<colgroup>'+[5,7,34,10,11,12,9,9,3].map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr><th>Item</th>'+cols.map(c=>'<th>'+(c[0]==='weight'?'Net Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')':c[1])+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='totalValue'?fmt(amount(r.qty)*amount(r.unitValue)):(key==='weight'?'<input data-row="'+i+'" data-col="weight" inputmode="decimal" value="'+esc(String(r.weight??'').trim()?fmt(amount(r.weight)):'')+'">':key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]||'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" value="'+esc(r[key]||'')+'">'))+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
+ $('editorTotal').textContent='Total Net Weight: '+fmt(state.items.reduce((a,r)=>a+amount(r.weight),0))+' '+(state.weightUnit==='Kgs'?'Kgs':'Ton')+' · Total Value: '+fmt(state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0))+' '+(state.fields.currency||'USD');
+}
+function render(){
+ if(!state)return;
+ const co=business(),h=header(),head={...co,documentTitle:'GOODS RECEIVED NOTE',documentNumber:state.fields.reference,documentDate:state.fields.date};
+ const titleText=h.titleText||'{doctype}',color=/^#[\da-fA-F]{6}$/.test(h.titleColor||'')?h.titleColor:'#d6a900';
+ const fontSize=Math.max(9,Math.min(36,Number(h.titleSize)||16));
+ const font=['Arial','Verdana','Georgia','Tahoma','Times New Roman'].includes(h.titleFont)?h.titleFont:'Arial';
+ const align=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
+ const heading='<div class="grn-title" style="color:'+color+';font-size:'+fontSize+'pt;font-family:'+font+';text-align:'+align+'">'+richPresetText(expandPresetText(titleText,head,globals))+'</div>';
+ const extra=h.extraText?'<div style="font-size:'+Math.max(7,Number(h.extraSize)||9)+'pt;text-align:'+(['left','center','right'].includes(h.extraAlign)?h.extraAlign:'right')+'">'+richPresetText(expandPresetText(h.extraText,head,globals))+'</div>':'';
+ const dateText=/^\d{4}-\d{2}-\d{2}$/.test(state.fields.date||'')?new Date(state.fields.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).replace(/ (\d{4})$/,', $1'):state.fields.date;
+ const meta=[['Date',dateText],['Reference No.',state.fields.reference],['Purchase Order No.',state.fields.poNumber],['Delivery Ticket No.',state.fields.deliveryNote]];
+ const company='<div class="grn-head"><div class="grn-identity">'+sharedPresetSlot('logo',head,h,globals)+sharedPresetSlot('name',head,h,globals)+sharedPresetSlot('details',head,h,globals)+'</div><div class="grn-right">'+heading+extra+'<div class="grn-meta">'+meta.map(([k,v])=>'<div class="grn-meta-line"><b>'+esc(k)+':</b><span>'+esc(v||'')+'</span></div>').join('')+'</div></div></div>';
+ const info='<div class="grn-section"><div class="grn-section-title">Delivery To Information</div><div class="grn-client"><div><table class="grn-info"><tbody><tr><th>Delivery To:</th><td>'+esc(expanded(state.deliveryTo.company))+'</td></tr><tr class="grn-address-row"><th>Address:</th><td><span class="grn-address-lines">'+esc(expanded(state.deliveryTo.address))+'</span></td></tr></tbody></table></div><div><table class="grn-info"><tbody><tr><th>Contact:</th><td>'+esc(state.deliveryTo.contact)+'</td></tr><tr><th>Telephone:</th><td>'+esc(state.deliveryTo.phone)+'</td></tr><tr><th>Email:</th><td>'+esc(state.deliveryTo.email)+'</td></tr><tr class="grn-filler"><th></th><td></td></tr></tbody></table></div></div></div>';
+ const freightRow='<tr><th>Freight Agent / Transport Company:</th><td>'+esc(expanded(state.fields.freightAgent))+'</td></tr>';
+ const collectionInfo='<div class="grn-section"><div class="grn-section-title">Collection Address</div><table class="grn-info"><tbody><tr><th>Collection Address:</th><td><span class="grn-address-lines">'+esc(expanded(state.collection.address))+'</span></td></tr></tbody></table></div>';
+ const bill=state.billTo||{company:'',address:'',contact:'',phone:'',email:''};
+ const billToInfo=state.showBillTo?'<div class="grn-section"><div class="grn-section-title">Bill To</div><div class="grn-client"><div><table class="grn-info"><tbody><tr><th>Bill To:</th><td>'+esc(expanded(bill.company))+'</td></tr><tr class="grn-address-row"><th>Address:</th><td><span class="grn-address-lines">'+esc(expanded(bill.address))+'</span></td></tr></tbody></table></div><div><table class="grn-info"><tbody><tr><th>Contact:</th><td>'+esc(bill.contact)+'</td></tr><tr><th>Telephone:</th><td>'+esc(bill.phone)+'</td></tr><tr><th>Email:</th><td>'+esc(bill.email)+'</td></tr><tr class="grn-filler"><th></th><td></td></tr></tbody></table></div></div></div>':'';
+ const transportInfo=String(state.fields.freightAgent||'').trim()?'<div class="grn-section"><div class="grn-section-title">Freight / Transport</div><table class="grn-info"><tbody>'+freightRow+'</tbody></table></div>':'';
+ const logistics=collectionInfo+billToInfo+transportInfo;
+ const colWidths=[5,6,35,11,9,12,10,12];
+ const table='<table class="excel-table grn-items"><colgroup>'+colWidths.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+['Item','Qty','Description','Net Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')','Country of Origin','Customs Commodity Code','Unit Value ('+(state.fields.currency||'USD')+')','Total Value ('+(state.fields.currency||'USD')+')'].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(expanded(r.description||''))+'</td><td>'+esc(String(r.weight??'').trim()?fmt(amount(r.weight)):'')+'</td><td>'+esc(r.origin||'')+'</td><td>'+esc(r.commodity||'')+'</td><td>'+esc(String(r.unitValue||'').trim()?fmt(amount(r.unitValue)):'')+'</td><td>'+fmt(amount(r.qty)*amount(r.unitValue))+'</td></tr>').join('')+'</tbody></table>';
+ const weight=state.items.reduce((a,r)=>a+amount(r.weight),0),total=state.items.reduce((a,r)=>a+amount(r.qty)*amount(r.unitValue),0);
+ const totals='<table class="grn-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Weight ('+(state.weightUnit==='Kgs'?'Kgs':'Ton')+')</th><td>'+fmt(weight)+'</td></tr><tr><th scope="row">Total Value ('+esc(state.fields.currency||'USD')+')</th><td>'+fmt(total)+'</td></tr></tbody></table>';
+ const bottom='<div class="grn-bottom"><div class="grn-panel"><h4>PACKING DETAILS</h4><p>'+esc(expanded(state.fields.packingDetails))+'</p></div><div class="grn-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
+ const signatureSlots=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']];
+ const sign='<div class="grn-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="grn-sign"><div class="grn-sigtitle">'+esc(expanded(state[key].title??label))+'</div><div class="grn-sigline">'+esc(expanded(state[key].belowLine??'Signature / Name'))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'');
+ $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
+ paginatePresetDocument($('paper'),{fit:'normal'});
+ $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
+ fitPreview();posted('height',{height:document.documentElement.scrollHeight+8});
+}
+function fitPreview(){const holder=document.querySelector('.preview-column'),width=holder?.clientWidth||window.innerWidth;const zoom=Math.min(1,Math.max(.15,(width-24)/(210*96/25.4)));$('paper').querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(zoom*1000)/1000))}
+function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:profile?.id||'',locked:!!docId,status:$('status').textContent})}
+function fresh(){docId=null;savedCompany=null;savedHeader=null;state=blank();draw();notify('New GRN ready');ready()}
+async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Document not found');const data=snap.data();if(data.templateFamily!=='goods-received-note')throw Error('Not a GRN');docId=id;state=decodePreset(data.presetData);
+ // Pre-existing GRN records recorded kilograms; normalize only in-memory for the new Ton schema.
+ if(!state.weightUnit){state.items=(state.items||[]).map(row=>({...row,weight:String(row.weight??'').trim()?String(amount(row.weight)/1000):''}));state.weightUnit='Ton'}
+ state.signatureVisibility={prepared:true,reviewed:false,approved:false,...(state.signatureVisibility||{})};
+ state.prepared=state.prepared||{name:'',position:'',date:''};
+ state.reviewed=state.reviewed||{name:'',position:'',date:''};
+ state.approved=state.approved||{name:'',position:'',date:''};
+ for(const [key,label] of [['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']]){
+  const sig=state[key];
+  if(sig.title===undefined)sig.title=label;
+  if(sig.belowLine===undefined){
+   const legacyLines=[sig.name||'',sig.position||'',sig.date||''].filter(Boolean);
+   sig.belowLine=legacyLines.length?legacyLines.join('\n'):'Signature / Name';
+  }
+ }
+ state.billTo=state.billTo||{company:'',address:'',contact:'',phone:'',email:''};
+ state.collection=state.collection||{address:''};
+ state.showBillTo=!!state.showBillTo;
+ savedCompany=decodePreset(data.companySnapshot||null);savedHeader=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('GRN',state.fields.date);notify('Duplicate ready; enter a new GRN number')}else notify('Opened '+data.number);draw();ready()}
+function dialog(reference,duplicate){return new Promise(resolve=>{let host=document;try{if(window.top!==window&&window.top.document?.body)host=window.top.document}catch(e){}const veil=host.createElement('div');veil.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0009;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px';const card=host.createElement('div');card.style.cssText='background:#192321;color:#fff;padding:24px;border-radius:14px;max-width:540px;width:100%;box-shadow:0 15px 40px #0008;font:15px Arial';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');const h=host.createElement('h3');h.textContent=duplicate?'Document Already Exists':'Saved Successfully';const msg=host.createElement('p');msg.textContent=duplicate?'GRN '+reference+' already exists. Overwrite it?':'GRN '+reference+' saved online.';const actions=host.createElement('div');actions.style.cssText='display:flex;gap:9px;justify-content:flex-end;margin-top:24px';const done=v=>{veil.remove();resolve(v)};for(const [label,value] of (duplicate?[['Cancel',false],['Overwrite',true]]:[['OK',true]])){const b=host.createElement('button');b.textContent=label;b.style.cssText='background:#83d9cc;color:#102d2a;border:0;border-radius:18px;padding:10px 20px';b.onclick=()=>done(value);actions.append(b)}card.append(h,msg,actions);veil.append(card);host.body.append(veil)})}
+async function save(){if(saving||!user)return;const reference=String(state.fields.reference||'').trim();if(!reference||reference===refPrefix('GRN',state.fields.date))return alert('Enter the GRN reference');if(!business().id)return alert('Select Business Profile');saving=true;try{
+ if(docId){const old=await getDoc(doc(db,'documents',docId));if(!old.exists()||old.data().number!==reference)docId=null}
+ if(!docId){const matches=await getDocs(query(collection(db,'documents'),where('number','==',reference),limit(100)));const existing=matches.docs.find(x=>x.data().profileId===business().id&&x.data().documentType==='Goods Received Note');if(existing){if(!await dialog(reference,true))return;docId=existing.id}}
+ const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));const prior=await getDoc(ref),snapshot=business();
+ await setDoc(ref,{templateSource:'preset',templateFamily:'goods-received-note',templateId:'standard',templateVersion:1,documentType:'Goods Received Note',number:reference,date:state.fields.date,presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(header()),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+ docId=ref.id;savedCompany=snapshot;notify('Saved online: '+reference);reportPresetSaved(reference,docId,state.fields.date);ready();await dialog(reference,false)
+ }catch(e){notify('Save failed: '+e.message);reportPresetSaveError(e);alert('Save failed: '+e.message)}finally{saving=false}}
+window.printDoc=()=>{const old=document.title,ref=String(state.fields.reference||'').replace(/[\\/:*?"<>|]/g,'-');document.title=ref||'GRN';if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=document.title;window.addEventListener('afterprint',()=>window.parent.document.title=parentTitle,{once:true})}render();window.print();window.addEventListener('afterprint',()=>document.title=old,{once:true})};
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.addressMaxLines!==undefined){const lines=e.target.value.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){const start=e.target.selectionStart;e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(Math.min(start,e.target.value.length),Math.min(start,e.target.value.length))}}if(d.group){const obj=state[d.group];if(!obj)return;if(d.group==='fields'&&d.key==='reference'&&d.referenceSuffix!==undefined)obj.reference=fullReference(refPrefix('GRN',state.fields.date),e.target.value);else if(d.group==='fields'&&d.key==='date'){obj.date=e.target.value;obj.reference=updateReferenceYear(obj.reference,'GRN',obj.date);syncReferenceField($('documentFields'),'GRN',obj.date,obj.reference)}else obj[d.key]=e.target.value;drawRows();render()}else if(d.field){state.fields[d.field]=e.target.value;render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;if(d.col==='weight'){render();return}const focus=e.target;const sel=focus.selectionStart;drawRows();const replacement=document.querySelector('[data-row="'+d.row+'"][data-col="'+d.col+'"]');if(replacement){replacement.focus();if(sel!==null)replacement.setSelectionRange(sel,sel)}render()}});
+$('grnCurrencyFields').addEventListener('change',e=>{if(e.target.id!=='grnWeightUnit')return;const next=e.target.value==='Kgs'?'Kgs':'Ton';if(state.weightUnit===next)return;const factor=next==='Kgs'?1000:1/1000;state.items.forEach(row=>{if(String(row.weight??'').trim())row.weight=String(Math.round(amount(row.weight)*factor*1000000)/1000000)});state.weightUnit=next;drawRows();render()});
+$('showBillTo').addEventListener('change',e=>{state.showBillTo=e.target.checked;const b=state.billTo;$('billToFields').innerHTML=state.showBillTo?valueInput('company','Company',b.company,'billTo')+valueInput('address','Address',b.address,'billTo',true)+valueInput('contact','Contact Person',b.contact,'billTo')+valueInput('phone','Telephone',b.phone,'billTo')+valueInput('email','Email',b.email,'billTo'):'';render()});
+document.addEventListener('focusout',e=>{if(e.target.dataset.col!=='weight')return;const val=String(e.target.value||'').trim();if(val)e.target.value=fmt(amount(val));},true);
+document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Prepared by'],['reviewed','Reviewed by'],['approved','Approved by']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[name].title,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
+document.addEventListener('click',e=>{const remove=e.target.closest('[data-remove]');if(remove){state.items.splice(Number(remove.dataset.remove),1);if(!state.items.length)state.items.push(emptyRow());drawRows();render();return}if(e.target.id==='addRow'){state.items.push(emptyRow());drawRows();render()}else if(e.target.id==='removeRow'){if(state.items.length>1)state.items.pop();drawRows();render()}else if(e.target.id==='newBtn')fresh();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc()});
+$('businessSelect').addEventListener('change',e=>{if(docId)return;profile=profiles.find(p=>p.id===e.target.value)||profile;draw();ready()});
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')fresh();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business'&&!docId){profile=profiles.find(p=>p.id===e.data.profileId)||profile;draw();ready()}else if(a==='view')render()});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in from DocSystem first');return}try{const usr=await getDoc(doc(db,'users',u.uid));role=usr.data()?.role||'user'}catch(e){}try{const settingsSnap=await getDoc(doc(db,'appSettings','main'));const settings=settingsSnap.data()?.settings||{};profiles=(settings.profiles||[]).filter(p=>p?.company);globals=settings.globalPlaceholders||{};profile=profiles.find(p=>p.id===settings.activeProfileId)||profiles[0]||null;state=blank();if(docId)await loadSaved(docId);else{draw();notify('GRN ready');ready()}}catch(e){notify('GRN load failed: '+e.message)}});
+window.addEventListener('resize',fitPreview);
+</script></body></html>
