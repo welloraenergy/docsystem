@@ -729,7 +729,14 @@ if(t.family==='journal'){
 }
 let b=baseTotal(),running=b,rows=[];(t.adjustments||[]).forEach(a=>{let v=Number(a.value||0),amt=a.mode==='fixed'?v:running*(v/100);if(a.operation==='subtract'){running-=amt}else{running+=amt}let label=esc(a.label||'Adjustment')+(a.mode==='percent'?' ('+v+'%)':'');rows.push('<tr><td>'+label+'</td><td>'+(a.operation==='subtract'?'-':'+')+amount(amt)+'</td></tr>')});if(!t.subtotal&&rows.length===0)return'';let s='<table class="totals">';if(t.subtotal)s+='<tr><td>Subtotal</td><td>'+amount(b)+'</td></tr>';s+=rows.join('');return s+'<tr class="grand"><td>Total</td><td>'+amount(running)+'</td></tr></table>'}
 function sigs(){let t=tpl();if(!(t.sigEnabled||[]).some(Boolean))return'';return '<div class="ack"><div class="siggrid">'+t.sigs.map((s,i)=>t.sigEnabled[i]?'<div class="sig"><div class="sigtitle">'+esc(s)+'</div><div class="sigline">'+esc((t.sigNames||[])[i]||'Signature / Name')+'</div></div>':'<div class="sig sigempty" aria-hidden="true"></div>').join('')+'</div></div>'}
-function footer(p,n){return '<div class="footer">'+layoutHtml('footer',p,n)+'</div>'}
+function footer(p,n){
+ const markup=layoutHtml('footer',p,n);
+ const probe=document.createElement('div');
+ probe.innerHTML=markup;
+ // Do not reserve a footer area for blank panels or empty resolved placeholders.
+ if(!probe.textContent.trim()&&!probe.querySelector('img'))return '';
+ return '<div class="footer">'+markup+'</div>';
+}
 let paginationBusy=false;
 function renderPreview(){
   if(paginationBusy)return;
@@ -765,7 +772,10 @@ function renderPreview(){
       const paper=measureRoot.firstElementChild;
       const footerEl=paper.querySelector('.footer');
       const content=Array.from(paper.children).filter(x=>x!==footerEl);
-      const maxBottom=footerEl.getBoundingClientRect().top-4*96/25.4;
+      // Empty footer: use the normal page bottom margin instead of reserving footer space.
+      const maxBottom=footerEl
+       ?footerEl.getBoundingClientRect().top-4*96/25.4
+       :paper.getBoundingClientRect().bottom-margin*96/25.4;
       return content.every(x=>x.getBoundingClientRect().bottom<=maxBottom+1);
     };
     try{
