@@ -213,9 +213,11 @@ async function uploadDocumentFromForm(){
  btn.disabled=true;status.textContent="Validating and uploading PDF...";
  try{
   const result=await uploadPdfDocument({db,user,reference:el("cloudUploadReference").value,date:el("cloudUploadDate").value,family:el("cloudUploadFamily").value,file:el("cloudUploadFile").files[0]});
+  const originalDate=el("cloudUploadDate").value;
   status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
   el("cloudUploadForm").reset();
-  el("cloudYear").value=el("cloudUploadDate").value.slice(0,4)||el("cloudYear").value;
+  el("cloudYear").value=originalDate.slice(0,4);
+  el("cloudMonth").value=originalDate.slice(0,7);
   await loadDocs();
  }catch(error){status.textContent="Upload failed: "+(error.code||error.message)}
  finally{btn.disabled=false}
