@@ -216,8 +216,13 @@ async function uploadDocumentFromForm(){
   const result=await uploadPdfDocument({db,user,reference:el("cloudUploadReference").value,date:originalDate,family:el("cloudUploadFamily").value,file:el("cloudUploadFile").files[0]});
   status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
   el("cloudUploadForm").reset();
+  // Show the newly uploaded PDF in Saved Documents, regardless of previous filters.
+  el("cloudPeriod").value="month";
+  updatePeriodControls();
   el("cloudYear").value=originalDate.slice(0,4);
   el("cloudMonth").value=originalDate.slice(0,7);
+  el("cloudFamily").value="";
+  el("cloudReferenceSearch").value="";
   await loadDocs();
  }catch(error){status.textContent="Upload failed: "+(error.code||error.message)}
  finally{btn.disabled=false}
