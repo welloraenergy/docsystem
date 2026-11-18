@@ -136,11 +136,11 @@ let documentListRequest=0;
 export async function loadDocs(){
  if(!user)return;
  const requestId=++documentListRequest;
- const period=el("cloudPeriod").value==="year"?"year":"month";
+ const period=["all","year","month"].includes(el("cloudPeriod").value)?el("cloudPeriod").value:"all";
  const year=String(el("cloudYear").value||"").trim();
  const month=el("cloudMonth").value;
- const dateStart=period==="year"?year+"-01-01":month+"-01";
- const dateEnd=period==="year"?year+"-12-31":month+"-31";
+ const dateStart=period==="all"?"":period==="year"?year+"-01-01":month+"-01";
+ const dateEnd=period==="all"?"":period==="year"?year+"-12-31":month+"-31";
  const reference=String(el("cloudReferenceSearch")?.value||"").trim();
  const family=String(el("cloudFamily")?.value||"");
  const sort=el("cloudNumberSort")?.value==="asc"?"asc":"desc";
@@ -184,7 +184,7 @@ export async function loadDocs(){
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
    return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div></div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
-  const scope=reference?" · Reference: "+reference:(period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
+  const scope=reference?" · Reference: "+reference:(period==="all"?" · All dates":period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
  }catch(e){if(requestId===documentListRequest)notify("Document load failed: "+e.message);throw e}
 }
@@ -217,7 +217,7 @@ async function uploadDocumentFromForm(){
   status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
   el("cloudUploadForm").reset();
   // Show the newly uploaded PDF in Saved Documents, regardless of previous filters.
-  el("cloudPeriod").value="month";
+  el("cloudPeriod").value="all";
   updatePeriodControls();
   el("cloudYear").value=originalDate.slice(0,4);
   el("cloudMonth").value=originalDate.slice(0,7);
@@ -345,9 +345,9 @@ const initialDate=new Date();
 el("cloudYear").value=String(initialDate.getFullYear());
 el("cloudMonth").value=String(initialDate.getFullYear())+"-"+String(initialDate.getMonth()+1).padStart(2,"0");
 const updatePeriodControls=()=>{
- const fullYear=el("cloudPeriod").value==="year";
- el("cloudMonth").disabled=fullYear;
- el("cloudMonthLabel").hidden=fullYear;
+ const period=el("cloudPeriod").value;
+ el("cloudMonth").disabled=period!=="month";
+ el("cloudMonthLabel").hidden=period!=="month";
 };
 el("cloudPeriod").addEventListener("change",()=>{updatePeriodControls();if(el("cloudReferenceSearch"))el("cloudReferenceSearch").value="";loadDocs()});
 el("cloudYear").addEventListener("change",()=>{
