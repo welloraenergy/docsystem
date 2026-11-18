@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wellora DocSystem · Quick Guide</title>
+<meta name="description" content="A simple guide to creating, saving and printing documents with Wellora DocSystem.">
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--panel:#161d24;--line:#34404b;--text:#f0f4f8;--muted:#b0becb;--accent:#e5ba37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Arial,sans-serif}
+.wrap{max-width:950px;margin:auto;padding:0 20px}
+header{padding:43px 0 23px;border-bottom:1px solid var(--line)}
+.eyebrow{color:var(--accent);font-weight:bold;font-size:12px;letter-spacing:.09em;text-transform:uppercase}
+h1{font-size:clamp(28px,5vw,43px);margin:8px 0}h2{font-size:20px;margin:0 0 8px}
+p{margin:0;color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+a{color:var(--accent)}nav a,.back{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-size:13px}
+nav a:hover,.back:hover{border-color:var(--accent)}
+main{padding:26px 0 44px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:21px;min-width:0}
+section p+p{margin-top:10px}strong{color:var(--text)}
+code{font-family:Consolas,monospace;background:#242e38;border-radius:4px;padding:2px 5px;color:#f5d67c;overflow-wrap:anywhere}
+table{border-collapse:collapse;width:100%;margin-top:9px}th,td{text-align:left;vertical-align:top;padding:7px 8px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--text);width:34%}td{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);font-size:13px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}header{padding-top:28px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="eyebrow">Wellora Energy · Document Management System</div>
+<h1>DocSystem Quick Guide</h1>
+<p>A short guide for everyday document work. Available tools depend on your access and the selected document template.</p>
+<nav aria-label="Guide sections"><a href="#settings">Global Settings</a><a href="#templates">Templates</a><a href="#shortcodes">Shortcodes</a><a href="#buttons">Buttons &amp; Documents</a></nav>
+</div></header>
+<main class="wrap"><div class="grid">
+<section id="settings"><h2>1. Global Settings</h2>
+<p>Company details, logo, addresses, contact information, header, footer and other common settings are maintained centrally. Where available, these values are reused in documents to keep company presentation consistent.</p>
+<p>If a shared detail needs changing, check the relevant settings rather than manually changing it in every new document.</p>
+</section>
+<section id="templates"><h2>2. Preset &amp; Custom Templates</h2>
+<p><strong>Preset Templates</strong> provide ready-made layouts. Select the document family, enter the required details and review the result.</p>
+<p><strong>Custom Templates</strong> let you work with a configured layout for other document needs. Choose the appropriate template source in Workspace before entering information.</p>
+</section>
+<section id="shortcodes"><h2>3. Shortcodes</h2>
+<p>Shortcodes are reusable placeholders in headers, footers and template text. They display the related information automatically when the document is prepared.</p>
+<p>Examples: <code>{logo}</code> for the logo, <code>{companyname}</code> for the company name, <code>{doctype}</code> for document type and <code>{page}</code> for page numbering. Available shortcodes depend on the template settings.</p>
+</section>
+<section id="buttons"><h2>4. Everyday Buttons</h2>
+<table><tbody>
+<tr><th>Working Form</th><td>Enter or edit document information.</td></tr>
+<tr><th>Preview</th><td>Check the layout before printing.</td></tr>
+<tr><th>New</th><td>Start a new document.</td></tr>
+<tr><th>Open Saved</th><td>Find a previously saved document.</td></tr>
+<tr><th>Save Online</th><td>Save the document online.</td></tr>
+<tr><th>Print / PDF</th><td>Print or save as PDF.</td></tr>
+</tbody></table>
+<p style="margin-top:12px">The <strong>Documents</strong> page lists saved documents and uploaded PDFs. Use date, family and reference filters to find records. Choose <strong>View PDF</strong> to open an uploaded file.</p>
+</section>
+</div>
+<p style="margin-top:23px"><a class="back" href="./">← Open DocSystem</a></p>
+</main>
+<footer><div class="wrap">Wellora Energy · DocSystem · Quick reference</div></footer>
+</body></html>
