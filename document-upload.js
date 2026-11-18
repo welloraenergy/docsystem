@@ -46,15 +46,18 @@ export async function uploadPdfDocument({db,user,reference,date,family,file}){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date+"T12:00:00")))throw Error("Enter the original document date.");
  if(!file||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"))throw Error("Select a PDF file.");
  const bytes=await optimizedPdf(file);
- const match=await getDocs(query(collection(db,"documents"),where("number","==",number),limit(1)));
+ let match;
+ try{match=await getDocs(query(collection(db,"documents"),where("number","==",number),limit(1))}
+ catch(e){if(e.code==="permission-denied")throw Error("Permission denied checking document references in Firestore documents. Check documents read/query rules.");throw e}
  if(!match.empty)throw Error("A document with this reference already exists. Use a unique reference.");
  const ref=doc(collection(db,"documents"));
  const pdfRef=doc(db,"documentFiles",ref.id);
  // Write the payload first to avoid a listing row without an accessible PDF.
- await setDoc(pdfRef,{base64:asBase64(bytes),contentType:"application/pdf",size:bytes.length,createdBy:user.uid,createdAt:serverTimestamp()});
+ try{await setDoc(pdfRef,{base64:asBase64(bytes),contentType:"application/pdf",size:bytes.length,createdBy:user.uid,createdAt:serverTimestamp()})}
+ catch(e){if(e.code==="permission-denied")throw Error("Permission denied saving PDF data in Firestore documentFiles. Check documentFiles create rules for the signed-in user.");throw e}
  try{
   await setDoc(ref,{number,date,documentType:family,templateFamily:family,templateSource:"uploaded-pdf",fileType:"application/pdf",fileName:file.name,fileSize:bytes.length,fileId:ref.id,locked:true,createdBy:user.uid,updatedBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
- }catch(e){try{await deleteDoc(pdfRef)}catch{}throw e}
+ }catch(e){try{await deleteDoc(pdfRef)}catch{}if(e.code==="permission-denied")throw Error("Permission denied creating document metadata in Firestore documents. Check documents create rules for uploaded PDFs.");throw e}
  return {id:ref.id,size:bytes.length};
 }
 export async function viewPdfDocument(db,id){
