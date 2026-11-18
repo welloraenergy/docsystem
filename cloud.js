@@ -1,5 +1,5 @@
 import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
-import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,uploadDateToIso} from "./document-upload.js?v=20261117-date-compact";
+import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,uploadDateToIso} from "./document-upload.js?v=20261118-full-year-date";
 import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261117-lock1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
