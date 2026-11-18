@@ -58,7 +58,11 @@ export async function uploadPdfDocument({db,user,reference,date,family,file}){
  try{
   await setDoc(ref,{number,date,documentType:family,templateFamily:family,templateSource:"uploaded-pdf",fileType:"application/pdf",fileName:file.name,fileSize:bytes.length,fileId:ref.id,locked:true,createdBy:user.uid,updatedBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
  }catch(e){try{await deleteDoc(pdfRef)}catch{}if(e.code==="permission-denied")throw Error("Permission denied creating document metadata in Firestore documents. Check documents create rules for uploaded PDFs.");throw e}
- return {id:ref.id,size:bytes.length};
+ // Confirm that the listing metadata is readable before reporting upload success.
+ const saved=await getDoc(ref);
+ if(!saved.exists()||saved.data().templateSource!=="uploaded-pdf"||saved.data().fileId!==ref.id)
+  throw Error("PDF data was sent but its Saved Documents listing could not be verified. Search the reference before trying again.");
+ return {id:ref.id,size:bytes.length,reference:number};
 }
 export async function viewPdfDocument(db,id){
  // Open synchronously before Firebase awaits to avoid popup blocking.
