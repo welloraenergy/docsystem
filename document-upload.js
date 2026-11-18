@@ -47,7 +47,7 @@ export async function uploadPdfDocument({db,user,reference,date,family,file}){
  if(!file||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"))throw Error("Select a PDF file.");
  const bytes=await optimizedPdf(file);
  let match;
- try{match=await getDocs(query(collection(db,"documents"),where("number","==",number),limit(1))}
+ try{match=await getDocs(query(collection(db,"documents"),where("number","==",number),limit(1)))}
  catch(e){if(e.code==="permission-denied")throw Error("Permission denied checking document references in Firestore documents. Check documents read/query rules.");throw e}
  if(!match.empty)throw Error("A document with this reference already exists. Use a unique reference.");
  const ref=doc(collection(db,"documents"));
