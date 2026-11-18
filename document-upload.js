@@ -8,11 +8,11 @@ export function displayDocumentDate(value){
  return match?match[3]+"/"+match[2]+"/"+match[1].slice(-2):String(value||"");
 }
 export function uploadDateToIso(value){
- const match=/^(\d{2})\/(\d{2})\/(\d{2})$/.exec(String(value||"").trim());
- if(!match)throw Error("Enter document date as dd/mm/yy (e.g. 17/11/26).");
- const year=2000+Number(match[3]),month=Number(match[2]),day=Number(match[1]);
+ const match=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value||"").trim());
+ if(!match)throw Error("Enter document date as dd/mm/yyyy (e.g. 17/11/2026).");
+ const year=Number(match[3]),month=Number(match[2]),day=Number(match[1]);
  const date=new Date(Date.UTC(year,month-1,day));
- if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw Error("Enter a valid document date as dd/mm/yy.");
+ if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw Error("Enter a valid document date as dd/mm/yyyy.");
  return String(year)+"-"+match[2]+"-"+match[1];
 }
 const fileRecord=id=>({collection:"documentFiles",id});
