@@ -195,7 +195,7 @@ export async function loadDocs(){
    };
    const [recipientLabel,recipientValue]=byFamily[familyName]||[];
    const recipientName=typeof recipientValue==="string"?recipientValue.trim():"";
-   const recipient=recipientLabel&&recipientName&&!/^\\{[^{}]+\\}$/.test(recipientName)
+   const recipient=recipientLabel&&recipientName&&!/^\{[^{}]+\}$/.test(recipientName)
     ?'<div class="muted">'+escape(recipientLabel)+': '+escape(recipientName)+'</div>':'';
    const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
