@@ -1,6 +1,5 @@
 // PDF upload module: Base64 bytes are stored separately from document-list metadata.
 import {doc,getDoc,setDoc,deleteDoc,collection,query,where,limit,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-const TARGET_PDF_BYTES=100*1024;
 const MAX_PDF_BYTES=200*1024;
 // Display dates as dd/mm/yy; retain ISO YYYY-MM-DD in Firestore for date filtering.
 export function displayDocumentDate(value){
@@ -22,7 +21,7 @@ const looksLikePdf=bytes=>bytes.length>=5&&String.fromCharCode(...bytes.subarray
 async function optimizedPdf(file){
  const original=new Uint8Array(await file.arrayBuffer());
  if(!looksLikePdf(original))throw Error("Only valid PDF files can be uploaded.");
- if(original.length<=TARGET_PDF_BYTES)return original;
+ if(original.length<=MAX_PDF_BYTES)return original;
  // Prefer lossless PDF structure optimization: keep vector text, images, and signatures intact.
  // Never replace a smaller original with a larger optimized result.
  let best=original;
@@ -32,9 +31,7 @@ async function optimizedPdf(file){
   const optimized=await pdf.save({useObjectStreams:true,objectsPerTick:50});
   if(looksLikePdf(optimized)&&optimized.length<best.length)best=optimized;
  }catch(e){
-  // A valid original within the fallback limit remains uploadable even if
-  // PDF-lib cannot process its encryption, signatures, or unsupported features.
-  if(original.length>MAX_PDF_BYTES)throw Error("PDF optimization could not be completed and the original is above 200 KB. "+(e.message||""));
+  throw Error("PDF optimization could not be completed and the original is above 200 KB. "+(e.message||""));
  }
  if(best.length>MAX_PDF_BYTES)throw Error("PDF remains "+Math.ceil(best.length/1024)+" KB after optimization. Maximum is 200 KB; please reduce the PDF size without making its text or signatures unreadable.");
  return best;
