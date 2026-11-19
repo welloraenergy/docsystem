@@ -144,9 +144,20 @@
 .paper .inv-sign tbody td{font-size:8pt}
 .paper .inv-totals{font-size:8.5pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261119-ownership1">
+<link rel="stylesheet" href="./preset-typography.css?v=20261119-module-ownership2">
 
 <style id="welloraPresetRhythm20261112">
+/* Preset-owned CSS moved from global typography (no new style section). */
+/* Invoice short item/signature dates */
+.paper .inv-table tbody td:nth-child(5),
+.paper .inv-table tbody td:nth-child(6),
+.paper .inv-sign tbody td:nth-child(4){
+ white-space:nowrap!important;
+ overflow-wrap:normal!important;
+ word-break:normal!important;
+ font-variant-numeric:tabular-nums!important;
+}
+
 /* Harmonized vertical rhythm for all five original preset document families. */
 @media screen,print {
  .paper{--preset-section-gap:3mm}

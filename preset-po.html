@@ -283,9 +283,28 @@
 .paper .po-totals{font-size:8.5pt}
 .paper .po-signatures tbody td{font-size:8pt}
 </style>
-<link rel="stylesheet" href="./preset-typography.css?v=20261119-ownership1">
+<link rel="stylesheet" href="./preset-typography.css?v=20261119-module-ownership2">
 
 <style id="welloraPresetRhythm20261112">
+/* Preset-owned CSS moved from global typography (no new style section). */
+.paper .po-vendor{grid-template-columns:minmax(0,58%) minmax(0,42%)!important;column-gap:0!important}
+.paper .po-vendor-left{--po-label-width:23mm!important}
+.paper .po-vendor-right{--po-label-width:24mm!important}
+.paper .po-vendor>div{min-width:0!important;position:relative!important}
+.paper .po-vendor>div::before{left:var(--po-label-width)!important;top:0!important;bottom:0!important}
+.paper .po-vendor .po-vendor-row,
+.paper .po-vendor-right .po-vendor-row{
+ display:grid!important;grid-template-columns:var(--po-label-width) minmax(0,1fr)!important;
+ gap:0!important;box-sizing:border-box!important;min-width:0!important;
+}
+.paper .po-vendor .po-vendor-row strong{
+ min-width:0!important;box-sizing:border-box!important;white-space:nowrap!important;
+ padding:1mm 1.2mm .3mm .6mm!important;font-size:7.2pt!important;
+}
+.paper .po-vendor .po-vendor-row span{
+ min-width:0!important;box-sizing:border-box!important;padding:1mm 1.2mm .3mm!important;
+}
+
 /* Preset-specific declarations: maintain in this module. */
 /* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
 .po-fulfillment-choice{
