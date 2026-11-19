@@ -91,3 +91,25 @@
 .paper .ticket-comments{box-sizing:border-box;border:1px solid #555;margin:1.5mm 0;break-inside:avoid;font:7.5pt Arial,sans-serif}
 .paper .ticket-comments-title{background:#000;color:#fff;text-align:center;font-weight:bold;padding:1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .paper .ticket-comments-body{min-height:8mm;padding:1mm 2mm;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Shared Delivery / Return Ticket photo appendix — authoritative rules. */
+.paper .dt-photos{width:100%;table-layout:fixed;border-collapse:collapse;border:1px solid #666}
+.paper .dt-photos th,.paper .dt-photos td{border:1px solid #666!important}
+.paper .dt-photos td{height:auto;min-height:50mm;text-align:center!important;vertical-align:middle!important;padding:2mm}
+.paper .dt-photos img{display:block;object-fit:contain;max-width:100%;max-height:110mm;margin:0 auto}
+.paper .dt-photos td[colspan="2"] img{max-height:225mm}
+
+/* DO/Return photo appendix: 2 equal compact cells in every row; never enlarge a single image. */
+.paper .dt-photos{table-layout:fixed!important;width:100%!important}
+.paper .dt-photos tbody td{
+ box-sizing:border-box!important;width:50%!important;max-width:50%!important;
+ height:49mm!important;min-height:49mm!important;max-height:49mm!important;
+ padding:2mm!important;text-align:center!important;vertical-align:middle!important
+}
+.paper .dt-photos tbody td img{
+ width:auto!important;height:auto!important;max-width:100%!important;
+ max-height:44mm!important;object-fit:contain!important;margin:auto!important
+}
+.paper .dt-photos tbody td.photo-empty-filler{
+ border:0!important;background:transparent!important
+}
