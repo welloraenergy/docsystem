@@ -143,7 +143,6 @@ body.preview .preview-only{display:block}
 /* Excel reference header uses aligned labels and values without separator rules. */
 .paper .excel-ref .ref-line span:first-child{border-right:0!important;padding-right:1.5mm!important}
 .paper .excel-ref .ref-line span:last-child{border-left:0!important}
-@media print{.paper .excel-ref .ref-line span:first-child{border-right:0!important}}
 </style><style id="excelRightAlignedDocumentDetails">
 /* Keep quotation metadata compact and aligned against the right page margin. */
 .paper .excel-right{align-items:flex-end!important}
@@ -350,7 +349,7 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 </style><style id="sharedPresetHeaderRhythm20261101">
 /* Common preset letterhead rhythm: identity at left, heading above metadata at right. */
 @media screen,print {
- .paper .excel-company{min-height:48mm!important;align-items:stretch!important}
+ .paper .excel-company{align-items:stretch!important}
  .paper .excel-right{min-height:48mm!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;align-items:flex-end!important}
  .paper .excel-heading-block{width:100%!important;flex:0 0 auto!important}
  .paper .excel-ref{margin-top:11mm!important;margin-bottom:2mm!important;flex:0 0 auto!important}
@@ -499,9 +498,9 @@ body.embedded-preset .preview-only>.notice{display:none!important}
  .paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{position:relative;top:-2mm;margin-right:0!important}
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
-</style>
-<style id="welloraQuotationRhythm20261112">@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}.paper .excel-right{padding-right:0!important}}</style>
-<style id="welloraQuotationMetaValueAlignment20261112">
+
+@media screen,print{.paper .excel-company{min-height:42mm!important;margin-bottom:3mm!important}.paper .excel-client{margin-bottom:3mm!important}.paper .excel-ref{margin-bottom:0!important}}
+
 /* Document metadata stays together at the right edge; reserve full revision suffix (0001-R1). */
 @media screen,print {
  .paper .excel-right{align-items:flex-end!important;min-width:0!important;justify-content:space-between!important}
