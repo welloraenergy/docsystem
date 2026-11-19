@@ -18,11 +18,6 @@
 .paper .po-terms .po-term{
  font-size:7pt!important;line-height:1.2!important
 }
-.paper .quote-item-section-title{
- font:700 10pt/1.3 Arial,sans-serif!important;text-align:left!important;
- margin:3mm 0 1.5mm;padding:0;border:0;
- color:#111;break-after:avoid;page-break-after:avoid
-}
 /* Keep values aligned by their meaning rather than centering all data. */
 .paper .excel-table tbody td:nth-child(2),
 .paper .po-items tbody td.description{text-align:left!important}
@@ -81,18 +76,6 @@
 #itemsEditor th,#itemsEditor td{overflow-wrap:anywhere}
 #itemsEditor input:not(.inv-native-date),#itemsEditor textarea{width:100%;min-width:0!important;box-sizing:border-box}
 #itemsEditor td:has(textarea) textarea{min-height:50px;resize:vertical}
-
-/* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
-.po-fulfillment-choice{
- display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px;padding:10px;
- border:1px solid #555;border-radius:7px;min-width:0
-}
-.po-fulfillment-choice legend{font-weight:700;padding:0 5px}
-.po-fulfillment-choice label{display:flex!important;flex-direction:row!important;
- align-items:center;gap:8px;cursor:pointer;flex:1 1 180px}
-.po-fulfillment-choice input[type=radio]{width:auto!important;flex:none}
-.po-fulfillment-address-wrap[hidden]{display:none!important}
-.po-fulfillment-address-wrap textarea{width:100%;min-height:90px;resize:vertical}
 
 /* DO/Return photo appendix: 2 equal compact cells in every row; never enlarge a single image. */
 .paper .dt-photos{table-layout:fixed!important;width:100%!important}
@@ -222,13 +205,6 @@
  border-bottom:0!important;
  margin-bottom:0!important;
 }
-.po-editor-subtotal{
- margin-top:10px;
- margin-bottom:8px;
- font-weight:700;
- text-align:right;
-}
-
 /* 2026-11-12: constrain the quotation header to the A4 content width.
    Two percentage columns plus a gap previously exceeded 100%. */
 .paper .excel-company{
@@ -261,7 +237,6 @@
 .paper .po-vendor-row strong{white-space:nowrap!important;padding-right:.5mm!important}
 .paper .po-vendor>div{min-width:0!important;box-sizing:border-box!important}
 .paper .po-vendor-row span{min-width:0!important;overflow-wrap:anywhere!important}
-.po-currency-setting{margin-top:10px}
 /* Editor-only, easy-to-proof descriptions: wide, wrapped and vertically resizable.
    No changes to the stored field values or PDF table heights. */
 .preset-item-editor textarea,

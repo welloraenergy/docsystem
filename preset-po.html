@@ -3,7 +3,9 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#14263c;font:13px Arial,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer;padding:9px 14px;border:1px solid #cbd5e1;border-radius:7px;background:white}button.primary{background:#193f72;color:white}button.danger{color:#ad2931}header{padding:16px 2%;background:#193f72;color:white}header h2{margin:0 0 6px;font-size:18px}header small{color:#dce8f8}.toolbar{background:white;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 2%;border-bottom:1px solid #dce5ee}.toolbar span{margin-left:auto;color:#536175}.workspace{max-width:1800px;margin:15px auto;padding:0 12px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.card{background:#fff;border:1px solid #d9e2eb;border-radius:10px;padding:15px;margin:0 0 13px}.card h3{font-size:14px;margin:0 0 12px}label{display:flex;flex-direction:column;gap:5px;min-width:0}input,textarea,select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:5px;background:white}textarea{min-height:62px;resize:vertical}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fields label.wide{grid-column:1/-1}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aebbc8;padding:6px;text-align:left}th{background:#e9eff5;font-size:11px}td input,td textarea{border:0;background:transparent;padding:5px;min-width:65px}td textarea{min-width:145px;min-height:48px}.line-actions{display:flex;gap:8px;margin-top:10px}.preview-container{min-width:0}.preview-header{display:flex;justify-content:space-between;align-items:center;padding:0 4px 9px}.paper{width:210mm;min-height:297mm;padding:12mm 13mm 13mm;background:white;color:#111;margin:0 auto 16px;box-shadow:0 4px 15px #0002;position:relative;font:9pt Arial,sans-serif}.po-head{display:grid;grid-template-columns:minmax(0,60%) minmax(0,40%);gap:4mm;min-height:43mm;margin-bottom:4mm;align-items:stretch}.po-company-ident{min-width:0;align-self:start}.po-company-ident .preset-header-slot{line-height:1.3}.po-company-ident img{display:block;max-height:24mm;object-fit:contain;margin-bottom:1mm}.po-company-ident .preset-header-slot:nth-child(2){font-weight:700;margin-bottom:1mm}.po-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;min-width:0;min-height:43mm}.po-title{width:100%;font-size:16pt;font-weight:bold;text-align:right;margin:0}.po-meta{width:58mm;max-width:100%;font-size:7pt;line-height:1.3;margin:0 0 2mm auto}.po-meta-row{display:grid;grid-template-columns:21mm minmax(0,1fr);gap:1mm;align-items:baseline;min-height:4.1mm}.po-meta-label{text-align:right;font-weight:600}.po-meta-value{overflow-wrap:anywhere;white-space:pre-wrap}.po-vendor{margin:5mm 0 4mm;display:grid;grid-template-columns:1fr 1fr;gap:8mm}.po-vendor div{white-space:pre-wrap}.po-section-title{font-size:10pt;font-weight:bold;border-bottom:1px solid #333;margin:4mm 0 2mm}.po-items{font-size:8.5pt;table-layout:fixed}.po-items th{background:#f0f0f0}.po-items td,.po-items th{border:1px solid #555;padding:1.5mm;vertical-align:top;overflow-wrap:anywhere}.po-items .description{white-space:break-spaces}.po-totals{width:76mm;margin:4mm 0 2mm auto;font-size:9pt;table-layout:fixed}.po-totals td{padding:1.3mm 2mm}.po-totals tr:last-child{font-weight:bold}.po-words{font-size:8pt;white-space:pre-wrap}.po-terms{font-size:8pt;line-height:1.35;white-space:normal}.po-terms-header{background:#111;color:white;text-align:center;font-weight:bold;padding:1.5mm;font-size:9pt}.po-term{display:grid;grid-template-columns:7mm 1fr;gap:1mm;margin:1.5mm 0;break-inside:avoid;white-space:pre-wrap}.po-term strong{font-weight:bold}.po-term-num{font-weight:bold}.po-signatures{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5mm;font:8pt Arial,sans-serif}.po-signatures thead th,.po-signatures tbody th{background:#000!important;color:#fff!important;text-align:center;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}.po-signatures thead th{padding:1.2mm 1mm;border:1px solid #000}.po-signatures tbody th{padding:2mm 1mm;border:1px solid #000;vertical-align:middle}.po-signatures tbody td{border:1px solid #aaa;background:#fff!important;height:12mm;padding:1.2mm 1mm;text-align:center;vertical-align:middle;overflow-wrap:anywhere}.po-signatures .sign-blank{background:#fff!important}@media print{.paper .po-signatures{break-inside:avoid;page-break-inside:avoid}}.muted{color:#66758a}.status{font-size:12px;color:#475569}.notice{padding:8px;background:#fffae9;border:1px solid #e7dcae;border-radius:6px;color:#5a4920}.po-terms-section{break-inside:avoid}.line-total{text-align:right;white-space:nowrap}body.embedded header,body.embedded .toolbar,body.embedded .po-template-card{display:none!important}body.embedded .workspace{margin:0 auto;padding:0 2px 10px}body.embedded{background:transparent}body.printing .editor{display:none!important}body.printing .workspace{display:block;margin:0 auto}body.printing .preview-container{width:100%}
 @media(max-width:1100px){html,body{max-width:100%;overflow-x:hidden}.workspace{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}.workspace>.editor,.workspace>.preview-column,.workspace>.preview-container,.workspace .card,.workspace .fields,.workspace .section-fields,.workspace .sign-editor,.workspace .photo-editor{min-width:0;max-width:100%}.workspace input,.workspace textarea,.workspace select{min-width:0;max-width:100%}.preview-column,.preview-container,#paper{width:100%;max-width:100%;min-width:0;overflow-x:hidden}.paper{max-width:100%}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.fields{grid-template-columns:1fr}.paper{zoom:.75;max-width:none}}@media print{@page{size:A4 portrait;margin:0}html,body{width:210mm!important;background:white!important}.editor,header,.toolbar,.preview-header{display:none!important}.workspace{display:block!important;margin:0!important;padding:0!important;width:210mm!important}.preview-container{display:block!important;width:210mm!important}.paper{zoom:1!important;transform:none!important;box-shadow:none!important;margin:0!important;min-height:297mm!important;width:210mm!important;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}}
-</style><style id="sharedPresetHeaderRhythm20261101">
+
+/* ---- sharedPresetHeaderRhythm20261101 ---- */
+
 /* Match Quotation: company identity left; separate document title and metadata right. */
 @media screen,print {
  .paper .po-head{align-items:stretch!important}
@@ -11,7 +13,9 @@
  .paper .po-title{width:100%!important;flex:0 0 auto!important}
  .paper .po-meta{margin-top:11mm!important;margin-bottom:2mm!important;flex:0 0 auto!important}
 }
-</style><style id="excelPOFieldsSharedDesign20261101">
+
+/* ---- excelPOFieldsSharedDesign20261101 ---- */
+
 /* Shared design language; PO fields/order follow the original Excel sheets. */
 .po-vendor-form{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;align-items:start}
 .po-vendor-form .fields{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -29,7 +33,9 @@
 .paper .po-title>div{color:inherit}
 @media(max-width:700px){.po-vendor-form{grid-template-columns:1fr}}
 @media print{.po-vendor-title{background:#080808!important;color:#fff!important}}
-</style><style id="presetPOAddressAndClause6Excel20261101">
+
+/* ---- presetPOAddressAndClause6Excel20261101 ---- */
+
 /* A multiline address occupies a distinct address area, just as in Quotations. */
 .po-vendor-left .po-address-row{min-height:17mm;align-items:start}
 .po-vendor-left .po-address-row strong,.po-vendor-left .po-address-row span{align-self:start}
@@ -40,7 +46,11 @@
 .paper .po-lettered-lines{display:block;margin-top:0.7mm;padding-left:2mm;line-height:1.3}
 .paper .po-lettered-item{display:block;margin:0;padding:0;white-space:pre-wrap;overflow-wrap:anywhere}
 
-</style><style id="poSharedTermsControls20261101">.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.3}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}</style><style id="poSignatureAndVerticalGridNormalization20261101">
+
+/* ---- poSharedTermsControls20261101 ---- */
+.po-terms-fitting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}.po-terms-fitting label{min-width:0}.po-terms-fitting select{width:100%}@media(max-width:650px){.po-terms-fitting{grid-template-columns:1fr}}.paper .po-terms{line-height:1.3}.paper .po-term{margin-bottom:var(--term-gap,1.3mm)}
+/* ---- poSignatureAndVerticalGridNormalization20261101 ---- */
+
 /* Exactly the three grouped signature cards used by Preset Quotations. */
 .po-signature-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
 .po-signature-group{border:1px solid #d8e0e8;border-radius:8px;display:flex;flex-direction:column;gap:8px;padding:12px;min-width:0;margin:0}
@@ -64,7 +74,9 @@
 .paper .po-signatures tr>th,.paper .po-signatures tr>td{border:1px solid #999!important}
 .paper .po-signatures thead th,.paper .po-signatures tbody th{border-color:#111!important}
 @media print{.paper .po-vendor-row strong{border-right:1px solid #aaa!important}.paper .po-items th,.paper .po-items td,.paper .po-signatures tr>td{border:1px solid #777!important}}
-</style><style id="poExcelContinuousLinesAndTermsBox20261101">
+
+/* ---- poExcelContinuousLinesAndTermsBox20261101 ---- */
+
 /* Matches the established Quotation client table: continuous rules across
    each full-height information column, instead of fragmented row borders. */
 .paper .po-vendor-section{width:100%;margin:2.5mm 0 4mm;box-sizing:border-box}
@@ -136,7 +148,11 @@
  line-height:1.3!important
 }
 
-</style><style id="poClause6PermanentFields20261101">.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.po-signature-groups label,.po-terms-fitting label{min-width:0}</style><style id="poClause6EditFields20261101">
+
+/* ---- poClause6PermanentFields20261101 ---- */
+.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.po-signature-groups label,.po-terms-fitting label{min-width:0}
+/* ---- poClause6EditFields20261101 ---- */
+
 .po-terms-contact-editor{border:1px solid #d8e0e8;border-radius:8px;padding:12px;margin:10px 0 12px;background:#fff;display:flex;flex-direction:column;gap:10px}
 .po-contact-edit-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .po-contact-edit-fields label{min-width:0}
@@ -144,13 +160,17 @@
 .po-contact-notes{margin-top:3px}
 .po-contact-notes textarea{width:100%}
 @media(max-width:700px){.po-contact-edit-fields{grid-template-columns:1fr}}
-</style><style id="mobileA4Fit20261102">
+
+/* ---- mobileA4Fit20261102 ---- */
+
 /* Shared mobile A4 preview: fit available width without changing print geometry. */
 @media screen and (max-width:1099px){
  .paper{max-width:none!important;transform:none!important}
  .preview-only,.preview-container,.preview-column{max-width:100%;min-width:0;overflow-x:hidden!important}
 }
-</style><style id="welloraPresetWorkspaceTheme20261106">
+
+/* ---- welloraPresetWorkspaceTheme20261106 ---- */
+
 @media screen {
  :root{--we-gold:#d3af36;--we-gold-hover:#e0c15a;--we-green:#16a34a;--we-red:#dc2626}
  html,body{background:#000;color:#fff}
@@ -185,7 +205,9 @@
  /* Printed paper table headers keep each preset's own background/text colors. */
  .paper input,.paper textarea,.paper select{background:#fff;color:#111}
 }
-</style><style id="welloraWorkspaceReadability20261106">
+
+/* ---- welloraWorkspaceReadability20261106 ---- */
+
 /* Contrast pass for nested editors. Only the application UI, never paper/PDF. */
 @media screen {
   body{color:#f5f5f5}
@@ -238,8 +260,9 @@
   .form-only button:disabled,.workspace .card button:disabled{opacity:.65}
   /* Explicitly keep all document-preview text and colors governed by its template. */
 }
-</style>
-<style id="presetA4HeaderGridParity20261111">
+
+/* ---- presetA4HeaderGridParity20261111 ---- */
+
 /* Same A4 section typography, table fills, and visible rules in screen preview and print. */
 .paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .paper table{border-collapse:collapse}
@@ -263,6 +286,30 @@
 <link rel="stylesheet" href="./preset-typography.css?v=20261113-zebra-print-parity38">
 
 <style id="welloraPresetRhythm20261112">
+/* Preset-specific declarations: maintain in this module. */
+/* PO: an explicit, mutually exclusive delivery/pick-up choice precedes its address. */
+.po-fulfillment-choice{
+ display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px;padding:10px;
+ border:1px solid #555;border-radius:7px;min-width:0
+}
+.po-fulfillment-choice legend{font-weight:700;padding:0 5px}
+.po-fulfillment-choice label{display:flex!important;flex-direction:row!important;
+ align-items:center;gap:8px;cursor:pointer;flex:1 1 180px}
+.po-fulfillment-choice input[type=radio]{width:auto!important;flex:none}
+.po-fulfillment-address-wrap[hidden]{display:none!important}
+.po-fulfillment-address-wrap textarea{width:100%;min-height:90px;resize:vertical}
+
+
+.po-editor-subtotal{
+ margin-top:10px;
+ margin-bottom:8px;
+ font-weight:700;
+ text-align:right;
+}
+
+
+.po-currency-setting{margin-top:10px}
+
 /* Harmonized vertical rhythm for all five original preset document families. */
 @media screen,print {
  .paper{--preset-section-gap:3mm}

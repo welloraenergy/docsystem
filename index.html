@@ -39,8 +39,9 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 @media (min-width:681px){.paper{width:var(--page-w,210mm);min-height:var(--page-h,297mm);height:var(--page-h,297mm);padding:var(--page-m,15mm)}}
 .paper .footer{left:var(--page-m,15mm);right:var(--page-m,15mm);bottom:4mm}
 @media print{html,body{width:auto!important;overflow:visible!important}main,.preview,#preview{display:block!important;width:100%!important;max-width:none!important;overflow:visible!important}.paper{display:flex!important;box-sizing:border-box!important;width:var(--page-w,210mm)!important;height:calc(var(--page-h,297mm) - 1mm)!important;min-height:0!important;max-height:calc(var(--page-h,297mm) - 1mm)!important;padding:var(--page-m,15mm)!important;margin:0!important;box-shadow:none!important;aspect-ratio:auto!important;overflow:hidden!important;break-after:page!important;page-break-after:always!important}.paper:last-child{break-after:auto!important;page-break-after:auto!important}}
-</style>
-<style id="workspaceFullWidthFix">
+
+/* ---- workspaceFullWidthFix ---- */
+
 /* Override the original two-column editor/preview layout after all legacy styles. */
 @media screen {
   #docMain { display:block !important; grid-template-columns:none !important; width:100%; max-width:1600px; margin:16px auto; padding:0 16px 32px; }
@@ -58,15 +59,17 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
   #docMain > .preview {display:block !important;position:static !important;visibility:visible !important;width:100% !important;}
   #docMain .workspace, #docMain .workspace-view-tabs {display:none !important;}
 }
-</style>
-<style id="shortcodeLineLayoutFix">
+
+/* ---- shortcodeLineLayoutFix ---- */
+
 /* Permanent stylesheet: printPaperRule is dynamically replaced during preview. */
 #preview .shortcode-line, .pagination-measure .shortcode-line {display:block!important;white-space:pre-wrap!important;overflow-wrap:break-word;min-height:1em;line-height:inherit}
 #preview .shortcode-line + .shortcode-line, .pagination-measure .shortcode-line + .shortcode-line {clear:both}
 #preview .layout-preserve, .pagination-measure .layout-preserve {white-space:pre-wrap!important}
 @media print {.shortcode-line{display:block!important;white-space:pre-wrap!important;min-height:1em}.layout-preserve{white-space:pre-wrap!important}}
-</style>
-<style id="cleanWorkspaceNavigation">
+
+/* ---- cleanWorkspaceNavigation ---- */
+
 .clean-subnav{display:flex;gap:8px;flex-wrap:wrap;max-width:1600px;margin:10px auto 0;padding:0 16px}
 .clean-subnav[hidden],#presetWorkspace[hidden]{display:none!important}
 .clean-subnav button{background:#f4f7fb;border:1px solid #cbd6e4;color:#254065;border-radius:7px;padding:9px 13px;cursor:pointer}
@@ -90,10 +93,14 @@ html:not(.auth-ready) body > header, html:not(.auth-ready) body > nav, html:not(
 #docMain:not(.on-workspace-tab) .workspace-view-tabs{display:none!important}
 #docMain .preview{max-width:100%}
 [data-library-kind].active{background:#193f72;color:white;border-color:#193f72}
-</style><style id="documentToolbarConsistency">
+
+/* ---- documentToolbarConsistency ---- */
+
 /* Embedded preset has its own Save / Open / Print toolbar. Do not show custom actions. */
 body.preset-current header #newBtn,body.preset-current header #saveBtn,body.preset-current header #pdfBtn,body.preset-current header .filebtn{display:none!important}
-</style><style id="unifiedWorkspaceToolbarStyle">
+
+/* ---- unifiedWorkspaceToolbarStyle ---- */
+
 .unified-workspace-toolbar{background:#fff;border:1px solid #dfe5ec;border-radius:12px;padding:12px 14px;margin:0 0 14px;display:flex;align-items:end;gap:12px;flex-wrap:wrap;position:relative}
 .unified-workspace-toolbar .workspace-business-label{flex:0 1 235px;min-width:190px}
 .unified-toolbar-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1 1 610px}
@@ -102,9 +109,17 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 #docMain.preset-editor-mode #unifiedWorkspaceToolbar,#docMain.working-mode #unifiedWorkspaceToolbar,#docMain.preview-mode #unifiedWorkspaceToolbar{display:flex!important}
 @media(max-width:700px){.unified-workspace-toolbar{align-items:stretch}.unified-workspace-toolbar .workspace-business-label{flex:1 1 100%}.unified-toolbar-actions{flex:1 1 100%}.unified-toolbar-actions button{flex:1 1 auto}}
 @media print{#unifiedWorkspaceToolbar{display:none!important}}
-</style><style id="presetSlotSettingsStyle">.preset-header-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.preset-header-config-grid textarea{width:100%;font-family:monospace}#presetHeaderConfigCard{margin-top:18px}@media(max-width:760px){.preset-header-config-grid{grid-template-columns:1fr}}</style><style id="websiteLinkStyle">.doc-website-link,.doc-website-link:link,.doc-website-link:visited{color:inherit!important;text-decoration:none!important;font:inherit}.doc-website-link:hover{text-decoration:none!important}</style><style id="presetDocumentHeadingSettingStyles">.preset-heading-configuration{margin-top:14px;border-top:1px solid #d9e2ef;padding-top:12px}.preset-heading-design-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.preset-heading-design-grid input[type=color],.preset-header-config-grid input[type=color]{height:40px;width:100%;padding:3px}@media(max-width:850px){.preset-heading-design-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---- presetSlotSettingsStyle ---- */
+.preset-header-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.preset-header-config-grid textarea{width:100%;font-family:monospace}#presetHeaderConfigCard{margin-top:18px}@media(max-width:760px){.preset-header-config-grid{grid-template-columns:1fr}}
+/* ---- websiteLinkStyle ---- */
+.doc-website-link,.doc-website-link:link,.doc-website-link:visited{color:inherit!important;text-decoration:none!important;font:inherit}.doc-website-link:hover{text-decoration:none!important}
+/* ---- presetDocumentHeadingSettingStyles ---- */
+.preset-heading-configuration{margin-top:14px;border-top:1px solid #d9e2ef;padding-top:12px}.preset-heading-design-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.preset-heading-design-grid input[type=color],.preset-header-config-grid input[type=color]{height:40px;width:100%;padding:3px}@media(max-width:850px){.preset-heading-design-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .preset-heading-configuration{display:flex;flex-direction:column;gap:7px}
-.preset-header-config-grid>div{min-width:0}.preset-heading-configuration .panel-inline-tools{margin:0}.preset-heading-configuration p{font-size:12px;margin:0 0 5px}.preset-heading-configuration>strong:not(:first-child){margin-top:14px}.preset-heading-configuration input[type=color]{width:100%;height:40px;padding:3px}</style><style id="splitLiveWorkspace20261031">
+.preset-header-config-grid>div{min-width:0}.preset-heading-configuration .panel-inline-tools{margin:0}.preset-heading-configuration p{font-size:12px;margin:0 0 5px}.preset-heading-configuration>strong:not(:first-child){margin-top:14px}.preset-heading-configuration input[type=color]{width:100%;height:40px;padding:3px}
+/* ---- splitLiveWorkspace20261031 ---- */
+
 /* Desktop: editable form and live A4 preview side by side.
    Existing mobile working/preview tabs and preset iframe remain unchanged. */
 @media screen and (min-width:1100px) {
@@ -133,7 +148,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
  }
 }
 /* A narrow screen retains the original separate Working/Preview controls. */
-</style><style id="normalizedWorkspaceAndToolbar20261031">
+
+/* ---- normalizedWorkspaceAndToolbar20261031 ---- */
+
 /* Both template families use one workspace width. The two working areas remain side by side. */
 @media screen {
  #docMain.on-workspace-tab {max-width:1800px!important;width:100%!important;}
@@ -159,7 +176,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
   }
  }
 }
-</style><style id="customUnifiedPageScroll20261031">
+
+/* ---- customUnifiedPageScroll20261031 ---- */
+
 /* Custom templates share the outer page scrollbar with the working form. */
 @media screen {
  #docMain.on-workspace-tab:not(.preset-editor-mode)>.preview {
@@ -192,7 +211,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 @media print {
  #preview>.paper {zoom:1!important}
 }
-</style><style id="normalizedPresetFamilySelector20261101">
+
+/* ---- normalizedPresetFamilySelector20261101 ---- */
+
 /* One consistent hierarchy: Template Source → Document Family → Type. */
 @media screen and (min-width:1000px){
  #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end!important;gap:12px!important}
@@ -202,7 +223,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 @media screen and (max-width:999px){
  #docMain.on-workspace-tab .workspace-picker>.row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:12px!important}
 }
-</style><style id="welloraLoginTheme">
+
+/* ---- welloraLoginTheme ---- */
+
 /* Wellora Energy login identity, consistent with IMS / SCS / JMS. */
 :root{--wellora-gold:#d3af36;--wellora-gold-hover:#e0c15a}
 @media screen {
@@ -224,8 +247,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
   @media(min-width:640px){#authCard{padding:32px}#authBrand img{width:112px;height:112px}#authCard #authBrand h2{font-size:30px}#authBrand p{font-size:14px}}
   @media(max-width:400px){#authCard{padding:22px 20px}}
 }
-</style>
-<style id="welloraLoginGoogleStyles">
+
+/* ---- welloraLoginGoogleStyles ---- */
+
 @media screen{
 #authCard #authGoogleSignIn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:48px;margin:20px 0 0;padding:10px 16px;background:#111;color:#fff;border:1px solid #333;border-radius:8px;font:600 14px ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;cursor:pointer}
 #authCard #authGoogleSignIn:hover{background:#1a1a1a}
@@ -234,7 +258,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 #authDivider span:first-child,#authDivider span:last-child{height:1px;flex:1;background:#374151}
 #authCard form{margin-top:0}
 }
-</style><style id="welloraWorkspaceTheme20261106">
+
+/* ---- welloraWorkspaceTheme20261106 ---- */
+
 /* Shared Wellora UI palette. Screen-only: A4 pages and printed/PDF documents retain their own styling. */
 @media screen {
   :root{--we-gold:#d3af36;--we-gold-hover:#e0c15a;--we-green:#16a34a;--we-green-hover:#15803d;--we-red:#dc2626;--we-red-hover:#b91c1c;--we-edge:#343434;--we-muted:#b9c1cc}
@@ -300,7 +326,9 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
   #docMain .previewTitle{color:#fff}
   #presetWorkspaceFrame{background:#000}
 }
-</style><style id="welloraMainReadability20261106">
+
+/* ---- welloraMainReadability20261106 ---- */
+
 /* Improve legibility of workspace controls without affecting white A4 pages. */
 @media screen {
  #docMain .workspace .card,#docMain .workspace .unified-workspace-toolbar,#docMain .workspace .workspace-picker{
