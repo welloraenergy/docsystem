@@ -4,7 +4,6 @@
 </style><style id="excelA4Preset">
 /* Dedicated, workbook-derived page layout; independent of DocSystem custom page settings */
 :root{--sheet-w:210mm;--sheet-h:297mm}
-body.preview .preview-only{display:block}
 .paper{width:var(--sheet-w);max-width:none;min-height:var(--sheet-h);height:auto;padding:10mm 10mm 12mm;font-family:Arial,Helvetica,sans-serif;font-size:8.8pt;line-height:1.24;color:#111}
 .paper .excel-title{text-align:right;font-weight:700;font-size:18pt;letter-spacing:.7pt;margin:0 0 8mm}
 .paper .excel-company{display:grid;grid-template-columns:60% 40%;gap:4mm;align-items:start;min-height:33mm;margin-bottom:4mm}
@@ -137,7 +136,6 @@ body.preview .preview-only{display:block}
 .paper .excel-info-table col:first-child{border-right:0!important}
 .paper .excel-info-table tr.info-filler{height:auto!important}
 .paper .excel-info-table tr.info-filler th,.paper .excel-info-table tr.info-filler td{padding:0!important}
-@media print{.paper .excel-info-table col:first-child{border-right:0!important}}
 
 </style><style id="headerNoVerticalDivider">
 /* Excel reference header uses aligned labels and values without separator rules. */
@@ -253,7 +251,6 @@ body.embedded-preset .wrap{margin:10px auto 0;padding:0 1px;max-width:100%}
 body.embedded-preset .form-only{width:100%}
 body.embedded-preset .form-only .card{max-width:none}
 body.embedded-preset .preview-only>.notice{display:none!important}
-@media print{body.embedded-preset .bar{display:none!important}}
 </style><style id="presetExplicitHeaderSlots">
 .paper .preset-header-slot{white-space:break-spaces;overflow-wrap:anywhere;line-height:1.25}
 /* Inline [size=...] overrides the slot default; profile-origin size tags are removed in JS. */
