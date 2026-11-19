@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "catalogName": "DocSystem Preset Template Registry",
-  "updated": "2026-11-16",
+  "updated": "2026-11-19",
   "families": [
     {
       "id": "quotation",
       "name": "Quotation",
       "manifest": "quotation/index.json",
       "editor": "preset-quotation.html",
-      "templateCount": 5,
-      "status": "current-editor-active-json-prepared-not-live-sourced"
+      "templateCount": 2,
+      "status": "three-live-presets-two-retained-json-definitions"
     },
     {
       "id": "purchase-order",

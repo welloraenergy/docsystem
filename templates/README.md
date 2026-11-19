@@ -9,7 +9,7 @@ The branch preserves the repository state **before preparing Quotation JSONs**. 
 
 ## Template families
 
-- `quotation/index.json`: Five Quotation presets extracted from the existing `preset-quotation.html`. Each file includes defaults, form fields, rental/consumables columns, the original effective terms wording, dynamic placeholders, A4 settings, and signature rows.
+- `quotation/index.json`: Two retained Quotation JSON definitions (Rental and Rental + Consumable). The active editor also includes Consumable. Each file includes defaults, form fields, rental/consumables columns, the original effective terms wording, dynamic placeholders, A4 settings, and signature rows.
 - `po/index.json`: Six Purchase Order presets based on the uploaded Wellora PO Excel workbook. Each has its own source worksheet, vendor fields, calculation formula, terms, and signatures.
 - `index.json`: Catalog for document-family discovery.
 
@@ -23,7 +23,7 @@ The template families remain intentionally independent. A future UI may share th
 4. Test A4 preview/print, row wrapping, terms page breaks, currency/SST, signatures, save/open, and access roles.
 5. Only then replace the live editor's hard-coded preset definitions with JSON loading.
 
-**Current live status:** Quotation editor unchanged; PO editor not yet connected.
+**Current live status:** Quotation editor has three active presets (Rental, Rental + Consumable and Consumable); PO editor loads its JSON definitions.
 
 ## Data compatibility
 

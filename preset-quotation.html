@@ -793,7 +793,7 @@ function drawFieldsOnly(){
  $('operationalInfoFields').innerHTML=fields.filter(f=>['rfq','rfqDate','operator','rig','well','loadout'].includes(f[0])).map(f=>field(...f)).join('');
  $('presetTermSettings').innerHTML='';
 }
-const presets=[{id:"rental3",name:"Rental",rental:3,cons:0},{id:"rentcon53",name:"Rental + Consumable",rental:3,cons:3},{id:"consumable",name:"Consumable",rental:0,cons:3},{id:"rental10",name:"Rental (Legacy Qty 10)",rental:10,cons:0,legacy:true},{id:"rentcon105",name:"Rental + Consumables (Legacy Qty 10+5)",rental:10,cons:5,legacy:true},{id:"specialtkr",name:"Rental — Special TKR (Legacy)",rental:3,cons:0,legacy:true}];
+const presets=[{id:"rental3",name:"Rental",rental:3,cons:0},{id:"rentcon53",name:"Rental + Consumable",rental:3,cons:3},{id:"consumable",name:"Consumable",rental:0,cons:3}];
 const fields=[["docTitle","Printed Document Heading","text"],["headingLines","Additional Heading Lines (optional)","textarea"],["reference","Quotation No.","text"],["date","Date","date"],["currency","Currency","select"],["client","Client Company","text"],["address","Client Address","textarea"],["contact","Contact Person","text"],["telephone","Telephone","text"],["email","Email","text"],["rfq","RFQ No.","text"],["rfqDate","RFQ Date","date"],["operator","Operator","text"],["rig","Rig","text"],["well","Well","text"],["loadout","Load Out","text"],["minDays","Minimum Rental Days","number"],["payment","Payment Terms","text"],["validity","Validity","text"]];
 let state={};const $=id=>document.getElementById(id),esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),fmt=n=>Number(n||0).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});
 const preset=()=>presets.find(p=>p.id===state.preset)||presets[0];
@@ -834,13 +834,11 @@ function daysPhrase(v){
  const n=Math.max(1,Math.floor(Number(v)||30));
  return dayWords[n] || numberToEnglish(n)+' ('+n+')';
 }
-function usesStandardRentalTerms(){return ['rental3','rental10','rentcon53','rentcon105','specialtkr'].includes(state.preset)}
-function isSpecialTkr(){return state.preset==='specialtkr'}
+function usesStandardRentalTerms(){return ['rental3','rentcon53'].includes(state.preset)}
 function rental3Terms(){
  const d=daysPhrase(state.minDays), paymentDays=Math.max(1,Math.floor(parseInt(state.payment,10)||30)), pay=daysPhrase(paymentDays),valid=daysPhrase(parseInt(state.validity,10)||30);
  return RENTAL3_TERMS.map(([title,body],i)=>{
   if(i===2)body=String(state.facilityAddress||'');
-  if(i===12&&state.preset==='rental10')body=body.replace('Sales and Service Tax ("SST")','Sales and Service ("SST")');
   if(i===13)body='Should the Client cancel the order after issuance of the PO, the Client shall be liable for a minimum rental charge equivalent to '+d+' days together with reimbursement of all costs and expenses already incurred by Wellora Energy in connection with the order. Such costs may include, but are not limited to, inspection, repair, mobilisation, freight, trucking, lifting services, and other logistics or preparation costs.';
   if(i===14)body='A minimum rental period of '+d+' days shall apply to all equipment rented under this quotation. The Client shall be liable for the rental charges for the full minimum rental period of '+d+' days regardless of the actual period of equipment usage or early return.';
   if(i===15)body='Payment for rental equipment shall be made within '+pay+' days from the date of the invoice. Invoice shall be billed monthly.';
@@ -853,41 +851,6 @@ function rental3Terms(){
 function rental3TermsHtml(){return renderClauses(rental3Terms())}
 
 
-const SPECIAL_TKR_TERMS=[
-["Purchase Order and Ordering Requirements",'A formal Purchase Order ("PO") must be issued to Wellora Energy Sdn. Bhd. (1690936-D) prior to any preparation, dispatch, mobilisation, or load-out of the rental equipment. All POs shall be addressed to: Wellora Energy Sdn. Bhd. (1690936-D), Lot 38, Block D, 2nd Floor, Lazenda Centre, Jalan Okk Abdullah, 87000 W.P. Labuan, Malaysia.'],
-["Correspondence","All correspondence and documentation relating to this quotation shall be addressed to Wellora Energy Sdn. Bhd. (1690936-D)."],
-["Equipment Availability and Price Adjustment","All quoted equipment is subject to availability at the time the order is placed. Any subsequent variation in the quantity of equipment required or the rental period may result in a corresponding adjustment to the quoted rates and/or charges."],
-["Equipment Pick-up Address",""],
-["Equipment Return Address",""],
-["Mobilisation, Demobilisation, Load Out and Backload","Client shall arrange and bear the cost of transportation to collect the rental equipment from the Equipment Pick-up Address and return the equipment to the Equipment Return Address."],
-["Rental Commencement and Completion",'The rental period shall begin on the date the equipment leaves the Pick-up Address and shall remain in effect until the equipment has been returned to the Return Address. The commencement and return dates shall be determined based on the duly completed and signed Wellora Energy\'s Delivery Ticket ("DT") and Return Ticket ("RT") by the Client or its authorised representative. Where such documentation is unavailable or has not been duly signed, Wellora Energy\'s records shall be deemed conclusive for the purpose of determining the rental period. Where the rental period is less than forty-five (45) days, a minimum rental period of thirty (30) days shall apply to each rental equipment, whereas rental period exceeding forty-five (45) days shall entitle the Client to a credit equivalent to fifteen (15) days of rental fees for the respective equipment.'],
-["Acceptance","The Client shall be deemed to have accepted the equipment in its delivered condition upon the duly signed DT by the Client or its authorised representative."],
-["Handling and Material Handling Equipment",'Where applicable, all costs relating to equipment handling and the use of Material Handling Equipment ("MHE") in connection with inspection, repair, maintenance, redress, or other post-rental activities shall be borne by the Client. If such services are required to be provided by Wellora Energy, these expenses shall be charged on a reimbursable basis at the actual documented cost plus fifteen percent (15%).'],
-["Post-Rental Inspection","Upon return of the equipment, Wellora Energy shall conduct a post-rental inspection equivalent to the pre-rental inspection specifications. Any inspection related costs shall be chargeable to the Client at the actual documented cost plus fifteen percent (15%)."],
-["Repair, Maintenance and Redress","Equipment returned following the rental period that requires repair, maintenance, refurbishment, redress, or connection repair shall be subject to additional charges. Such charges shall be calculated based on the actual documented cost incurred by Wellora Energy plus fifteen percent (15%)."],
-["Loss or Damage to Equipment","The Client shall remain responsible for the equipment throughout the rental period and shall be liable for any loss or damage to the equipment. Any repair, refurbishment, replacement, transportation, handling, or other costs arising from such loss or damage shall be charged to the Client based on the actual documented cost plus fifteen percent (15%), unless stated in the quotation otherwise."],
-["Consumables","(a) New single-legged slings supplied, if requested by the Client, shall be treated as direct sale items and charged at cost plus fifteen percent (15%).\n(b) Thread protectors lost or damaged shall be replaced at the Client's cost, charged at cost plus fifteen percent (15%).\n(c) Plastic pallets, where required, shall be treated as direct sale items and charged at cost plus fifteen percent (15%)."],
-["Taxes, Duties and Other Statutory Charges",'All quoted rates and prices are exclusive of any applicable taxes, levies, duties, withholding taxes, bank charges, or other statutory charges. Any such charges shall be borne by the Client. Where importation or exportation of equipment is required, all associated costs, including customs duties, taxes, port charges, clearance fees, and related expenses, shall be borne by the Client. Where applicable, Sales and Service Tax ("SST") shall be imposed at the prevailing statutory rate, currently six percent (6%).'],
-["Cancellation and Minimum Rental Commitment",""],
-["Minimum Rental Period",""],
-["Payment Terms",""],
-["Late Payment",""],
-["Quotation Validity",""]
-];
-function specialTkrTerms(){
- const d=daysPhrase(state.minDays),pay=daysPhrase(parseInt(state.payment,10)||30),valid=daysPhrase(parseInt(state.validity,10)||30);
- return SPECIAL_TKR_TERMS.map(([title,initial],i)=>{
-  let body=initial;
-  if(i===3)body=state.pickupAddress||'';
-  if(i===4)body=state.returnAddress||'';
-  if(i===14)body='Should the Client cancel the order after issuance of the PO, the Client shall be liable for a minimum rental charge equivalent to '+d+' days together with reimbursement of all costs and expenses already incurred by Wellora Energy in connection with the order. Such costs may include, but are not limited to, inspection, repair, mobilisation, freight, trucking, lifting services, and other logistics or preparation costs.';
-  if(i===15){body='A minimum rental period of '+d+' days shall apply to all equipment rented under this quotation. The Client shall be liable for the rental charges for the full minimum rental period of '+d+' days regardless of the actual period of equipment usage or early return.';}
-  if(i===16)body='Payment for rental equipment shall be made within '+pay+' days from the date of the invoice. Invoice shall be billed monthly.';
-  if(i===17)body='A late payment charge of ten percent (10%) per annum shall apply to any outstanding amount remaining unpaid after the expiry of the agreed '+pay+' days payment period.';
-  if(i===18)body='This quotation shall remain valid for '+valid+' days from the quotation date stated herein, unless otherwise agreed in writing.';
-  return {num:i+1,title,body};
- });
-}
 function quoteClauseHtml(body){
  const raw=String(body??'');
  const markers=[...raw.matchAll(/(?:^|\s)\(?([a-z])\)\s/gi)];
@@ -915,7 +878,7 @@ function quoteOrderButtons(key){return '<div style="display:flex;justify-content
 function activePresetClauses(){
  const omitted=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
  const replacements=state.clauseReplacements||{};
- const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();
+ const originals=rental3Terms();
  const minDays=daysPhrase(state.minDays),paymentDays=daysPhrase(parseInt(state.payment,10)||30),validityDays=daysPhrase(parseInt(state.validity,10)||30);
  const tokens={minDays,paymentDays,validityDays,facilityAddress:state.facilityAddress||'',pickupAddress:state.pickupAddress||'',returnAddress:state.returnAddress||''};
  const resolve=body=>String(body||'').replace(/\{(minDays|paymentDays|validityDays|facilityAddress|pickupAddress|returnAddress)\}/g,(match,key)=>tokens[key]);
@@ -924,37 +887,25 @@ function activePresetClauses(){
 }
 function activePresetClausesHtml(){return renderClauses(activePresetClauses())}
 function quoteTermsEditorMarkup(){
- const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();
+ const originals=rental3Terms();
  const hidden=Array.isArray(state.omittedTerms)?state.omittedTerms:[];
  const replacements=state.clauseReplacements||{};
  const extras=Array.isArray(state.extraTerms)?state.extraTerms:[];
  const clauseInput=t=>{
-  const special=isSpecialTkr();
   const n=Number(t.num);
   const fieldFor=key=>field(...fields.find(f=>f[0]===key));
   let controls='';
-  if(!special&&n===3)controls='<label>Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address">'+esc(state.facilityAddress||'')+'</textarea></label>';
-  if(special&&n===4)controls='<label>Equipment Pick-up Address<textarea id="pickupAddress" rows="3">'+esc(state.pickupAddress||'')+'</textarea></label>';
-  if(special&&n===5)controls='<label>Equipment Return Address<textarea id="returnAddress" rows="3">'+esc(state.returnAddress||'')+'</textarea></label>';
-  if(n===(special?16:15))controls+=fieldFor('minDays');
-  if(n===(special?17:16))controls+=fieldFor('payment');
-  if(n===(special?19:18))controls+=fieldFor('validity');
+  if(n===3)controls='<label>Designated Facility Address<textarea id="facilityAddress" rows="3" placeholder="Enter designated facility address">'+esc(state.facilityAddress||'')+'</textarea></label>';
+  if(n===15)controls+=fieldFor('minDays');
+  if(n===16)controls+=fieldFor('payment');
+  if(n===18)controls+=fieldFor('validity');
   return controls?'<div class="quote-clause-inputs" style="padding-top:9px;margin-top:9px;border-top:1px solid #e2e8f0;display:grid;gap:8px">'+controls+'</div>':'';
  };
  const cards=quoteEntries(originals,extras).map(t=>{const i=t.extraIndex;if(!t.original)return '<div data-order-card="'+t.orderKey+'" style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+quoteOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-extra-show="'+i+'" style="width:auto" '+(t.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label><label>Heading<input data-quote-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label><label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label><button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>';return '<div data-order-card="'+t.orderKey+'" style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+quoteOrderButtons(t.orderKey)+'<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>Show · '+t.num+'. '+esc(t.title)+'</strong></label><div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+clauseInput(t)+(editingPresetTemplate?'<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label>':'')+'</div>'}).join('');
- const core=originals.map(t=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
- '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-term="'+t.num+'" style="width:auto;flex:none" '+(!hidden.includes(Number(t.num))?'checked':'')+'><strong>Show · '+t.num+'. '+esc(t.title)+'</strong></label>'+
- '<div style="font-size:12px;white-space:pre-wrap;line-height:1.4;margin:6px 0">'+esc(t.body||'')+'</div>'+
- clauseInput(t)+(editingPresetTemplate?'<label>Replacement wording (optional)<textarea data-quote-replace="'+t.num+'" rows="2" placeholder="Leave empty to retain calculated original wording">'+esc(replacements[t.num]||'')+'</textarea></label>':'')+'</div>').join('');
- const added=extras.map((t,i)=>'<div style="border:1px solid #e1e8ef;border-radius:6px;padding:10px;margin:8px 0">'+
- '<label style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-quote-extra-show="'+i+'" style="width:auto" '+(t.enabled===false?'':'checked')+'>Show additional statement '+(i+1)+'</label>'+
- '<label>Heading<input data-quote-extra-title="'+i+'" value="'+esc(t.title||'')+'"></label>'+
- '<label>Statement<textarea data-quote-extra-body="'+i+'" rows="3">'+esc(t.body||'')+'</textarea></label>'+
- '<button type="button" class="small" data-quote-extra-remove="'+i+'">Remove added statement</button></div>').join('');
  return '<p class="muted">Original clauses are protected and cannot be removed. Toggle Show/Hide for this document, then add your own statements below. These selections are saved with the document. Formula-driven wording stays linked.'+(editingPresetTemplate?' To use dynamic values in custom wording: {minDays}, {paymentDays}, {validityDays}.':'')+'</p>'+
  cards+'<button type="button" class="small" id="quoteAddStatement">+ Add Statement</button>';
 }
-function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:'USD',client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",pickupAddress:"",returnAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],statementOrder:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
+function fresh(name){savedCompanySnapshot=null;savedHeaderSnapshot=null;initialCurrencySet=false;const p=presets.find(p=>p.id===name)||presets[0];id=null;state={preset:p.id,docTitle:"QUOTATION",headingLines:"",reference:refPrefix('QUO',new Date().toISOString().slice(0,10)),date:new Date().toISOString().slice(0,10),currency:'USD',client:"",address:"",contact:"",telephone:"",email:"",rfq:"",rfqDate:"",operator:"",rig:"",well:"",loadout:"",minDays:30,payment:"30 Days",validity:"30 Days",facilityAddress:"",rental:Array.from({length:p.rental},()=>({no:"",description:"",unit:"",qty:"",rate:"",lih:""})),consumables:Array.from({length:p.cons},()=>({no:"",description:"",unit:"",qty:"",rate:""})),terms:"",omittedTerms:[],statementOrder:[],clauseReplacements:{},extraTerms:[],termsFontSize:7,termsPageFit:"flow",signatures:["","",""]};draw()}
 function headingFormatControls(k){
  if(!['docTitle','headingLines'].includes(k))return '';
  return '<div class="panel-inline-tools" aria-label="Format '+(k==='docTitle'?'document heading':'additional lines')+'">'+
@@ -978,7 +929,7 @@ function grid(table){
  const arr=state[table],cols=table==="rental"?["description","unit","qty","rate","lih"]:["description","unit","qty","rate"];
  return (table==='rental'?'<datalist id="quote-lih-options"><option value="New Replacement + 15%"></option></datalist>':'')+'<table class="preset-item-editor"'+(table==='rental'?' style="min-width:1050px"':'')+'><colgroup>'+(table==='rental'?[5,34,7,6,22,22,4]:[5,55,8,7,19,6]).map(n=>'<col style="width:'+n+'%">').join('')+'</colgroup><thead><tr><th>No.</th>'+cols.map(x=>'<th>'+({description:"Description",unit:"Unit",qty:"Qty",rate:"Rate",lih:"LIH/DBR"}[x])+'</th>').join('')+'<th aria-label="Row actions"></th></tr></thead><tbody>'+arr.map((r,i)=>'<tr><td><input aria-label="Item number" data-table="'+table+'" data-row="'+i+'" data-key="no" value="'+esc(r.no||String(i+1))+'"></td>'+cols.map(k=>'<td>'+(k==='description'?'<textarea rows="2" data-table="'+table+'" data-row="'+i+'" data-key="'+k+'">'+esc(r[k]||'')+'</textarea>':k==='lih'?'<input list="quote-lih-options" aria-label="LIH/DBR: select New Replacement + 15% or enter custom text" data-table="'+table+'" data-row="'+i+'" data-key="lih" value="'+esc(quoteLihDisplay(r.lih))+'" placeholder="Select or type">':'<input data-table="'+table+'" data-row="'+i+'" data-key="'+k+'" value="'+esc(k==='rate'&&String(r[k]??'').trim()?fmt(Number(String(r[k]).replace(/,/g,''))):r[k]||'')+'">')+'</td>').join('')+'<td><button type="button" class="preset-remove-item" data-quote-delete-row="'+table+'" data-row="'+i+'" aria-label="Remove item '+(i+1)+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody></table>'
 }
-function draw(){$('preset').value=state.preset;renderBusinessSelector();drawFieldsOnly();$('rental').innerHTML=grid("rental");$('consumables').innerHTML=grid("consumables");$('consWrap').hidden=['rental3','rental10','specialtkr'].includes(state.preset);$('rentalWrap').hidden=state.preset==='consumable';$('terms').value=state.terms;$('termsPageFit').value=state.termsPageFit==='normal'?'normal':'flow';$('rental3TermsControls').hidden=!usesStandardRentalTerms();$('otherPresetTerms').hidden=usesStandardRentalTerms();$('rental3TermsReadOnly').innerHTML=usesStandardRentalTerms()?quoteTermsEditorMarkup():'';$('signatures').innerHTML=['Prepared By','Reviewed By','Approved By'].map((n,i)=>'<fieldset class="sign-form"><legend>'+n+'</legend>'+['Name','Position','Date'].map((label,j)=>'<label>'+label+(j===2?quotationDatePicker('data-sign-row="'+i+'" data-sign-key="date"',(typeof state.signatures[i]==='object'?state.signatures[i].date:'')):'<input data-sign-row="'+i+'" data-sign-key="'+['name','position','date'][j]+'" type="text" value="'+esc((typeof state.signatures[i]==='object'?state.signatures[i][['name','position','date'][j]]:(j===0?state.signatures[i]:''))||'')+'">')+'</label>').join('')+'</fieldset>').join('');render()}
+function draw(){$('preset').value=state.preset;renderBusinessSelector();drawFieldsOnly();$('rental').innerHTML=grid("rental");$('consumables').innerHTML=grid("consumables");$('consWrap').hidden=state.preset==='rental3';$('rentalWrap').hidden=state.preset==='consumable';$('terms').value=state.terms;$('termsPageFit').value=state.termsPageFit==='normal'?'normal':'flow';$('rental3TermsControls').hidden=!usesStandardRentalTerms();$('otherPresetTerms').hidden=usesStandardRentalTerms();$('rental3TermsReadOnly').innerHTML=usesStandardRentalTerms()?quoteTermsEditorMarkup():'';$('signatures').innerHTML=['Prepared By','Reviewed By','Approved By'].map((n,i)=>'<fieldset class="sign-form"><legend>'+n+'</legend>'+['Name','Position','Date'].map((label,j)=>'<label>'+label+(j===2?quotationDatePicker('data-sign-row="'+i+'" data-sign-key="date"',(typeof state.signatures[i]==='object'?state.signatures[i].date:'')):'<input data-sign-row="'+i+'" data-sign-key="'+['name','position','date'][j]+'" type="text" value="'+esc((typeof state.signatures[i]==='object'?state.signatures[i][['name','position','date'][j]]:(j===0?state.signatures[i]:''))||'')+'">')+'</label>').join('')+'</fieldset>').join('');render()}
 function resultTable(arr,table){if(!arr.length)return '';const rental=table==='rental';return '<h3>'+(rental?'Rental Equipment':'Consumables')+'</h3><table><thead><tr><th>No.</th><th>Description</th><th>Unit</th><th>Qty</th><th>'+(rental?'Daily Rental Rate':'Unit Price')+' ('+esc(state.currency)+')</th><th>'+(rental?'LIH/DBR':'Amount')+'</th></tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(quotationPresetValue(r.description))+'</td><td>'+esc(quotationPresetValue(r.unit))+'</td><td>'+esc(quotationPresetValue(r.qty))+'</td><td>'+esc(quotationPresetValue(r.rate))+'</td><td>'+(rental?esc(quotationPresetValue(r.lih)):fmt(Number(r.qty)*Number(r.rate)))+'</td></tr>').join('')+'</tbody></table>'}
 function formatExcelDate(v){return quotationDate(v,true)}
 function quotationPresetValue(value){
@@ -994,7 +945,7 @@ function render(){
   const filled=r=>Object.values(r).some(v=>String(v??'').trim()!=='');
   if(!arr.length)return '';
   const rental=key==='rental',columns=rental?['No','Description','Unit','Qty','Daily Rental Rate ('+state.currency+'/Day/Unit)','LIH/DBR ('+state.currency+'/Unit)']:['No','Description','Unit','Qty','Amount ('+state.currency+'/Unit)','Total Amount ('+state.currency+')'];
-  return (state.preset==='rentcon53'||state.preset==='rentcon105'?'<h4 class="quote-item-section-title">'+(rental?'A) Rental':'B) Consumable')+'</h4>':'')+'<table class="excel-table"><colgroup><col style="width:5%"><col style="width:35%"><col style="width:8%"><col style="width:8%"><col style="width:22%"><col style="width:22%"></colgroup><thead><tr>'+columns.map((t,i)=>'<th>'+(rental&&i===4?'Daily Rental Rate<br>('+esc(state.currency)+'/Day/Unit)':rental&&i===5?'LIH/DBR<br>('+esc(state.currency)+'/Unit)':esc(t))+'</th>').join('')+'</tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+esc(r.no||'')+'</td><td>'+esc(r.description||'')+'</td><td>'+esc(r.unit||'')+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(String(r.rate??'').trim()?fmt(Number(String(r.rate).replace(/,/g,''))):'')+'</td><td>'+(rental?esc(quoteLihDisplay(r.lih)):(filled(r)?fmt((Number(String(r.qty).replace(/,/g,''))||0)*(Number(String(r.rate).replace(/,/g,''))||0)):'') )+'</td></tr>').join('')+'</tbody></table>';
+  return (state.preset==='rentcon53'?'<h4 class="quote-item-section-title">'+(rental?'A) Rental':'B) Consumable')+'</h4>':'')+'<table class="excel-table"><colgroup><col style="width:5%"><col style="width:35%"><col style="width:8%"><col style="width:8%"><col style="width:22%"><col style="width:22%"></colgroup><thead><tr>'+columns.map((t,i)=>'<th>'+(rental&&i===4?'Daily Rental Rate<br>('+esc(state.currency)+'/Day/Unit)':rental&&i===5?'LIH/DBR<br>('+esc(state.currency)+'/Unit)':esc(t))+'</th>').join('')+'</tr></thead><tbody>'+arr.map((r,i)=>'<tr><td>'+esc(r.no||'')+'</td><td>'+esc(r.description||'')+'</td><td>'+esc(r.unit||'')+'</td><td>'+esc(r.qty||'')+'</td><td>'+esc(String(r.rate??'').trim()?fmt(Number(String(r.rate).replace(/,/g,''))):'')+'</td><td>'+(rental?esc(quoteLihDisplay(r.lih)):(filled(r)?fmt((Number(String(r.qty).replace(/,/g,''))||0)*(Number(String(r.rate).replace(/,/g,''))||0)):'') )+'</td></tr>').join('')+'</tbody></table>';
  };
  const intro=state.rfqDate?'With reference to your Request for Quotation (RFQ), dated '+esc(formatExcelDate(state.rfqDate))+', we are pleased to quote you the following item(s), subject to our terms and conditions:':'';
  const terms=usesStandardRentalTerms()?activePresetClausesHtml():String(state.terms||'').trim()?String(state.terms||'').split(/\n(?=\d+[.)]\s)/).map((x,i)=>'<div class="excel-term"><span class="term-num">'+(i+1)+'.</span><div class="term-text">'+quoteClauseHtml(x.replace(/^\d+[.)]\s*/,'' )).html+'</div></div>').join(''):'';
@@ -1092,8 +1043,8 @@ if(document.body.classList.contains('embedded-preset')){
  const statusNode=$('status');
  new MutationObserver(()=>informWorkspace('status',{status:statusNode.textContent||'Ready'})).observe(statusNode,{childList:true,subtree:true,characterData:true});
 }
-$('preset').innerHTML=presets.filter(p=>!p.legacy).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency='USD';initialCurrencySet=true;drawFieldsOnly();render();announcePresetReady();};
-$('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'))fresh(e.target.value);else e.target.value=state.preset};function finishquoteDrag(from,to){const keys=quoteEntries(isSpecialTkr()?specialTkrTerms():rental3Terms(),state.extraTerms||[]).map(x=>x.orderKey),a=keys.indexOf(from),b=keys.indexOf(to);if(a<0||b<0||a===b)return;keys.splice(b,0,keys.splice(a,1)[0]);state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}
+$('preset').innerHTML=presets.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('businessProfileSelect').onchange=e=>{if(id){renderBusinessSelector();return}const selected=businessProfiles.find(p=>p.id===e.target.value);if(!selected)return;businessProfile=selected;state.currency='USD';initialCurrencySet=true;drawFieldsOnly();render();announcePresetReady();};
+$('preset').onchange=e=>{if(confirm('Switch template and clear unsaved changes?'))fresh(e.target.value);else e.target.value=state.preset};function finishquoteDrag(from,to){const keys=quoteEntries(rental3Terms(),state.extraTerms||[]).map(x=>x.orderKey),a=keys.indexOf(from),b=keys.indexOf(to);if(a<0||b<0||a===b)return;keys.splice(b,0,keys.splice(a,1)[0]);state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}
 let quoteDragSession=null;
 document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-quote-drag]');if(!handle||e.button>0)return;const card=handle.closest('[data-order-card]');if(!card)return;quoteDragSession={id:e.pointerId,from:handle.dataset.quoteDrag,card,target:null,handle};handle.setPointerCapture?.(e.pointerId);card.style.opacity='.6';handle.style.cursor='grabbing';e.preventDefault()});
 document.addEventListener('pointermove',e=>{const d=quoteDragSession;if(!d||d.id!==e.pointerId)return;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-order-card]');if(d.target)d.target.style.outline='';d.target=target&&target!==d.card?target:null;if(d.target)d.target.style.outline='2px dashed #d3af36';e.preventDefault()});
@@ -1118,7 +1069,7 @@ document.addEventListener('click',e=>{
  state[key]=field.value;field.focus();field.setSelectionRange(start+before.length,start+before.length+selected.length);render();
 });
 document.addEventListener('click',e=>{
- const move=e.target.closest('[data-quote-order]');if(move){const originals=isSpecialTkr()?specialTkrTerms():rental3Terms();const entries=quoteEntries(originals,state.extraTerms||[]);const keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.quoteOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}return}
+ const move=e.target.closest('[data-quote-order]');if(move){const originals=rental3Terms();const entries=quoteEntries(originals,state.extraTerms||[]);const keys=entries.map(x=>x.orderKey),i=keys.indexOf(move.dataset.quoteOrder),j=i+Number(move.dataset.delta);if(i>=0&&j>=0&&j<keys.length){[keys[i],keys[j]]=[keys[j],keys[i]];state.statementOrder=keys;$('rental3TermsReadOnly').innerHTML=quoteTermsEditorMarkup();render()}return}
  const action=e.target.closest('button[data-quote-add-row],button[data-quote-remove-row],button[data-quote-delete-row]');
  const addTable=action?.dataset.quoteAddRow,removeTable=action?.dataset.quoteRemoveRow,deleteTable=action?.dataset.quoteDeleteRow;
  const validTable=t=>t==='rental'||t==='consumables';
