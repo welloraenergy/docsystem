@@ -179,10 +179,28 @@ export async function loadDocs(){
   });
   el("cloudList").innerHTML=!filtered.length?"<p>No matching documents found.</p>":filtered.map(s=>{
    const d=s.data(),uploaded=d.templateSource==="uploaded-pdf",locked=isDocumentLocked(d),manager=mayManageLocks(role);
+   // Display the recipient already saved by each preset; do not duplicate metadata or modify document saving.
+   const preset=d.templateSource==="preset"&&!uploaded?decode(d.presetData||{}):{};
+   const familyName=savedDocumentFamily(d);
+   const byFamily={
+    'quotation':['To',preset.client],
+    'purchase-order':['To',preset.fields?.vendorName],
+    'delivery-ticket':['Deliver To',preset.deliverTo?.company],
+    'returning-ticket':['Collect From',preset.collection?.company],
+    'invoice':['To',preset.client?.company],
+    'commercial-invoice-packing-list':['Consignee',preset.consignee?.company],
+    'goods-received-note':['Delivery To',preset.deliveryTo?.company],
+    'payment-voucher':['Pay To',preset.payTo],
+    'salary-payslip':['Employee',preset.fullName]
+   };
+   const [recipientLabel,recipientValue]=byFamily[familyName]||[];
+   const recipientName=typeof recipientValue==="string"?recipientValue.trim():"";
+   const recipient=recipientLabel&&recipientName&&!/^\\{[^{}]+\\}$/.test(recipientName)
+    ?'<div class="muted">'+escape(recipientLabel)+': '+escape(recipientName)+'</div>':'';
    const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
-   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div></div><div class="actions">'+open+lock+del+'</div></div>';
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
   const scope=reference?" · Reference: "+reference:(period==="all"?" · All dates":period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
