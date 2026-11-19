@@ -87,7 +87,7 @@
 .paper .excel-table td{height:9mm!important}
 .paper .excel-notes{font-weight:700}
 .paper .excel-terms-header{background:#000!important;color:white!important}
-@media print{.paper .excel-company{min-height:46mm!important}}
+
 </style><style id="excelFieldBehavior">
 /* Excel grey cells signal editable areas in the web form, while generated text remains read-only. */
 .form-only input[data-field],.form-only textarea[data-field],.form-only select[data-field],
@@ -148,8 +148,7 @@
 .paper .excel-ref .ref-line{grid-template-columns:21mm minmax(0,1fr)!important;gap:1mm!important;width:100%!important}
 .paper .excel-ref .ref-line span:first-child{text-align:right!important}
 .paper .excel-title{align-self:flex-end!important;text-align:right!important}
-@media print{.paper .excel-ref{margin-left:auto!important;margin-right:0!important}}
-</style><style id="profileLogoStyling">.paper .excel-business-logo{display:block;max-width:35mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin-bottom:1mm}</style><style id="excelLabelValueBaselineAlignment">
+@media print{}</style><style id="profileLogoStyling">.paper .excel-business-logo{display:block;max-width:35mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin-bottom:1mm}</style><style id="excelLabelValueBaselineAlignment">
 /* A shared text baseline for each label/value pair, including long multiline values. */
 .paper .excel-ref .ref-line{
  display:grid!important;
@@ -171,7 +170,7 @@
 .paper .excel-terms .excel-term .term-num{display:block!important;width:auto!important;min-width:0!important;text-align:center!important;white-space:nowrap}
 .paper .excel-terms .excel-term .term-text{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;text-align:justify!important;text-justify:inter-word!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;line-height:1.25!important}
 .paper .excel-terms .quote-lettered-items{display:block!important;margin-top:.5mm!important;padding-left:2mm!important;text-align:left!important}.paper .excel-terms .quote-lettered-item{display:block!important;margin:0 0 .45mm!important;padding:0!important;white-space:normal!important;text-align:left!important;line-height:1.25!important}
-@media print{.paper .excel-terms,.paper .excel-terms .excel-term{width:100%!important}.paper .excel-terms .term-text{text-align:justify!important}}
+
 </style><style id="termsTableBorders">
 /* Excel-style enclosing box with one continuous rule between clause numbers and text. */
 .paper .excel-terms{
@@ -198,10 +197,7 @@
 }
 .paper .excel-terms .excel-term .term-num{padding:0 1mm!important;text-align:center!important}
 .paper .excel-terms .excel-term .term-text{padding-right:0!important;text-align:justify!important}
-@media print{
- .paper .excel-terms{border:1px solid #555!important}
- .paper .excel-terms::before{border-left:1px solid #999!important}
-}
+
 </style><style id="unifiedTermsSection">
 /* Treat the heading and numbered clauses as one uninterrupted A4 section. */
 .paper .excel-terms-section{
@@ -463,15 +459,13 @@ body.embedded-preset .preview-only>.notice{display:none!important}
 .paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .paper table{border-collapse:collapse}
 .paper table th,.paper table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.paper .excel-client-title,.paper .excel-terms-header{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
+.paper .excel-client-title,.paper .excel-terms-header{font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
 .paper .excel-table thead th{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important}
 .paper .excel-table th,.paper .excel-table td{border:1px solid #777!important}
-.paper .excel-table td{border-color:#777!important}
 @media print{.paper{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 
 /* Preset typography defaults v20261111: configurable title/header styles remain untouched. */
 .paper .excel-client-title,.paper .excel-terms-header{font-size:9pt!important}
-.paper .excel-table thead th{font-size:8pt!important}
 .paper .excel-table tbody td{font-size:8pt}
 .paper .excel-client .item{font-size:8pt}
 .paper .excel-client .item b{font-size:8pt}
