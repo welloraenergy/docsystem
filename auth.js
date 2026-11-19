@@ -65,6 +65,7 @@ function unlock(user, profile) {
 async function verifyOnlineSession(user) {
   const attempt = ++sessionCheck;
   const uid = user?.uid || null;
+  const alreadyOpen = document.documentElement.classList.contains("auth-ready") && currentUid === uid;
   currentUid = uid;
   if (!navigator.onLine) {
     lock("Internet connection required. DocSystem cannot be used offline.");
@@ -77,7 +78,7 @@ async function verifyOnlineSession(user) {
     lock("Sign in with your approved account.");
     return;
   }
-  lock("Verifying live online access...");
+  if (!alreadyOpen) lock("Verifying live online access...");
   try {
     // Server-only verification: never unlock using a cached account profile.
     const snap = await getDocFromServer(doc(db, "users", uid));
@@ -91,6 +92,9 @@ async function verifyOnlineSession(user) {
       return;
     }
     const normalizedRole = profile.role === "staff" ? "user" : profile.role;
+    lastOnlineCheck = Date.now();
+    // Periodic/focus checks must not reset the currently edited document.
+    if (alreadyOpen) return;
     const managerOrAbove = ["superadmin", "manager"].includes(normalizedRole);
     window.DocSystemRole = normalizedRole;
     window.DocSystemCloud = cloud;
