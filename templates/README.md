@@ -29,4 +29,4 @@ The template families remain intentionally independent. A future UI may share th
 
 Existing Firebase documents remain untouched. If an eventual migration changes its JSON source, keep existing `presetData`, `templateId`, `templateSource` and original document metadata compatible. Never replace the original contract text in saved documents without explicit user action.
 
-Run `node templates/validate-presets.mjs` from the repo root to check the templates before UI integration.
+Preset definitions should be checked against their active editors before any template integration or removal.
