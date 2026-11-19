@@ -188,7 +188,7 @@
 <section class="card"><h3>Delivery Items</h3><div class="table-wrap"><table class="items" id="itemEditor"></table></div><p class="muted">Total Qty: <strong id="qtyTotal">0</strong></p><button id="addRow" class="preset-add-item">+ Add Item</button> <button id="removeRow" class="preset-remove-last">Remove Last</button></section>
 <section class="card"><h3>Notes</h3><div style="display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 10px"><input id="showTicketNotes" type="checkbox" style="width:16px;height:16px;flex:0 0 16px;margin:0;padding:0"><label for="showTicketNotes" style="display:inline;width:auto;margin:0">Show Notes</label></div><label id="ticketNotesEditor">Notes<textarea id="ticketComments" rows="4" placeholder="Notes, if any"></textarea></label></section>
 <section class="card"><h3>Signatures</h3><div id="signatureFields" class="sign-editor"></div></section>
-<section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Original images up to 12 MB each are uploaded to Firebase Storage on Save Online, without compression. Firestore stores only the file paths.</p><div id="photoFields" class="photo-editor"></div></section>
+<section class="card"><h3>Photos</h3><p class="muted">10 photo spaces in two columns. Images up to 12 MB can be selected. Larger images are compressed when needed, stored as Base64 in Firestore, and linked to this ticket. Existing saved photos remain supported.</p><div id="photoFields" class="photo-editor"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
 import {tableDate} from './preset-table-date.js?v=20261112-1';
@@ -198,8 +198,8 @@ import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceFiel
 
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {getStorage,ref as storageRef,uploadBytes,getDownloadURL,deleteObject} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
+import {getFirestore,doc,getDoc,setDoc,deleteDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {getStorage,ref as storageRef,getDownloadURL,deleteObject} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
 import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
 import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js?v=20261101-common2';
@@ -210,7 +210,8 @@ const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app),params=new 
 if(params.get('embedded')==='1')document.body.classList.add('embedded');
 let user=null,role='user',profiles=[],profile=null,globals={},template=null,state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,busy=false,loaded=false,saving=false;
 const pendingPhotos=new Map(),photoPreviews=new Map(),resolvedPhotos=new Map();
-const MAX_PHOTO_BYTES=12*1024*1024; // Original image upload; per-photo safety cap.
+const MAX_PHOTO_BYTES=12*1024*1024; // Original selection limit.
+const MAX_STORED_PHOTO_BYTES=200*1024; // Each optimized Base64 payload lives in its own Firestore document.
 const posted=(type,data={})=>{if(window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+type,...data},location.origin)};
 function notify(message){$('status').textContent=message;posted('status',{status:message})}
 function business(){const c=profile?.company||{};return savedCompany||{id:profile?.id||'',name:c.name||'',logo:c.logo||'',info:(typeof c.headerText==='string'&&c.headerText.trim())?c.headerText:(c.fields||[]).filter(x=>x?.value&&x.place!=='footer').map(x=>(x.label?x.label+': ':'')+x.value).join('\n'),placeholders:globals}}
@@ -240,14 +241,27 @@ function photoSrc(idx){
  if(photoPreviews.has(idx))return photoPreviews.get(idx);
  if(!item)return '';
  if(item.startsWith('data:image/')||item.startsWith('blob:')||item.startsWith('https://'))return item;
+ if(item.startsWith('documentFiles/')){
+  if(resolvedPhotos.has(item))return resolvedPhotos.get(item);
+  if(!photoRequests.has(item)){
+   const request=getDoc(doc(db,'documentFiles',item.slice('documentFiles/'.length))).then(snapshot=>{
+    if(!snapshot.exists())throw Error('Photo record not found');
+    const data=snapshot.data();
+    if(typeof data.base64!=='string'||!data.base64)throw Error('Photo data is missing');
+    resolvedPhotos.set(item,'data:'+(data.contentType||'image/jpeg')+';base64,'+data.base64);
+    if(state?.photos?.includes(item))draw();
+   }).catch(error=>{console.warn('Cannot display saved photo:',error);notify('Photo preview unavailable: '+(error.code||error.message))}).finally(()=>photoRequests.delete(item));
+   photoRequests.set(item,request);
+  }
+ }
  if(item.startsWith('delivery-tickets/')){
   if(resolvedPhotos.has(item))return resolvedPhotos.get(item);
-  // Keep Storage paths in Firestore, resolve temporary download URLs for display.
+  // Existing tickets may contain Firebase Storage paths; keep them readable.
   if(!photoRequests.has(item)){
    const request=getDownloadURL(storageRef(storage,item)).then(url=>{
     resolvedPhotos.set(item,url);
-    if(state?.photos?.includes(item)){draw()}
-   }).catch(error=>{console.warn('Cannot display photo:',error);notify('Photo preview unavailable: check Storage access')}).finally(()=>photoRequests.delete(item));
+    if(state?.photos?.includes(item))draw();
+   }).catch(error=>{console.warn('Cannot display legacy photo:',error);notify('Legacy photo unavailable: '+(error.code||error.message))}).finally(()=>photoRequests.delete(item));
    photoRequests.set(item,request);
   }
  }
@@ -262,7 +276,28 @@ function clearPhotoSession(){
 async function preparePhoto(file){
  if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type))throw Error('Choose a JPG, PNG, WebP or GIF image.');
  if(file.size>MAX_PHOTO_BYTES)throw Error('Image exceeds 12 MB. Choose a smaller file.');
- return file; // Upload original pixels and quality; no compression or canvas conversion.
+ if(file.size<=MAX_STORED_PHOTO_BYTES)return file;
+ // Keep small originals; optimize larger photos before Firestore Base64 storage.
+ const bitmap=await createImageBitmap(file);
+ try{
+  let edge=1400,quality=.84;
+  for(let attempt=0;attempt<12;attempt++){
+   const ratio=Math.min(1,edge/Math.max(bitmap.width,bitmap.height));
+   const canvas=document.createElement('canvas');
+   canvas.width=Math.max(1,Math.round(bitmap.width*ratio));
+   canvas.height=Math.max(1,Math.round(bitmap.height*ratio));
+   const ctx=canvas.getContext('2d');
+   if(!ctx)throw Error('Image compression is unavailable in this browser.');
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+   ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   const compressed=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+   if(!compressed)throw Error('Image compression failed.');
+   if(compressed.size<=MAX_STORED_PHOTO_BYTES)return compressed;
+   edge=Math.max(320,Math.floor(edge*.80));
+   quality=Math.max(.48,quality-.06);
+  }
+  throw Error('Image could not be reduced below 200 KB for online saving.');
+ }finally{bitmap.close()}
 }
 
 function draw(){
@@ -380,17 +415,15 @@ async function save(){
   const oldPhotos=Array.isArray(before.data()?.presetData?.photos)?before.data().presetData.photos:[];
   const nextPhotos=[...state.photos];
   for(const [idx,blob] of pendingPhotos){
-   notify('Uploading photo '+(idx+1)+' ('+Math.ceil(blob.size/1024)+' KB)…');
-   const path='delivery-tickets/'+user.uid+'/'+ref.id+'/photo-'+(idx+1)+'-'+Date.now()+'.'+({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'}[blob.type]||'img');
-   const fileRef=storageRef(storage,path);
-   try{
-    await uploadBytes(fileRef,blob,{contentType:blob.type||'application/octet-stream',customMetadata:{documentId:ref.id,slot:String(idx+1)}});
-   }catch(error){
-    const detail=[error?.code,error?.message].filter(Boolean).join(': ')||String(error);
-    throw new Error('Photo '+(idx+1)+' could not upload to Firebase Storage. '+detail);
-   }
-   uploaded.push(path);
-   nextPhotos[idx]=path;
+   notify('Saving photo '+(idx+1)+' to Firestore ('+Math.ceil(blob.size/1024)+' KB)…');
+   // PDF uploads use documentFiles with Base64; photos use separate records to avoid Firestore's 1 MiB document limit.
+   const bytes=new Uint8Array(await blob.arrayBuffer());
+   let binary='';
+   for(let offset=0;offset<bytes.length;offset+=8192)binary+=String.fromCharCode(...bytes.subarray(offset,offset+8192));
+   const photoRef=doc(collection(db,'documentFiles'));
+   await setDoc(photoRef,{base64:btoa(binary),contentType:blob.type||'image/jpeg',size:bytes.length,documentId:ref.id,slot:idx+1,createdBy:user.uid,createdAt:serverTimestamp()});
+   uploaded.push(photoRef.id);
+   nextPhotos[idx]='documentFiles/'+photoRef.id;
   }
   const snapshot=business();
   const payload={templateSource:'preset',templateFamily:'delivery-ticket',templateId:'standard',templateVersion:1,documentType:'Delivery Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
@@ -398,20 +431,21 @@ async function save(){
   docId=ref.id;savedCompany=snapshot;state.photos=nextPhotos;
   pendingPhotos.clear();
   for(const [idx,path] of nextPhotos.entries()){
-   if(photoPreviews.has(idx)&&path&&path.startsWith('delivery-tickets/')){
-    resolvedPhotos.set(path,photoPreviews.get(idx));photoPreviews.delete(idx);
+   if(photoPreviews.has(idx)&&path&&path.startsWith('documentFiles/')){
+    const url=photoPreviews.get(idx);
+    resolvedPhotos.set(path,url);photoPreviews.delete(idx);
    }
   }
-  // Remove replaced or cleared Storage files only after the new document is saved.
+  // Remove superseded image records only after the ticket is successfully saved.
   for(const path of oldPhotos){
-   if(typeof path==='string'&&path.startsWith('delivery-tickets/')&&!nextPhotos.includes(path)){
-    deleteObject(storageRef(storage,path)).catch(e=>console.warn('Old photo cleanup pending:',e));
-   }
+   if(typeof path!=='string'||nextPhotos.includes(path))continue;
+   if(path.startsWith('documentFiles/'))deleteDoc(doc(db,'documentFiles',path.slice('documentFiles/'.length))).catch(error=>console.warn('Old photo cleanup pending:',error));
+   else if(path.startsWith('delivery-tickets/'))deleteObject(storageRef(storage,path)).catch(error=>console.warn('Legacy photo cleanup pending:',error));
   }
   draw();notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
-  for(const path of uploaded)deleteObject(storageRef(storage,path)).catch(()=>{});
+  for(const id of uploaded)deleteDoc(doc(db,'documentFiles',id)).catch(()=>{});
   const detail=[e?.code,e?.message].filter(Boolean).join(': ')||String(e);
   notify('Delivery Ticket save failed: '+detail);reportPresetSaveError(e);alert('Delivery Ticket save failed: '+detail);
  }finally{saving=false}
