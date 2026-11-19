@@ -398,7 +398,8 @@ async function save(){
   if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='delivery-ticket'||d.data().documentType==='Delivery Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const before=await getDoc(ref);
-  const oldPhotos=Array.isArray(before.data()?.presetData?.photos)?before.data().presetData.photos:[];
+  const storedPhotos=before.exists()?decodePreset(before.data()?.presetData||{}).photos:[];
+   const oldPhotos=Array.isArray(storedPhotos)?storedPhotos:[];
   const nextPhotos=[...state.photos];
   for(const [idx,blob] of pendingPhotos){
    notify('Saving photo '+(idx+1)+' to Firestore ('+Math.ceil(blob.size/1024)+' KB)…');
@@ -434,7 +435,8 @@ async function save(){
   // Do not touch the saved document if an upload or write failed.
   for(const id of uploaded)deleteDoc(doc(db,'documentFiles',id)).catch(()=>{});
   const detail=[e?.code,e?.message].filter(Boolean).join(': ')||String(e);
-  notify('Delivery Ticket save failed: '+detail);reportPresetSaveError(e);alert('Delivery Ticket save failed: '+detail);
+  const description=e.code==='permission-denied'?'Firestore permission denied. The documentFiles rules must allow Base64 ticket images.':(e.code||e.message);
+  notify('Delivery Ticket save failed: '+description);reportPresetSaveError(e);alert('Delivery Ticket save failed: '+description);
  }finally{saving=false}
 }
 async function loadSaved(id){
@@ -492,7 +494,7 @@ document.addEventListener('change',async e=>{
   const localUrl=URL.createObjectURL(blob);
   photoPreviews.set(idx,localUrl);pendingPhotos.set(idx,blob);
   state.photos[idx]='pending:'+idx;
-  draw();notify('Photo '+(idx+1)+' ready ('+Math.ceil(blob.size/1024)+' KB). Save Online to upload.');
+  draw();notify('Photo '+(idx+1)+' ready ('+Math.ceil(blob.size/1024)+' KB). Save Online to store in Firestore.');
  }catch(err){notify('Photo selection failed');alert('Could not process photo: '+err.message)}
 });
 async function start(){
