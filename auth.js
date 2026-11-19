@@ -1,7 +1,7 @@
-import * as cloud from "./cloud.js?v=20261119-recipient-list";
+import * as cloud from "./cloud.js?v=20261119-online-install1";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDocFromServer } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",
@@ -23,12 +23,37 @@ const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
 const account = document.getElementById("authAccount");
 const logout = document.getElementById("authLogout");
+
+const installButton = document.getElementById("installApp");
+let installPrompt = null;
+const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+installButton.hidden = installed;
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  installPrompt = event;
+  installButton.hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+  installPrompt = null;
+  installButton.hidden = true;
+});
+installButton.addEventListener("click", async () => {
+  if (installPrompt) {
+    const prompt = installPrompt;
+    installPrompt = null;
+    await prompt.prompt();
+  } else {
+    alert("Use your browser menu and choose Install app (Chrome/Edge) or Add to Home Screen (Safari).");
+  }
+});
+let sessionCheck = 0;
 let currentUid = null;
+let lastOnlineCheck = 0;
 function lock(text = "") {
   document.documentElement.classList.remove("auth-ready");
   screen.hidden = false;
   account.hidden = true;
-  if(text) message.textContent = text;
+  if (text) message.textContent = text;
 }
 function unlock(user, profile) {
   screen.hidden = true;
@@ -37,7 +62,51 @@ function unlock(user, profile) {
   account.textContent = (profile.email || user.email) + " · " + profile.role;
   document.documentElement.classList.add("auth-ready");
 }
-lock("Checking sign-in...");
+async function verifyOnlineSession(user) {
+  const attempt = ++sessionCheck;
+  const uid = user?.uid || null;
+  currentUid = uid;
+  if (!navigator.onLine) {
+    lock("Internet connection required. DocSystem cannot be used offline.");
+    return;
+  }
+  if (!user) {
+    cloud.clearCloud();
+    window.DocSystemRole = null;
+    window.DocSystemCloud = null;
+    lock("Sign in with your approved account.");
+    return;
+  }
+  lock("Verifying live online access...");
+  try {
+    // Server-only verification: never unlock using a cached account profile.
+    const snap = await getDocFromServer(doc(db, "users", uid));
+    if (attempt !== sessionCheck || currentUid !== uid || !navigator.onLine) return;
+    const profile = snap.exists() ? snap.data() : null;
+    const validRole = ["superadmin", "manager", "user", "staff"].includes(profile?.role);
+    if (!profile || profile.status !== "active" || !validRole ||
+        (profile.email || "").toLowerCase() !== (user.email || "").toLowerCase()) {
+      await signOut(auth);
+      lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
+      return;
+    }
+    const normalizedRole = profile.role === "staff" ? "user" : profile.role;
+    const managerOrAbove = ["superadmin", "manager"].includes(normalizedRole);
+    window.DocSystemRole = normalizedRole;
+    window.DocSystemCloud = cloud;
+    document.querySelectorAll('#settingsNavTab, nav.tabs [data-tab="library"], [data-subpage="template"], #cloudMenuUsers').forEach(x => x.hidden = !managerOrAbove);
+    // Wait for live settings and document listing before giving access to the workspace.
+    await cloud.startCloud(user, profile);
+    if (attempt !== sessionCheck || !navigator.onLine || auth.currentUser?.uid !== uid) return;
+    lastOnlineCheck = Date.now();
+    unlock(user, {...profile, role: normalizedRole});
+  } catch (error) {
+    if (attempt !== sessionCheck) return;
+    console.error("DocSystem live access check failed:", error);
+    lock("Online connection required. Live data could not be verified: " + (error.code || error.message));
+  }
+}
+lock(navigator.onLine ? "Checking live connection..." : "Internet connection required. DocSystem cannot be used offline.");
 form.addEventListener("submit", async event => {
   event.preventDefault();
   submit.disabled = true;
@@ -76,41 +145,35 @@ logout.addEventListener("click", async () => {
   lock("Signing out...");
   await signOut(auth);
 });
-onAuthStateChanged(auth, async user => {
-  const uid = user?.uid || null;
-  currentUid = uid;
-  if (!user) {
-    cloud.clearCloud();
-    window.DocSystemRole=null;
-    window.DocSystemCloud=null;
-    lock("Sign in with your approved account.");
-    return;
-  }
-  lock("Checking account access...");
-  try {
-    const snap = await getDoc(doc(db, "users", uid));
-    if (currentUid !== uid) return;
-    const profile = snap.exists() ? snap.data() : null;
-    const validRole = ["superadmin", "manager", "user", "staff"].includes(profile?.role);
-    if (!profile || profile.status !== "active" || !validRole ||
-        (profile.email || "").toLowerCase() !== (user.email || "").toLowerCase()) {
-      await signOut(auth);
-      lock("Account not approved, inactive, or missing a valid user profile. Contact an administrator.");
-      return;
-    }
-    const normalizedRole=profile.role==="staff"?"user":profile.role;
-    const managerOrAbove=["superadmin","manager"].includes(normalizedRole);
-    window.DocSystemRole=normalizedRole;
-    window.DocSystemCloud=cloud;
-    document.querySelectorAll('#settingsNavTab, nav.tabs [data-tab="library"], [data-subpage="template"], #cloudMenuUsers').forEach(x=>x.hidden=!managerOrAbove);
-    unlock(user, {...profile,role:normalizedRole});
-    cloud.startCloud(user, profile).catch(error => {
-      console.error("DocSystem cloud initialization failed:", error);
-      const status=document.getElementById("cloudStatus");
-      if(status) status.textContent="Cloud loading failed: "+(error.code || error.message);
-    });
-  } catch (error) {
-    console.error("DocSystem user profile check failed:", error);
-    lock("Account verification failed: " + (error.code || error.message));
+
+onAuthStateChanged(auth, user => {
+  verifyOnlineSession(user);
+});
+window.addEventListener("offline", () => {
+  ++sessionCheck;
+  lock("Internet connection required. DocSystem cannot be used offline.");
+});
+window.addEventListener("online", () => {
+  if (auth.currentUser) verifyOnlineSession(auth.currentUser);
+});
+window.addEventListener("focus", () => {
+  if (auth.currentUser && navigator.onLine && Date.now() - lastOnlineCheck > 30000) {
+    verifyOnlineSession(auth.currentUser);
   }
 });
+// An open installed window must not continue functioning after it loses server access.
+setInterval(async () => {
+  if (!auth.currentUser || !navigator.onLine) return;
+  if (!document.documentElement.classList.contains("auth-ready")) return;
+  const uid = auth.currentUser.uid;
+  try {
+    const snap = await getDocFromServer(doc(db, "users", uid));
+    if (!snap.exists() || snap.data().status !== "active") {
+      ++sessionCheck;
+      lock("Live account verification failed. Online access is required.");
+    } else lastOnlineCheck = Date.now();
+  } catch {
+    ++sessionCheck;
+    lock("Connection to Firestore lost. Reconnect to continue.");
+  }
+}, 60000);

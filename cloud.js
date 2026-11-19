@@ -3,7 +3,7 @@ import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,u
 import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261117-lock1";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,startAfter,getDocs,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,startAfter,getDocs,getDocsFromServer,getDocFromServer,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 let db=null;
 let user=null, role=null, currentId=null, writeTimer=null, loading=false; const rank={user:1,staff:1,manager:2,superadmin:3};
 const el=id=>document.getElementById(id);
@@ -37,7 +37,7 @@ export async function startCloud(authUser,profile){
   el("cloudMenuUsers").hidden=!canManage();
   el("newSuperadminOption").hidden=!canAdmin();
   document.querySelectorAll(".cloud-admin-only").forEach(x=>x.hidden=!canManage());
-  const snap=await getDoc(doc(db,"appSettings","main"));
+  const snap=await getDocFromServer(doc(db,"appSettings","main"));
   if(snap.exists() && snap.data().settings)bridge().setSettings(decode(snap.data().settings));
   else if(canManage())await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedAt:serverTimestamp(),updatedBy:user.uid});
   loading=false;notify("Online · "+profile.role);
@@ -152,7 +152,7 @@ export async function loadDocs(){
   const records=[];
   let truncated=false;
   if(reference){
-   const direct=await getDocs(query(collectionRef,where("number","==",reference),limit(100)));
+   const direct=await getDocsFromServer(query(collectionRef,where("number","==",reference),limit(100)));
    records.push(...direct.docs);
    truncated=direct.size===100;
   }else{
@@ -163,7 +163,7 @@ export async function loadDocs(){
      :[orderBy("date","desc")];
     if(cursor)queryParts.push(startAfter(cursor));
     queryParts.push(limit(Math.min(batchSize,maxRecords-records.length)));
-    const page=await getDocs(query(collectionRef,...queryParts));
+    const page=await getDocsFromServer(query(collectionRef,...queryParts));
     records.push(...page.docs);
     if(page.empty||page.size<batchSize)break;
     cursor=page.docs[page.docs.length-1];
