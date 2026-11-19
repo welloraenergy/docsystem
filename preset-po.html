@@ -6,8 +6,8 @@
 </style><style id="sharedPresetHeaderRhythm20261101">
 /* Match Quotation: company identity left; separate document title and metadata right. */
 @media screen,print {
- .paper .po-head{min-height:48mm!important;align-items:stretch!important}
- .paper .po-right{min-height:48mm!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;align-items:flex-end!important}
+ .paper .po-head{align-items:stretch!important}
+ .paper .po-right{display:flex!important;flex-direction:column!important;justify-content:space-between!important;align-items:flex-end!important}
  .paper .po-title{width:100%!important;flex:0 0 auto!important}
  .paper .po-meta{margin-top:11mm!important;margin-bottom:2mm!important;flex:0 0 auto!important}
 }
@@ -97,7 +97,7 @@
 .paper .po-info-table tr.info-address th,.paper .po-info-table tr.info-address td{height:13mm}
 .paper .po-info-table tr.info-filler{height:100%}
 .paper .po-info-table tr.info-filler th,.paper .po-info-table tr.info-filler td{padding:0!important}
-@media print{.paper .po-info-table th{border-right:1px solid #999!important}}
+
 
 /* Quotation's Terms & Conditions uses one box around heading and clauses,
    with a continuous vertical separator after the number column. */
@@ -135,12 +135,7 @@
  min-width:0!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;
  line-height:1.3!important
 }
-@media print{
- .paper .po-vendor{border:1px solid #444!important;border-top:0!important}
- .paper .po-info-table th{border-right:1px solid #999!important}
- .paper .po-terms-section.excel-terms-section{border:1px solid #444!important}
- .paper .po-terms-section .po-terms::before{border-left:1px solid #999!important}
-}
+
 </style><style id="poClause6PermanentFields20261101">.paper .po-clause6-note{white-space:pre-wrap;overflow-wrap:anywhere;margin:1.4mm 0 0 0;padding:1mm 0;border-top:1px solid #ddd}.po-signature-groups label,.po-terms-fitting label{min-width:0}</style><style id="poClause6EditFields20261101">
 .po-terms-contact-editor{border:1px solid #d8e0e8;border-radius:8px;padding:12px;margin:10px 0 12px;background:#fff;display:flex;flex-direction:column;gap:10px}
 .po-contact-edit-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -249,8 +244,8 @@
 .paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .paper table{border-collapse:collapse}
 .paper table th,.paper table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.paper .po-vendor-title,.paper .po-terms-header,.paper .po-section-title{font-size:8pt!important;font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
-.paper .po-items thead th{font-size:7pt!important;font-family:Arial,sans-serif!important;background:#080808!important;color:#fff!important}
+.paper .po-vendor-title,.paper .po-terms-header,.paper .po-section-title{font-family:Arial,sans-serif!important;font-weight:700!important;text-transform:capitalize}
+.paper .po-items thead th{font-family:Arial,sans-serif!important;background:#080808!important;color:#fff!important}
 .paper .po-items th,.paper .po-items td{border:1px solid #666!important}
 .paper .po-items tbody tr:nth-child(odd) td{background:#f3f3f3!important}
 .paper .po-items tbody tr:nth-child(even) td{background:#fff!important}
@@ -281,8 +276,8 @@
  .paper .excel-ref,.paper .po-meta,.paper .dt-meta,.paper .inv-meta{position:relative;top:-2mm;margin-right:0!important}
  .paper .excel-right,.paper .po-right,.paper .dt-right,.paper .inv-right{padding-right:0!important}
 }
-</style>
-<style id="welloraPORhythm20261112">@media screen,print{.paper .po-head,.paper .po-right{min-height:44mm!important}.paper .po-vendor{margin-bottom:3mm!important}.paper .po-totals{width:76mm!important;border-collapse:collapse}.paper .po-totals td{padding:1.3mm 2mm!important}.paper .po-totals td:last-child{text-align:right}.paper .po-totals tr:last-child{border-top:1px solid #333;font-weight:700}}
+
+@media screen,print{.paper .po-head,.paper .po-right{min-height:44mm!important}.paper .po-vendor{margin-bottom:3mm!important}.paper .po-totals{width:76mm!important;border-collapse:collapse}.paper .po-totals td{padding:1.3mm 2mm!important}.paper .po-totals td:last-child{text-align:right}.paper .po-totals tr:last-child{border-top:1px solid #333;font-weight:700}}
 /* Document metadata stays together at the right edge; reserve full revision suffix (0001-R1). */
 @media screen,print {
  .paper .po-right{align-items:flex-end!important;min-width:0!important;justify-content:space-between!important}
