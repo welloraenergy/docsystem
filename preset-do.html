@@ -383,7 +383,12 @@ async function save(){
    notify('Uploading photo '+(idx+1)+' ('+Math.ceil(blob.size/1024)+' KB)…');
    const path='delivery-tickets/'+user.uid+'/'+ref.id+'/photo-'+(idx+1)+'-'+Date.now()+'.'+({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'}[blob.type]||'img');
    const fileRef=storageRef(storage,path);
-   await uploadBytes(fileRef,blob,{contentType:blob.type||'application/octet-stream',customMetadata:{documentId:ref.id,slot:String(idx+1)}});
+   try{
+    await uploadBytes(fileRef,blob,{contentType:blob.type||'application/octet-stream',customMetadata:{documentId:ref.id,slot:String(idx+1)}});
+   }catch(error){
+    const detail=[error?.code,error?.message].filter(Boolean).join(': ')||String(error);
+    throw new Error('Photo '+(idx+1)+' could not upload to Firebase Storage. '+detail);
+   }
    uploaded.push(path);
    nextPhotos[idx]=path;
   }
@@ -407,7 +412,8 @@ async function save(){
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
   for(const path of uploaded)deleteObject(storageRef(storage,path)).catch(()=>{});
-  notify('Delivery Ticket save failed: '+(e.code||e.message));reportPresetSaveError(e);alert('Delivery Ticket save failed: '+(e.code||e.message));
+  const detail=[e?.code,e?.message].filter(Boolean).join(': ')||String(e);
+  notify('Delivery Ticket save failed: '+detail);reportPresetSaveError(e);alert('Delivery Ticket save failed: '+detail);
  }finally{saving=false}
 }
 async function loadSaved(id){
