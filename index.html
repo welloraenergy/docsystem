@@ -877,7 +877,7 @@ function activeWorkspacePreset(){return document.getElementById('workspaceTempla
 function syncPresetBusiness(){if(activeWorkspacePreset())sendPresetCommand('business',{profileId:document.getElementById('businessProfile').value})}
 function workspaceAction(action){
  if(activeWorkspacePreset()){
-  if(action==='new'){if(confirm('Start a new preset document? Unsaved changes will be lost.'))sendPresetCommand('new');return}
+  if(action==='new'){if(confirm('Start a new preset document? Unsaved changes will be lost.')){sendPresetCommand('new')}return}
   if(action==='save')return sendPresetCommand('save',{isDraft:document.getElementById('documentDraft').checked});
   if(action==='print'){
    const frame=document.getElementById('presetWorkspaceFrame');
@@ -1017,7 +1017,7 @@ window.addEventListener('message',e=>{
  }
  if(e.data?.type==='docsystem-preset-saved'){
   document.getElementById('documentDraft').checked=e.data.isDraft===true;
-  window.DocSystemCloud?.selectDocumentTab(e.data.isDraft===true);
+  window.DocSystemCloud?.selectDocumentTab?.(e.data.isDraft===true);
   document.getElementById('workspaceStatus').textContent=(e.data.isDraft===true?'Draft saved online: ':'Saved online: ')+(e.data.number||'Document');
   const savedDate=String(e.data.date||'');
   if(/^\d{4}-\d{2}-\d{2}$/.test(savedDate))document.getElementById('cloudMonth').value=savedDate.slice(0,7);

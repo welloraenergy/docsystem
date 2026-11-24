@@ -136,6 +136,7 @@ function savedDocumentFamily(record){
 let documentListRequest=0;
 let showDrafts=false;
 export function selectDocumentTab(draft){
+ if(showDrafts!==(draft===true)){el("cloudList").innerHTML="";documentListRequest++;}
  showDrafts=draft===true;
  for(const [id,active] of [["cloudSavedTab",!showDrafts],["cloudDraftTab",showDrafts]]){el(id).classList.toggle("primary",active);el(id).setAttribute("aria-pressed",String(active));}
  el("cloudUploadCard").hidden=showDrafts;
@@ -143,6 +144,7 @@ export function selectDocumentTab(draft){
 export async function loadDocs(){
  if(!user)return;
  const requestId=++documentListRequest;
+ const requestedDrafts=showDrafts;
  const period=["all","year","month"].includes(el("cloudPeriod").value)?el("cloudPeriod").value:"all";
  const year=String(el("cloudYear").value||"").trim();
  const month=el("cloudMonth").value;
@@ -179,7 +181,7 @@ export async function loadDocs(){
   }
   // A previous month/search request must never overwrite a newer refresh.
   if(requestId!==documentListRequest||!user)return;
-  const filtered=records.filter(s=>(s.data().isDraft===true&&s.data().templateSource!=="uploaded-pdf")===showDrafts&&(!family||savedDocumentFamily(s.data())===family));
+  const filtered=records.filter(s=>(s.data().isDraft===true&&s.data().templateSource!=="uploaded-pdf")===requestedDrafts&&(!family||savedDocumentFamily(s.data())===family));
   filtered.sort((a,b)=>{
    const result=documentNumberCollator.compare(String(a.data().number||''),String(b.data().number||''));
    return (sort==="asc"?result:-result)||a.id.localeCompare(b.id);
