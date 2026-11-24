@@ -1,4 +1,4 @@
-import * as cloud from "./cloud.js?v=20261119-online-install1";
+import * as cloud from "./cloud.js?v=20261124-draft1";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { getFirestore, doc, getDocFromServer } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";

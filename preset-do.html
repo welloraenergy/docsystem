@@ -181,7 +181,7 @@
  .paper .dt-meta .dt-meta-line span{text-align:left!important;white-space:nowrap!important;padding:0!important;align-self:baseline!important;overflow:visible!important;overflow-wrap:normal!important;background:transparent!important}
 }
 </style>
-</head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+</head><body><header><h2>Delivery Ticket Preset</h2></header><div class="bar"><button id="newBtn">New</button><label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card"><h3>Delivery Ticket Details</h3><div class="fields" id="documentFields"></div></section>
 <section class="card"><h3>Collection Address &amp; Contact Person</h3><div class="section-fields" id="collectionFields"></div></section>
 <section class="card"><h3>Deliver To</h3><div class="section-fields" id="deliverToFields"></div></section>
@@ -192,7 +192,7 @@
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong><small id="pageCount"></small></div><div id="paper"></div></div></div>
 <script type="module">
 import {tableDate} from './preset-table-date.js?v=20261112-1';
-import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261124-draft1';
 
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
@@ -358,7 +358,7 @@ function fitPreview(){
  const scale=Math.min(1,available/(210*96/25.4));
  $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
 }
-function newDoc(){if(saving)return;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('')}draw();notify('New Delivery Ticket');ready()}
+function newDoc(){if(saving)return;$('documentDraft').checked=false;clearPhotoSession();docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):empty();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('')}draw();notify('New Delivery Ticket');ready()}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -386,7 +386,7 @@ function documentSaveMessage(reference,duplicate=false){
   panel.append(title,message,actions);veil.append(panel);host.body.append(veil);host.addEventListener('keydown',onKey,true);(cancel||okay).focus();
  })
 }
-async function save(){
+async function save(){const isDraft=$('documentDraft').checked;
  if(saving)return;
  if(!user)return alert('Please sign in first');
  if(!String(state.fields.reference||'').trim()||state.fields.reference===refPrefix('DT',state.fields.date))return alert('Enter Reference No. before saving');
@@ -398,6 +398,7 @@ async function save(){
   if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='delivery-ticket'||d.data().documentType==='Delivery Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const before=await getDoc(ref);
+  if(isDraft&&before?.exists()&&before.data().isDraft!==true&&before.data().locked!==false)throw Error('Unlock the existing saved document before converting it to a draft.');
   const storedPhotos=before.exists()?decodePreset(before.data()?.presetData||{}).photos:[];
    const oldPhotos=Array.isArray(storedPhotos)?storedPhotos:[];
   const nextPhotos=[...state.photos];
@@ -414,7 +415,7 @@ async function save(){
    nextPhotos[idx]='documentFiles/'+photoRef.id;
   }
   const snapshot=business();
-  const payload={templateSource:'preset',templateFamily:'delivery-ticket',templateId:'standard',templateVersion:1,documentType:'Delivery Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const payload={isDraft,...(!before?.exists()&&isDraft?{locked:false}:before?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:'delivery-ticket',templateId:'standard',templateVersion:1,documentType:'Delivery Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,payload,{merge:true});
   docId=ref.id;savedCompany=snapshot;state.photos=nextPhotos;
   pendingPhotos.clear();
@@ -430,7 +431,7 @@ async function save(){
    if(path.startsWith('documentFiles/'))deleteDoc(doc(db,'documentFiles',path.slice('documentFiles/'.length))).catch(error=>console.warn('Old photo cleanup pending:',error));
 
   }
-  draw();notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
+  draw();notify('Saved online: '+state.fields.reference);$('documentDraft').checked=isDraft;reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
   for(const id of uploaded)deleteDoc(doc(db,'documentFiles',id)).catch(()=>{});
@@ -440,9 +441,9 @@ async function save(){
  }finally{saving=false}
 }
 async function loadSaved(id){
- try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;state=decodePreset(d.presetData);state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Delivery Ticket reference; photos are not copied.')}else{draw();notify('Opened Delivery Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
+ try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Delivery Ticket reference; photos are not copied.')}else{draw();notify('Opened Delivery Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
 }
-function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
+function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){const previous=business().name;profile=selected;const preparedCompany=state?.signatures?.['Prepared By'];if(preparedCompany&&(!preparedCompany.companyName||preparedCompany.companyName===previous||preparedCompany.companyName==='{companyName}'))preparedCompany.companyName=business().name;draw();ready()}}
 window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Delivery Ticket').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
@@ -477,7 +478,7 @@ async function openSavedPresetCopy(){
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
 }
 
-window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const {action}=e.data;if(action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(action==='new')newDoc();else if(action==='save')save();else if(action==='print')window.printDoc();else if(action==='business')chooseBusiness(e.data.profileId);else if(action==='view')render()});
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const {action}=e.data;if(action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(action==='new')newDoc();else if(action==='draft'){$('documentDraft').checked=e.data.isDraft===true;return} else if(action==='save'){$('documentDraft').checked=e.data.isDraft===true;save();}else if(action==='print')window.printDoc();else if(action==='business')chooseBusiness(e.data.profileId);else if(action==='view')render()});
 document.addEventListener('input',e=>{if(e.target.matches('[data-date-picker]')){const display=e.target.closest('span').querySelector('[data-date-display]');if(display)display.value=displayTicketDate(e.target.value)}if(e.target.matches('textarea[data-group][data-key="address"]')){const lines=e.target.value.replace(/\r\n?/g,'\n').split('\n');if(lines.length>3){e.target.value=lines.slice(0,3).join('\n');e.target.setSelectionRange(e.target.value.length,e.target.value.length)}}if(e.target.id==='ticketComments'){state.comments=e.target.value;render();return}const d=e.target.dataset;if(d.group){const obj=d.group.startsWith('sign:')?(state.signatures[d.group.slice(5)]??={}):state[d.group];if(obj){if(d.group==='fields'&&d.key==='reference'&&e.target.dataset.referenceSuffix)obj[d.key]=fullReference(refPrefix('DT',state.fields.date),e.target.value);
  else if(d.group==='fields'&&d.key==='date'){obj.date=e.target.value;obj.reference=updateReferenceYear(obj.reference,'DT',obj.date);syncReferenceField($('documentFields'),'DT',obj.date,obj.reference)}
  else obj[d.key]=e.target.value;}render()}else if(d.row!==undefined){state.items[Number(d.row)][d.col]=e.target.value;$('qtyTotal').textContent=qtyTotal();render()}});

@@ -362,7 +362,7 @@
 }
 </style></head><body>
 <header><h2>Purchase Order Templates</h2><small>Wellora Energy · Dedicated PO editor</small></header>
-<div class="toolbar"><button id="newBtn">New PO</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
+<div class="toolbar"><button id="newBtn">New PO</button><label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span class="status" id="status">Loading…</span></div>
 <div class="workspace"><div class="editor">
 <section class="card po-template-card"><h3>PO Template</h3><label>PO Type<select id="poTemplate"></select></label><p class="muted">Purchase Order templates are kept separate from Quotations.</p></section>
 <section class="card preset-settings-card"><h3>Document Settings</h3><div class="preset-settings-fields" id="poFinancialFields"></div></section><section class="card"><h3>Purchase Order Details</h3><div class="fields" id="poReferenceFields"></div></section>
@@ -374,7 +374,7 @@
 <script type="module">
 import {tableDate} from './preset-table-date.js?v=20261112-1';
 import {currencyAmountWords} from './preset-amount-words.js?v=20261112-1';
-import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261124-draft1';
 
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
@@ -465,7 +465,7 @@ async function chooseTemplate(id,clear=true){
  const response=await fetch('./templates/po/'+entry.path,{cache:'no-cache'});
  if(!response.ok)throw Error('Cannot load '+entry.path);
  template=await response.json();
- if(clear||!state){
+ if(clear||!state){$('documentDraft').checked=false;
   state={poType:entry.id,fields:{},items:[],signatures:{},termsOverrides:{},omittedTerms:[],extraTerms:[],statementOrder:[],termsFontSize:7,termsPageFit:"flow"};
   for(const f of template.fields)state.fields[f.key]=f.default??'';
   state.fields.poDate=new Date().toISOString().slice(0,10);
@@ -656,7 +656,7 @@ function fitPreview(){
  const available=mobileA4AvailableWidth(holder),a4=210*96/25.4,scale=Math.min(1,available/a4);
  paper.querySelectorAll('.paper').forEach(p=>p.style.zoom=String(Math.round(scale*1000)/1000));
 }
-function newPo(){docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);state.fields.currency='USD';chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
+function newPo(){$('documentDraft').checked=false;docId=null;savedSnapshot=null;savedHeaderSnapshot=null;if(activeCopyDefaults){state=structuredClone(activeCopyDefaults);state.fields.poDate=new Date().toISOString().slice(0,10);state.fields.poNumber=refPrefix('PO',state.fields.poDate);state.fields.currency='USD';chooseTemplate(state.poType,false).then(()=>{notify('New PO from saved template');ready()});return}chooseTemplate($('poTemplate').value,true)}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -684,10 +684,10 @@ function documentSaveMessage(reference,duplicate=false){
   panel.append(title,message,actions);veil.append(panel);host.body.append(veil);host.addEventListener('keydown',onKey,true);(cancel||okay).focus();
  })
 }
-async function save(){
+async function save(){const isDraft=$('documentDraft').checked;
  if(!user)return alert('Sign in to DocSystem first');
  if(!state.fields.poNumber?.trim()||state.fields.poNumber===refPrefix('PO',state.fields.poDate))return alert('Enter PO Reference Number before saving.');
- if(!['delivery','pickup'].includes(state.fields.fulfillmentMode))return alert('Choose Delivery or Pick-up in Terms & Conditions before saving the PO.');
+ if(!isDraft&&!['delivery','pickup'].includes(state.fields.fulfillmentMode))return alert('Choose Delivery or Pick-up in Terms & Conditions before saving the PO.');
  if(!business().id)return alert('Select a Business Profile first.');
  try{
   const snapshot=business();
@@ -699,16 +699,17 @@ async function save(){
   }
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
   const old=await getDoc(ref);
-  const record={templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
-  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);reportPresetSaved(state.fields.poNumber,docId);ready();await documentSaveMessage(state.fields.poNumber);
+  if(isDraft&&old?.exists()&&old.data().isDraft!==true&&old.data().locked!==false)throw Error('Unlock the existing saved document before converting it to a draft.');
+  const record={isDraft,...(!old?.exists()&&isDraft?{locked:false}:old?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:'purchase-order',templateId:template.id,templateVersion:1,documentType:'Purchase Order',number:state.fields.poNumber,date:state.fields.poDate||'',presetData:encodePreset(state),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeaderSnapshot||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  await setDoc(ref,record,{merge:true});docId=ref.id;savedSnapshot=snapshot;notify('Saved online: '+state.fields.poNumber);$('documentDraft').checked=isDraft;reportPresetSaved(state.fields.poNumber,docId);ready();await documentSaveMessage(state.fields.poNumber);
  }catch(error){notify('PO save failed: '+(error.code||error.message));reportPresetSaveError(error);alert('PO save failed: '+(error.code||error.message))}
 }
 async function loadSaved(id){
  if(!user||!id)return;
- try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;state=decodePreset(data.presetData);savedSnapshot=decodePreset(data.companySnapshot||null);savedHeaderSnapshot=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);if(params.get('duplicate')==='1'){docId=null;state.fields.poNumber=refPrefix('PO',state.fields.poDate);draw();notify('Duplicate ready. Enter a new PO reference.')}else notify('Opened PO '+data.number);ready()}
+ try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const data=snapshot.data();if(data.templateFamily!=='purchase-order')throw Error('Not a saved Purchase Order');docId=id;$('documentDraft').checked=data.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(data.presetData);savedSnapshot=decodePreset(data.companySnapshot||null);savedHeaderSnapshot=decodePreset(data.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===data.profileId)||profile;await chooseTemplate(data.templateId,false);if(params.get('duplicate')==='1'){docId=null;state.fields.poNumber=refPrefix('PO',state.fields.poDate);draw();notify('Duplicate ready. Enter a new PO reference.')}else notify('Opened PO '+data.number);ready()}
  catch(e){notify('Cannot open PO: '+e.message)}
 }
-function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
+function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
 async function chooseBusiness(id){
  if(docId){ready();return}const picked=profiles.find(p=>p.id===id);if(!picked)return;profile=picked;state.fields.currency='USD';draw();ready()
 }
@@ -744,7 +745,8 @@ async function openSavedPresetCopy(){
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;
  if(e.data.action==='save-template'){saveAsNewPresetTemplate(e.data.name);return}
  if(e.data.action==='new'){newPo();return}
- if(e.data.action==='save'){save();return}
+ if(e.data.action==='draft'){$('documentDraft').checked=e.data.isDraft===true;return}
+ if(e.data.action==='save'){$('documentDraft').checked=e.data.isDraft===true;save();return}
  if(e.data.action==='print'){window.printDoc();return}
  if(e.data.action==='business'){chooseBusiness(e.data.profileId);return}
  if(e.data.action==='view'){document.body.classList.toggle('printing',!!e.data.preview);render();return}

@@ -70,7 +70,7 @@ export function settingsChanged(){
     }
   },900);
 }
-export function changedDocument(){currentId=null;}
+export function changedDocument(){currentId=null;el("documentDraft").checked=false;}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -100,7 +100,7 @@ function documentSaveMessage(reference,duplicate=false){
 }
 export async function saveDocument(){
   if(!user)return;
-  const payload=bridge().getDocument();
+  const payload=bridge().getDocument(),isDraft=el("documentDraft").checked;
   const d=payload.doc, num=String(d.fieldValues?.docno||"").trim(), date=String(d.fieldValues?.date||"").slice(0,10);
   if(!num){alert("Enter a document number before saving.");return}
   try{
@@ -116,8 +116,9 @@ export async function saveDocument(){
       }
     }
     const prior=await getDoc(savedDoc);
-    await setDoc(savedDoc,{...encode(payload),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
-    currentId=savedDoc.id;notify("Document saved online: "+num);await loadDocs();await documentSaveMessage(num);
+    if(isDraft&&prior.exists()&&prior.data().isDraft!==true&&isDocumentLocked(prior.data()))throw Error("Unlock the existing saved document before converting it to a draft.");
+    await setDoc(savedDoc,{...encode(payload),isDraft,...(!prior.exists()&&isDraft?{locked:false}:prior.data()?.isDraft===true&&!isDraft?{locked:true}:{}),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+    currentId=savedDoc.id;selectDocumentTab(isDraft);notify((isDraft?"Draft saved online: ":"Document saved online: ")+num);await loadDocs();await documentSaveMessage(num);
   }catch(e){notify("Save failed: "+e.message);alert("Could not save document: "+e.message)}
 }
 // Saved Documents uses one month-scoped Firestore scan and client-side family /
@@ -133,6 +134,12 @@ function savedDocumentFamily(record){
  return 'custom';
 }
 let documentListRequest=0;
+let showDrafts=false;
+export function selectDocumentTab(draft){
+ showDrafts=draft===true;
+ for(const [id,active] of [["cloudSavedTab",!showDrafts],["cloudDraftTab",showDrafts]]){el(id).classList.toggle("primary",active);el(id).setAttribute("aria-pressed",String(active));}
+ el("cloudUploadCard").hidden=showDrafts;
+}
 export async function loadDocs(){
  if(!user)return;
  const requestId=++documentListRequest;
@@ -172,7 +179,7 @@ export async function loadDocs(){
   }
   // A previous month/search request must never overwrite a newer refresh.
   if(requestId!==documentListRequest||!user)return;
-  const filtered=records.filter(s=>!family||savedDocumentFamily(s.data())===family);
+  const filtered=records.filter(s=>(s.data().isDraft===true&&s.data().templateSource!=="uploaded-pdf")===showDrafts&&(!family||savedDocumentFamily(s.data())===family));
   filtered.sort((a,b)=>{
    const result=documentNumberCollator.compare(String(a.data().number||''),String(b.data().number||''));
    return (sort==="asc"?result:-result)||a.id.localeCompare(b.id);
@@ -200,7 +207,7 @@ export async function loadDocs(){
    const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
-   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':d.isDraft===true?' · Draft':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
   const scope=reference?" · Reference: "+reference:(period==="all"?" · All dates":period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
@@ -235,6 +242,7 @@ async function uploadDocumentFromForm(){
   status.textContent="Uploaded PDF ("+Math.ceil(result.size/1024)+" KB) · Locked by default";
   el("cloudUploadForm").reset();
   // Show the newly uploaded PDF in Saved Documents, regardless of previous filters.
+  selectDocumentTab(false);
   el("cloudPeriod").value="all";
   updatePeriodControls();
   el("cloudYear").value=originalDate.slice(0,4);
@@ -273,7 +281,7 @@ export async function openDocument(id,duplicate=false){
     }
     const payload=decode(s.data());
     if(duplicate&&payload.doc?.fieldValues)payload.doc.fieldValues.docno='';
-    bridge().setDocument(payload);currentId=duplicate?null:id;
+    bridge().setDocument(payload);currentId=duplicate?null:id;el("documentDraft").checked=!duplicate&&s.data().isDraft===true;
     if(duplicate)notify('Duplicate ready: enter a new document number (for example, add -R2) and save');
     else notify("Document opened: "+(s.data().number||""));
     document.querySelector('[data-tab="create"]').click();
@@ -355,6 +363,7 @@ document.addEventListener("click",e=>{
   const del=e.target.closest("[data-delete-doc]");if(del)deleteDocument(del.dataset.deleteDoc);
   const b=e.target.closest("[data-copy-doc]");if(b)openDocument(b.dataset.copyDoc,true);
   const c=e.target.closest("[data-user-save]");if(c)saveUser(c.dataset.userSave);
+  if(e.target.id==="cloudSavedTab"||e.target.id==="cloudDraftTab"){selectDocumentTab(e.target.id==="cloudDraftTab");loadDocs().catch(()=>{});}
   if(e.target.id==="cloudRefresh")loadDocs();
   if(e.target.id==="cloudSave")saveDocument();
   if(e.target.id==="cloudUserAdd")addUser();

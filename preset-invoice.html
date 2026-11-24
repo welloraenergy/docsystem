@@ -215,7 +215,7 @@
 }
 </style>
 
-</head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
+</head><body><header><h2>Invoice Preset</h2></header><div class="bar"><button id="newBtn">New</button><label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><small id="status">Loading…</small></div><div class="workspace"><div class="editor">
 <section class="card preset-settings-card"><h3>Document Settings</h3><div id="invoiceCurrencyFields" class="preset-settings-fields"></div></section><section class="card"><h3>Invoice Details</h3><div id="invoiceFields" class="fields"></div></section>
 <section class="card"><h3>Client Information</h3><div id="clientFields" class="fields"></div></section>
 <section class="card"><h3>Rental / Invoice Items</h3><div class="table-wrap"><table class="items-editor" id="itemsEditor"></table></div><p><button id="addRow" class="preset-add-item">+ Add Item</button> <button id="removeRow" class="preset-remove-last">Remove Last</button></p><div id="totalSummary" class="muted"></div></section>
@@ -225,7 +225,7 @@
 <script type="module">
 import {tableDate} from './preset-table-date.js?v=20261112-1';
 import {currencyAmountWords} from './preset-amount-words.js?v=20261112-1';
-import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261112-save1';
+import {encodePreset,decodePreset,reportPresetSaved,reportPresetSaveError} from './preset-online-sync.js?v=20261124-draft1';
 
 import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceField,syncReferenceField} from './preset-document-reference.js?v=20261112-3';
 
@@ -391,7 +391,7 @@ function fitPreview(){
  const scale=Math.min(1,available/(210*96/25.4));
  $('paper').querySelectorAll('.paper').forEach(p=>{p.style.zoom=String(Math.round(scale*1000)/1000)});
 }
-function newDoc(){if(saving)return;docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):blank();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('INV',state.fields.date)}state.fields.currency='USD';draw();notify('New Invoice');ready()}
+function newDoc(){if(saving)return;$('documentDraft').checked=false;docId=null;savedCompany=null;savedHeader=null;state=activeCopyDefaults?structuredClone(activeCopyDefaults):blank();if(activeCopyDefaults){state.fields.date=new Date().toISOString().slice(0,10);state.fields.reference=refPrefix('INV',state.fields.date)}state.fields.currency='USD';draw();notify('New Invoice');ready()}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -419,18 +419,19 @@ function documentSaveMessage(reference,duplicate=false){
   panel.append(title,message,actions);veil.append(panel);host.body.append(veil);host.addEventListener('keydown',onKey,true);(cancel||okay).focus();
  })
 }
-async function save(){
+async function save(){const isDraft=$('documentDraft').checked;
  if(saving)return;if(!user)return alert('Sign in first');if(!String(state.fields.reference||'').trim()||state.fields.reference===refPrefix('INV',state.fields.date))return alert('Enter Reference No.');if(!business().id)return alert('Select Business Profile');saving=true;
  try{
   if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.reference.trim())docId=null;}
   if(!docId){const hits=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=hits.docs.find(x=>x.data().profileId===business().id&&(x.data().templateFamily==='invoice'||x.data().documentType==='Invoice'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),prior=docId?await getDoc(ref):null,snap=business();
-  const payload={templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:encodePreset((({notes,...documentState})=>documentState)(state)),profileId:snap.id,profileName:snap.name||'',companySnapshot:encodePreset(snap),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
-  await setDoc(ref,payload,{merge:true});docId=ref.id;savedCompany=snap;notify('Saved online: '+state.fields.reference);reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
+  if(isDraft&&prior?.exists()&&prior.data().isDraft!==true&&prior.data().locked!==false)throw Error('Unlock the existing saved document before converting it to a draft.');
+  const payload={isDraft,...(!prior?.exists()&&isDraft?{locked:false}:prior?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:'invoice',templateId:'standard',templateVersion:1,documentType:'Invoice',number:state.fields.reference.trim(),date:state.fields.date,presetData:encodePreset((({notes,...documentState})=>documentState)(state)),profileId:snap.id,profileName:snap.name||'',companySnapshot:encodePreset(snap),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior?.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  await setDoc(ref,payload,{merge:true});docId=ref.id;savedCompany=snap;notify('Saved online: '+state.fields.reference);$('documentDraft').checked=isDraft;reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
  }catch(e){notify('Invoice save failed: '+(e.code||e.message));reportPresetSaveError(e);alert(e.code||e.message)}finally{saving=false}
 }
-async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;state=decodePreset(d.presetData);if(state&&Object.hasOwn(state,'notes'))delete state.notes;savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('INV',state.fields.date);draw();notify('Duplicate ready. Enter a new Invoice reference.')}else{draw();notify('Opened Invoice '+d.number)}ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
-function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,status:$('status').textContent})}
+async function loadSaved(id){try{const snapshot=await getDoc(doc(db,'documents',id));if(!snapshot.exists())throw Error('Document not found');const d=snapshot.data();if(d.templateFamily!=='invoice')throw Error('This is not an Invoice');docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);if(state&&Object.hasOwn(state,'notes'))delete state.notes;savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(p=>p.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('INV',state.fields.date);draw();notify('Duplicate ready. Enter a new Invoice reference.')}else{draw();notify('Opened Invoice '+d.number)}ready()}catch(e){notify('Cannot open Invoice: '+e.message)}}
+function ready(){posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const found=profiles.find(p=>p.id===id);if(!found)return;profile=found;state.fields.currency='USD';draw();ready()}
 window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Invoice').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
@@ -460,7 +461,7 @@ async function openSavedPresetCopy(){
   draw();notify('Template copy ready: '+copy.name+' · New document');ready();
  }catch(error){presetCopyApplied=true;notify('Template copy could not open: '+error.message)}
 }
-window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(a==='new')newDoc();else if(a==='save')save();else if(a==='print')window.printDoc();else if(a==='business')chooseBusiness(e.data.profileId);else if(a==='view')render()});
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='save-template'){saveAsNewPresetTemplate(e.data.name);return}if(a==='new')newDoc();else if(a==='draft'){$('documentDraft').checked=e.data.isDraft===true;return} else if(a==='save'){$('documentDraft').checked=e.data.isDraft===true;save();}else if(a==='print')window.printDoc();else if(a==='business')chooseBusiness(e.data.profileId);else if(a==='view')render()});
 document.addEventListener('focusout',e=>{
  if(e.target?.dataset?.col==='dailyRate'){
   const raw=String(e.target.value||'').trim();

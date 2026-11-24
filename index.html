@@ -371,7 +371,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 
 <main class="working-mode on-workspace-tab" id="docMain">
 <section class="workspace">
-<section id="documents" class="panel"><div class="card"><h2>Saved Documents</h2><div class="row"><label>Year<input type="number" id="cloudYear" min="2000" max="2100" step="1"></label><label>Period<select id="cloudPeriod"><option value="all" selected>All Dates</option><option value="month">Monthly</option><option value="year">Full Year</option></select></label><label id="cloudMonthLabel">Month<input type="month" id="cloudMonth"></label><label>Document Family<select id="cloudFamily"><option value="">All families</option><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order</option><option value="delivery-ticket">Delivery Ticket</option><option value="returning-ticket">Return Ticket</option><option value="invoice">Invoice</option><option value="commercial-invoice-packing-list">Commercial Invoice / Packing List (CIPL)</option><option value="goods-received-note">Goods Received Note (GRN)</option><option value="payment-voucher">Payment Voucher</option><option value="salary-payslip">Salary Payslip</option><option value="custom">Custom Documents</option></select></label><label>Document No. order<select id="cloudNumberSort"><option value="desc">Highest first</option><option value="asc">Lowest first</option></select></label><label>Find document reference<input type="search" id="cloudReferenceSearch" placeholder="e.g. WLR-PV(26)-0001"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Search / Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div class="card" id="cloudUploadCard"><h3>Upload PDF Document</h3><form id="cloudUploadForm"><div class="row"><label>Document Reference<input id="cloudUploadReference" required placeholder="e.g. SUP-INV-001"></label><label>Document Date (dd/mm/yyyy)<input id="cloudUploadDate" required type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Enter dd/mm/yyyy"></label><label>Document Family<select id="cloudUploadFamily"><option value="invoice">Invoice</option><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order</option><option value="delivery-ticket">Delivery Ticket</option><option value="returning-ticket">Return Ticket</option><option value="commercial-invoice-packing-list">CIPL</option><option value="goods-received-note">Goods Received Note</option><option value="payment-voucher">Payment Voucher</option><option value="salary-payslip">Salary Payslip</option><option value="custom">Other / Custom</option></select></label><label>PDF File (max 200 KB)<input id="cloudUploadFile" required type="file" accept=".pdf,application/pdf"></label><div class="actions"><button type="submit" id="cloudUploadSubmit">Upload PDF</button></div></div><p class="muted" id="cloudUploadStatus" role="status" aria-live="polite">PDFs above 100 KB are optimized toward 100 KB when possible; files up to 200 KB are accepted without reducing print quality. Use the original document date.</p></form></div><div id="cloudList"></div></div></section>
+<section id="documents" class="panel"><div class="card"><h2>Documents</h2><div class="actions" role="group" aria-label="Document status" style="margin-bottom:12px"><button type="button" id="cloudSavedTab" class="primary" aria-pressed="true">Saved Documents</button><button type="button" id="cloudDraftTab" aria-pressed="false">Drafts</button></div><div class="row"><label>Year<input type="number" id="cloudYear" min="2000" max="2100" step="1"></label><label>Period<select id="cloudPeriod"><option value="all" selected>All Dates</option><option value="month">Monthly</option><option value="year">Full Year</option></select></label><label id="cloudMonthLabel">Month<input type="month" id="cloudMonth"></label><label>Document Family<select id="cloudFamily"><option value="">All families</option><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order</option><option value="delivery-ticket">Delivery Ticket</option><option value="returning-ticket">Return Ticket</option><option value="invoice">Invoice</option><option value="commercial-invoice-packing-list">Commercial Invoice / Packing List (CIPL)</option><option value="goods-received-note">Goods Received Note (GRN)</option><option value="payment-voucher">Payment Voucher</option><option value="salary-payslip">Salary Payslip</option><option value="custom">Custom Documents</option></select></label><label>Document No. order<select id="cloudNumberSort"><option value="desc">Highest first</option><option value="asc">Lowest first</option></select></label><label>Find document reference<input type="search" id="cloudReferenceSearch" placeholder="e.g. WLR-PV(26)-0001"></label><div class="actions" style="align-items:end"><button id="cloudRefresh">Search / Refresh</button></div></div><p id="cloudStatus" class="muted" aria-live="polite">Connecting...</p><div class="card" id="cloudUploadCard"><h3>Upload PDF Document</h3><form id="cloudUploadForm"><div class="row"><label>Document Reference<input id="cloudUploadReference" required placeholder="e.g. SUP-INV-001"></label><label>Document Date (dd/mm/yyyy)<input id="cloudUploadDate" required type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Enter dd/mm/yyyy"></label><label>Document Family<select id="cloudUploadFamily"><option value="invoice">Invoice</option><option value="quotation">Quotation</option><option value="purchase-order">Purchase Order</option><option value="delivery-ticket">Delivery Ticket</option><option value="returning-ticket">Return Ticket</option><option value="commercial-invoice-packing-list">CIPL</option><option value="goods-received-note">Goods Received Note</option><option value="payment-voucher">Payment Voucher</option><option value="salary-payslip">Salary Payslip</option><option value="custom">Other / Custom</option></select></label><label>PDF File (max 200 KB)<input id="cloudUploadFile" required type="file" accept=".pdf,application/pdf"></label><div class="actions"><button type="submit" id="cloudUploadSubmit">Upload PDF</button></div></div><p class="muted" id="cloudUploadStatus" role="status" aria-live="polite">PDFs above 100 KB are optimized toward 100 KB when possible; files up to 200 KB are accepted without reducing print quality. Use the original document date.</p></form></div><div id="cloudList"></div></div></section>
 <section id="users" class="panel"><div class="card"><h2>User Management</h2><p class="muted">Create accounts here using email and a temporary password. No Firebase UID is needed. Share the temporary password securely with the new user.</p><div class="row3"><label>Email<input type="email" id="newUserEmail" autocomplete="off"></label><label>Temporary Password<input type="password" id="newUserPassword" autocomplete="new-password" minlength="6"></label><label>Role<select id="newUserRole"><option value="user">User</option><option value="manager">Manager</option><option id="newSuperadminOption" value="superadmin" hidden>Superadmin</option></select></label></div><p><button id="cloudUserAdd">Create User</button></p><div id="userList"></div></div></section>
 <section id="create" class="panel active"><div class="card workspace-picker"><div class="between"><strong>Create / Edit Document</strong><span class="muted">One workspace for custom and preset documents</span></div><div class="row"><label>Template Source<select id="workspaceTemplateSource"><option value="custom">Custom Templates</option><option value="preset">Preset Templates</option></select></label><label id="workspaceFamilyChoice" hidden>Document Family<select id="workspacePresetFamily" disabled><option value="quotation">Quotation (Quo)</option><option value="purchase-order">Purchase Order (PO)</option><option value="delivery-ticket">Delivery Ticket (DT)</option><option value="returning-ticket">Return Ticket (RT)</option><option value="invoice">Invoice (Inv)</option><option value="commercial-invoice-packing-list">Commercial Invoice / Packing List (CIPL)</option><option value="goods-received-note">Goods Received Note (GRN)</option><option value="payment-voucher">Payment Voucher (PV)</option><option value="salary-payslip">Salary Payslip (SP)</option></select></label><label id="workspacePresetChoice" hidden>Type<select id="workspacePresetSelect" disabled><option value="rental3">Rental (Qty 3)</option><option value="rental10">Rental (Qty 10)</option><option value="rentcon53">Rental + Consumables (Qty 5+3)</option><option value="rentcon105">Rental + Consumables (Qty 10+5)</option><option value="specialtkr">Rental — Special TKR</option></select></label><label id="workspaceCustomChoice">Custom Document Type<select id="docType"></select></label></div></div>
 <div id="unifiedWorkspaceToolbar" class="unified-workspace-toolbar" role="toolbar" aria-label="Document workspace actions">
@@ -379,7 +379,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <div class="unified-toolbar-actions">
 <button type="button" id="newBtn">New</button>
 <button type="button" id="workspaceOpenSaved">Open Saved</button>
-<button type="button" id="saveBtn">Save Online</button>
+<label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button type="button" id="saveBtn">Save Online</button>
 <button type="button" id="pdfBtn" class="primary">Print / PDF</button>
 </div><span id="workspaceStatus" class="muted" role="status">Ready</span>
 </div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-form">
@@ -586,6 +586,7 @@ function makeProfile(copyCurrent){
   refresh()
 }
 function newDoc(type){
+  document.getElementById("documentDraft").checked=false;
   let t=profile().templates[type],fv={};
   t.fields.forEach(f=>fv[f[0]]='');
   if('date'in fv)fv.date=new Date().toISOString().slice(0,10);
@@ -872,11 +873,12 @@ function sendPresetCommand(action,extra={}){
  frame.contentWindow.postMessage({type:'docsystem-preset-command',action,...extra},location.origin);
 }
 function activeWorkspacePreset(){return document.getElementById('workspaceTemplateSource').value==='preset'}
+ document.getElementById('documentDraft').addEventListener('change',e=>{if(activeWorkspacePreset())sendPresetCommand('draft',{isDraft:e.target.checked})});
 function syncPresetBusiness(){if(activeWorkspacePreset())sendPresetCommand('business',{profileId:document.getElementById('businessProfile').value})}
 function workspaceAction(action){
  if(activeWorkspacePreset()){
   if(action==='new'){if(confirm('Start a new preset document? Unsaved changes will be lost.'))sendPresetCommand('new');return}
-  if(action==='save')return sendPresetCommand('save');
+  if(action==='save')return sendPresetCommand('save',{isDraft:document.getElementById('documentDraft').checked});
   if(action==='print'){
    const frame=document.getElementById('presetWorkspaceFrame');
    try{if(typeof frame.contentWindow?.printDoc==='function')return frame.contentWindow.printDoc();}
@@ -937,6 +939,7 @@ function fillPresetTypes(preserve=false){
  if(preserve&&choices.some(([id])=>id===previous))select.value=previous;
 }
 function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,duplicate=false){
+ if(reload)document.getElementById('documentDraft').checked=false;
  const preset=source==='preset',main=document.getElementById('docMain');
  document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
  document.getElementById('workspacePresetChoice').hidden=!preset;
@@ -953,7 +956,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,dupl
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='goods-received-note'?'preset-grn.html?version=20261117-grn1':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261117-notes-label':family==='invoice'?'preset-invoice.html?version=20261116-doc-duplicate':family==='returning-ticket'?'preset-return.html?version=20261117-dt-rt-latest2':family==='delivery-ticket'?'preset-do.html?version=20261117-dt-rt-latest2':family==='purchase-order'?'preset-po.html?version=20261117-label-inset':family==='payment-voucher'?'preset-payment-voucher.html?version=20261116-doc-duplicate':family==='salary-payslip'?'preset-salary-payslip.html?version=20261116-doc-duplicate':'preset-quotation.html?version=20261116-doc-duplicate';
+  const editor=family==='goods-received-note'?'preset-grn.html?version=20261124-draft1':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261124-draft1':family==='invoice'?'preset-invoice.html?version=20261124-draft1':family==='returning-ticket'?'preset-return.html?version=20261124-draft1':family==='delivery-ticket'?'preset-do.html?version=20261124-draft1':family==='purchase-order'?'preset-po.html?version=20261124-draft1':family==='payment-voucher'?'preset-payment-voucher.html?version=20261124-draft1':family==='salary-payslip'?'preset-salary-payslip.html?version=20261124-draft1':'preset-quotation.html?version=20261124-draft1';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
@@ -980,6 +983,7 @@ window.DocSystemOpenPreset=(record,id,duplicate=false)=>{
  const preferred=record.templateId||(family==='quotation'?'rental3':family==='purchase-order'?'rental':'standard');
  if(Array.from(selector.options).some(o=>o.value===preferred))selector.value=preferred;
  setWorkspaceSource('preset',true,id,null,duplicate);
+ document.getElementById('documentDraft').checked=!duplicate&&record.isDraft===true;
  showDocPage('create');
  window.scrollTo({top:0,behavior:'instant'});
 };
@@ -997,6 +1001,7 @@ window.addEventListener('message',e=>{
  }
  if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
  if(e.data?.type==='docsystem-preset-ready'){
+  if(typeof e.data.isDraft==='boolean')document.getElementById('documentDraft').checked=e.data.isDraft;
   const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
   const selection=document.getElementById('businessProfile');
   if(profileList.length){
@@ -1011,7 +1016,9 @@ window.addEventListener('message',e=>{
   return;
  }
  if(e.data?.type==='docsystem-preset-saved'){
-  document.getElementById('workspaceStatus').textContent='Saved and verified online: '+(e.data.number||'Document');
+  document.getElementById('documentDraft').checked=e.data.isDraft===true;
+  window.DocSystemCloud?.selectDocumentTab(e.data.isDraft===true);
+  document.getElementById('workspaceStatus').textContent=(e.data.isDraft===true?'Draft saved online: ':'Saved online: ')+(e.data.number||'Document');
   const savedDate=String(e.data.date||'');
   if(/^\d{4}-\d{2}-\d{2}$/.test(savedDate))document.getElementById('cloudMonth').value=savedDate.slice(0,7);
   // Refresh the complete saved-document list, not a one-document search.
@@ -1285,5 +1292,5 @@ if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset
  history.replaceState(null,'',location.pathname);
 }
 </script>
-<script type="module" src="auth.js?v=20261119-online-install1"></script>
+<script type="module" src="auth.js?v=20261124-draft1"></script>
 </body></html>
