@@ -95,7 +95,7 @@ function renderDocument(){
   body+='<div class="section-head">Approvals</div>'+table(['','Name','Position','Date','Signature'],['checked','authorised','received'].map(k=>tr([({checked:'Checked By',authorised:'Authorised By',received:'Received By'}[k]),esc(state.signatures[k]?.name),esc(state.signatures[k]?.position),shortSignatureDate(state.signatures[k]?.date),'<div class="signature-space"></div>'])),'approval')+'<div class="received-ic">Received By — IC No.: '+esc(state.receivedIc)+'</div>';
  }
  $('paper').innerHTML='<article class="paper">'+head+body+'</article>';
- const pages=paginatePresetDocument($('paper'),{fit:'normal',bottomReserveMm:10,keepTableHeadings:!slip});
+ const pages=paginatePresetDocument($('paper'),{fit:'normal',keepTableHeadings:!slip});
  $('pageCount').textContent=pages+' page(s)';
  fitPreview();
 }
