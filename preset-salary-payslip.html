@@ -36,6 +36,12 @@ body.embedded .toolbar{display:none}body.embedded{background:transparent}body.em
 .paper .financial tbody td:last-child,.paper .postings tbody td:nth-child(3),.paper .postings tbody td:nth-child(6){text-align:right;font-variant-numeric:tabular-nums}
 .paper .info-grid{width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
 .paper .info-grid>div{grid-template-columns:minmax(0,30mm) minmax(0,1fr)}
+.paper .info-grid.employee-info{padding:0;gap:0}
+.paper .employee-info>div:nth-child(odd){border-right:1px solid #999}
+.paper .employee-info>div>b{border-right:1px solid #999;text-align:right;padding:1mm 2mm;font-weight:600}
+.paper .employee-info>div>span{padding:1mm 1.5mm;min-width:0}
+.paper .employee-info>div:first-child>b,.paper .employee-info>div:first-child>span,.paper .employee-info>div:nth-child(2)>b,.paper .employee-info>div:nth-child(2)>span{padding-top:2mm}
+.paper .employee-info>div:nth-last-child(-n+2)>b,.paper .employee-info>div:nth-last-child(-n+2)>span{padding-bottom:2mm}
 .paper .amount-words{white-space:pre-wrap;overflow-wrap:anywhere}
 .paper .approval,.paper .electronic-note{break-inside:avoid;page-break-inside:avoid}
 .paper .totals{border:1px solid #666;justify-content:flex-end;gap:18mm;padding:2mm 3mm}
@@ -65,4 +71,4 @@ body.embedded .toolbar{display:none}body.embedded{background:transparent}body.em
 .editor .preset-reference-control{display:flex;align-items:stretch;width:100%;max-width:100%;min-width:0;border:1px solid #9baabe;border-radius:6px;overflow:hidden;background:#fff}
 .editor .preset-reference-prefix{display:flex;align-items:center;flex:none;padding:0 9px;white-space:nowrap;color:#202a37;background:#e8edf3;border-right:1px solid #b9c4d1;font:600 13px Arial,sans-serif}
 .editor .preset-reference-control input{flex:1 1 auto;min-width:0!important;width:0!important;max-width:100%!important;border:0!important;border-radius:0!important;background:#fff!important;padding:7px 9px!important}
-</style></head><body data-family="salary-payslip"><div class="toolbar"><button id="newBtn">New</button><label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261124-draft1"></script></body></html>
+</style></head><body data-family="salary-payslip"><div class="toolbar"><button id="newBtn">New</button><label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button id="saveBtn" class="primary">Save Online</button><button id="printBtn">Print / PDF</button><span id="status">Loading…</span></div><div class="workspace"><div class="editor"><section class="panel" id="formFields"></section></div><div class="preview-column"><div class="preview-header"><strong>Live A4 Preview</strong> · <span id="pageCount"></span></div><div id="paper"></div></div></div><script type="module" src="./preset-payments.js?v=20261124-sp-info1"></script></body></html>
