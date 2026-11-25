@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogName": "DocSystem Preset Template Registry",
-  "updated": "2026-11-19",
+  "updated": "2026-11-25",
   "families": [
     {
       "id": "quotation",
@@ -65,6 +65,13 @@
       "editor": "preset-salary-payslip.html",
       "templateCount": 1,
       "status": "native-browser-preset-integrated-pending-live-verification"
+    },
+    {
+      "id": "minutes-of-meeting",
+      "name": "Minutes of Meeting",
+      "editor": "preset-mom.html",
+      "templateCount": 1,
+      "status": "integrated-pending-live-verification"
     }
   ],
   "isolation": {

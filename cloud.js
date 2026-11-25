@@ -128,7 +128,7 @@ function savedDocumentFamily(record){
  const family=String(record.templateFamily||'');
  if(family)return family;
  if(record.templateSource==='preset'){
-  const known={'Quotation':'quotation','Purchase Order':'purchase-order','Delivery Ticket':'delivery-ticket','Return Ticket':'returning-ticket','Returning Ticket':'returning-ticket','Invoice':'invoice','Commercial Invoice / Packing List':'commercial-invoice-packing-list','Goods Received Note':'goods-received-note','Payment Voucher':'payment-voucher','Salary Payslip':'salary-payslip'};
+  const known={'Quotation':'quotation','Purchase Order':'purchase-order','Delivery Ticket':'delivery-ticket','Return Ticket':'returning-ticket','Returning Ticket':'returning-ticket','Invoice':'invoice','Commercial Invoice / Packing List':'commercial-invoice-packing-list','Goods Received Note':'goods-received-note','Payment Voucher':'payment-voucher','Salary Payslip':'salary-payslip','Minutes of Meeting':'minutes-of-meeting'};
   return known[record.documentType]||'custom';
  }
  return 'custom';
@@ -200,7 +200,8 @@ export async function loadDocs(){
     'commercial-invoice-packing-list':['Consignee',preset.consignee?.company],
     'goods-received-note':['Delivery To',preset.deliveryTo?.company],
     'payment-voucher':['Pay To',preset.payTo],
-    'salary-payslip':['Employee',preset.fullName]
+    'salary-payslip':['Employee',preset.fullName],
+    'minutes-of-meeting':['Meeting',preset.meetingTitle]
    };
    const [recipientLabel,recipientValue]=byFamily[familyName]||[];
    const recipientName=typeof recipientValue==="string"?recipientValue.trim():"";
@@ -263,9 +264,9 @@ export async function openDocument(id,duplicate=false){
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource==="preset"){
       const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket',isInvoice=data.templateFamily==='invoice'||data.documentType==='Invoice';
-      const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher'||data.templateFamily==='commercial-invoice-packing-list'||data.templateFamily==='goods-received-note')?'standard':isPo?'purchase-credit':'rental3'));
-      const family=data.templateFamily==='goods-received-note'?'&family=goods-received-note':data.templateFamily==='commercial-invoice-packing-list'?'&family=commercial-invoice-packing-list':data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
-      const saved=duplicate?'&docId='+encodeURIComponent(id)+'&duplicate=1':(data.templateFamily==='goods-received-note'||data.templateFamily==='commercial-invoice-packing-list'?'&docId=':isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='minutes-of-meeting'||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher'||data.templateFamily==='commercial-invoice-packing-list'||data.templateFamily==='goods-received-note')?'standard':isPo?'purchase-credit':'rental3'));
+      const family=data.templateFamily==='minutes-of-meeting'?'&family=minutes-of-meeting':data.templateFamily==='goods-received-note'?'&family=goods-received-note':data.templateFamily==='commercial-invoice-packing-list'?'&family=commercial-invoice-packing-list':data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
+      const saved=duplicate?'&docId='+encodeURIComponent(id)+'&duplicate=1':(data.templateFamily==='minutes-of-meeting'||data.templateFamily==='goods-received-note'||data.templateFamily==='commercial-invoice-packing-list'?'&docId=':isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
       if(typeof window.DocSystemOpenPreset==='function'){
         window.DocSystemOpenPreset(data,id,duplicate);
         notify((duplicate?'Duplicate ready — enter a new reference: ':'Opening saved document: ')+(data.number||id));
