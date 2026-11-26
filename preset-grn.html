@@ -168,7 +168,7 @@ const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
 
 const cols=[['description','Description'],['qty','Qty']];
 const emptyRow=()=>({description:'',qty:''});
-function blank(){return {fields:{reference:refPrefix('GRN',today()),date:today(),poNumber:'',deliveryNote:'',freightAgent:'Client Appointed',comments:'',certification:'We acknowledge receipt of the above equipment in good order.'},deliveryTo:{company:'',address:'',contact:'',phone:'',email:''},collection:{address:''},showCollection:true,billTo:{company:'',address:'',contact:'',phone:'',email:''},showBillTo:false,items:Array.from({length:3},emptyRow),signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Signature 1',belowLine:'Signature / Name'},reviewed:{name:'',position:'',date:'',title:'Signature 2',belowLine:'Signature / Name'},approved:{name:'',position:'',date:'',title:'Signature 3',belowLine:'Signature / Name'}}}
+function blank(){return {fields:{reference:refPrefix('GRN',today()),date:today(),poNumber:'',deliveryNote:'',freightAgent:'Client Appointed',comments:'',certification:'We acknowledge receipt of the above equipment in good order.'},deliveryTo:{company:'',address:'',contact:'',phone:'',email:''},collection:{address:''},showCollection:true,billTo:{company:'',address:'',contact:'',phone:'',email:''},showBillTo:false,items:Array.from({length:3},emptyRow),signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},reviewed:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},approved:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'}}}
 function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'"'+(key==='address'?' data-address-max-lines="3"':'')+'>'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
 function draw(){
  if(!state)return;
@@ -195,12 +195,12 @@ function drawRows(){
 }
 function render(){
  if(!state)return;
- const co=business(),h=header(),head={...co,documentTitle:'GOODS RECEIVED NOTE',documentNumber:state.fields.reference,documentDate:state.fields.date};
+ const co=business(),h=header(),head={...co,documentTitle:'GOODS RECEIVED\nNOTE',documentNumber:state.fields.reference,documentDate:state.fields.date};
  const titleText=h.titleText||'{doctype}',color=/^#[\da-fA-F]{6}$/.test(h.titleColor||'')?h.titleColor:'#d6a900';
  const fontSize=Math.max(9,Math.min(36,Number(h.titleSize)||16));
  const font=['Arial','Verdana','Georgia','Tahoma','Times New Roman'].includes(h.titleFont)?h.titleFont:'Arial';
  const align=['left','center','right'].includes(h.titleAlign)?h.titleAlign:'right';
- const heading='<div class="grn-title" style="color:'+color+';font-size:'+fontSize+'pt;font-family:'+font+';text-align:'+align+'">'+richPresetText(expandPresetText(titleText,head,globals)).replace(/GOODS\s+RECEIVED\s+NOTE/gi,'GOODS RECEIVED<br>NOTE')+'</div>';
+ const heading='<div class="grn-title" style="color:'+color+';font-size:'+fontSize+'pt;font-family:'+font+';text-align:'+align+'">'+richPresetText(expandPresetText(titleText,head,globals))+'</div>';
  const extra=h.extraText?'<div style="font-size:'+Math.max(7,Number(h.extraSize)||9)+'pt;text-align:'+(['left','center','right'].includes(h.extraAlign)?h.extraAlign:'right')+'">'+richPresetText(expandPresetText(h.extraText,head,globals))+'</div>':'';
  const dateText=/^\d{4}-\d{2}-\d{2}$/.test(state.fields.date||'')?new Date(state.fields.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).replace(/ (\d{4})$/,', $1'):state.fields.date;
  const meta=[['Date',dateText],['Reference No.',state.fields.reference],['Purchase Order No.',state.fields.poNumber],['Delivery Ticket No.',state.fields.deliveryNote]];
@@ -218,7 +218,7 @@ function render(){
  const totals='<table class="grn-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Qty</th><td>'+total.toLocaleString('en-MY',{maximumFractionDigits:6})+'</td></tr></tbody></table>';
  const bottom='<div class="grn-bottom"><div class="grn-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
  const signatureSlots=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
- const sign='<div class="grn-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="grn-sign"><div class="grn-sigtitle">'+esc(expanded(state[key].title??label))+'</div><div class="grn-sigline">'+esc(expanded(state[key].belowLine??'Signature / Name'))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'');
+ const sign='<div class="grn-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="grn-sign"><div class="grn-sigtitle">'+esc(expanded(state[key].title??''))+'</div><div class="grn-sigline">'+esc(expanded(state[key].belowLine??'Name:\nCompany:\nPosition:\nContact No.:\nDate:'))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'');
  $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
  paginatePresetDocument($('paper'),{fit:'normal'});
  $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
@@ -235,12 +235,12 @@ async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(
  state.reviewed=state.reviewed||{name:'',position:'',date:''};
  state.approved=state.approved||{name:'',position:'',date:''};
  for(const [key,label] of [['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']]){
-  if(['Prepared by','Reviewed by','Approved by'].includes(state[key]?.title))state[key].title=label;
+  if(state[key]?.title===label)state[key].title='';
   const sig=state[key];
-  if(sig.title===undefined)sig.title=label;
+  if(sig.title===undefined)sig.title='';
   if(sig.belowLine===undefined){
    const legacyLines=[sig.name||'',sig.position||'',sig.date||''].filter(Boolean);
-   sig.belowLine=legacyLines.length?legacyLines.join('\n'):'Signature / Name';
+   sig.belowLine=legacyLines.length?legacyLines.join('\n'):'Name:\nCompany:\nPosition:\nContact No.:\nDate:';
   }
  }
  state.billTo=state.billTo||{company:'',address:'',contact:'',phone:'',email:''};
