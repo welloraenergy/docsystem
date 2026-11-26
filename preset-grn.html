@@ -68,7 +68,7 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .grn-client .grn-info .grn-filler{height:100%}
 .grn-client .grn-info .grn-filler th,.grn-client .grn-info .grn-filler td{padding-top:0!important;padding-bottom:0!important}
 .grn-client>div:nth-child(2) .grn-info th,.grn-client>div:nth-child(2) .grn-info td{padding-top:1mm!important;padding-bottom:1mm!important}
-.paper .excel-table.grn-items tbody td:first-child,.paper .excel-table.grn-items tbody td:nth-child(3){text-align:center!important;vertical-align:middle!important}
+.paper .excel-table.grn-items tbody td:first-child,.paper .excel-table.grn-items tbody td:nth-child(3),.paper .excel-table.grn-items tbody td:nth-child(4){text-align:center!important;vertical-align:middle!important}
 .grn-items{width:100%;table-layout:fixed;margin:2mm 0 0;font:7.2pt Arial,sans-serif}
 .grn-items th{background:#000!important;color:#fff!important;font:700 7.2pt Arial,sans-serif!important;line-height:1.2!important;padding:.9mm .3mm!important;border:1px solid #444!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .grn-items td{border:1px solid #777;height:8mm;padding:1mm .6mm;vertical-align:top;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-size:7.2pt}
@@ -84,10 +84,12 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .grn-panel{border:1px solid #777;min-height:23mm;break-inside:avoid}
 .grn-panel h4{margin:0;background:#000;color:#fff;text-align:center;font-size:7.6pt;padding:1.1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .grn-panel p{white-space:pre-wrap;overflow-wrap:anywhere;padding:2mm;margin:0;line-height:1.35;font-size:7.2pt}
-.grn-cert{font-size:7.2pt;white-space:pre-wrap;line-height:1.35;margin:3mm 0}
 .grn-signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3.5mm;margin:3mm 0;break-inside:avoid;page-break-inside:avoid}
+.grn-signatures .grn-sigheader{grid-column:1/-1}
 .grn-sign{min-height:35mm;min-width:0}
-.grn-sigtitle{font-weight:700;min-height:12mm;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.grn-sigtitle{font-weight:700;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.grn-sigstatement{font-weight:400;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.grn-sigcaption{text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:2mm}
 .grn-sigline{margin-top:18mm;border-top:1px solid #555;padding-top:3px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
 .signature-choices{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .signature-choices label{display:flex;flex-direction:row;align-items:center;gap:6px;cursor:pointer}
@@ -141,7 +143,7 @@ body.embedded{background:transparent}
 <section class="card"><h3>Bill To</h3><label style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="showBillTo" style="width:auto;min-width:0"> Show Bill To Information</label><div class="row" id="billToFields"></div></section>
 
 <section class="card"><h3>Received Items</h3><div class="tablewrap"><table id="editorTable"></table></div><div class="actionbar"><button id="addRow">+ Add Item</button><button id="removeRow">Remove Last</button></div><p id="editorTotal"></p></section>
-<section class="card"><h3>Comments & Notes</h3><label>Comments<textarea data-field="comments" rows="4"></textarea></label><label>Notes<textarea data-field="certification" rows="3"></textarea></label></section>
+<section class="card"><h3>Comments</h3><label>Comments<textarea data-field="comments" rows="4"></textarea></label></section>
 <section class="card"><h3>Signature Blocks</h3><div class="signature-choices" id="signatureChoices"></div><div id="signatureFields"></div></section>
 </div><div class="preview-column"><div class="preview-header"><strong>Live A4 GRN Preview</strong><span id="pageCount"></span></div><div id="paper"></div></div></div>
 <script type="module">
@@ -166,9 +168,9 @@ const expanded=v=>expandPresetText(v,business(),globals);
 const today=()=>new Date().toISOString().slice(0,10);
 const amount=x=>Number(String(x??'').replace(/,/g,''))||0;
 
-const cols=[['description','Description'],['qty','Qty']];
-const emptyRow=()=>({description:'',qty:''});
-function blank(){return {fields:{reference:refPrefix('GRN',today()),date:today(),poNumber:'',deliveryNote:'',freightAgent:'Client Appointed',comments:'',certification:'We acknowledge receipt of the above equipment in good order.'},deliveryTo:{company:'',address:'',contact:'',phone:'',email:''},collection:{address:''},showCollection:true,billTo:{company:'',address:'',contact:'',phone:'',email:''},showBillTo:false,items:Array.from({length:3},emptyRow),signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},reviewed:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},approved:{name:'',position:'',date:'',title:'',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'}}}
+const cols=[['description','Description'],['unit','Unit'],['qty','Qty']];
+const emptyRow=()=>({description:'',unit:'',qty:''});
+function blank(){return {fields:{reference:refPrefix('GRN',today()),date:today(),poNumber:'',deliveryNote:'',freightAgent:'Client Appointed',comments:''},deliveryTo:{company:'',address:'',contact:'',phone:'',email:''},collection:{address:''},showCollection:true,billTo:{company:'',address:'',contact:'',phone:'',email:''},showBillTo:false,items:Array.from({length:3},emptyRow),signatureVisibility:{prepared:true,reviewed:false,approved:false},prepared:{name:'',position:'',date:'',title:'Vendor Acknowledgement:',statement:'We acknowledge receipt of the above items in good order.',lineLabel:'(Signature & Stamp)',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},reviewed:{name:'',position:'',date:'',title:'',statement:'',lineLabel:'(Signature & Stamp)',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'},approved:{name:'',position:'',date:'',title:'',statement:'',lineLabel:'(Signature & Stamp)',belowLine:'Name:\nCompany:\nPosition:\nContact No.:\nDate:'}}}
 function valueInput(key,label,value,group='fields',multiline=false){return '<label>'+esc(label)+(multiline?'<textarea rows="3" data-group="'+group+'" data-key="'+key+'"'+(key==='address'?' data-address-max-lines="3"':'')+'>'+esc(value||'')+'</textarea>':'<input data-group="'+group+'" data-key="'+key+'" value="'+esc(value||'')+'">')+'</label>'}
 function draw(){
  if(!state)return;
@@ -186,11 +188,11 @@ function draw(){
  document.querySelectorAll('[data-field]').forEach(e=>e.value=state.fields[e.dataset.field]||'');
  const signatureTypes=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
  $('signatureChoices').innerHTML=signatureTypes.map(([key,label])=>'<label><input type="checkbox" data-signature-visible="'+key+'" '+(state.signatureVisibility[key]?'checked':'')+'>'+label+'</label>').join('');
- $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[key].title,key,true)+valueInput('belowLine','Text below signature line (optional)',state[key].belowLine,key,true)+'</div>').join('');
+ $('signatureFields').innerHTML=signatureTypes.filter(([key])=>state.signatureVisibility[key]).map(([key,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Signature heading',state[key].title,key,true)+valueInput('statement','Acknowledgement statement',state[key].statement,key,true)+valueInput('lineLabel','Signature line label',state[key].lineLabel,key,true)+valueInput('belowLine','Text below signature line (optional)',state[key].belowLine,key,true)+'</div>').join('');
  drawRows();render();
 }
 function drawRows(){
- $('editorTable').innerHTML='<colgroup>'+[8,70,14,8].map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr><th>Item</th>'+cols.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]??'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" inputmode="decimal" value="'+esc(r[key]??'')+'">')+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
+ $('editorTable').innerHTML='<colgroup>'+[8,58,12,14,8].map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr><th>Item</th>'+cols.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th>Remove</th></tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map(([key])=>'<td>'+(key==='description'?'<textarea rows="2" data-row="'+i+'" data-col="'+key+'">'+esc(r[key]??'')+'</textarea>':'<input data-row="'+i+'" data-col="'+key+'" '+(key==='qty'?'inputmode="decimal"':'')+' value="'+esc(r[key]??'')+'">')+'</td>').join('')+'<td><button data-remove="'+i+'">×</button></td></tr>').join('')+'</tbody>';
  $('editorTotal').textContent='Total Qty: '+state.items.reduce((a,r)=>a+amount(r.qty),0).toLocaleString('en-MY',{maximumFractionDigits:6});
 }
 function render(){
@@ -212,13 +214,13 @@ function render(){
  const billToInfo=state.showBillTo?'<div class="grn-section"><div class="grn-section-title">Bill To</div><div class="grn-client"><div><table class="grn-info"><tbody><tr><th>Bill To:</th><td>'+esc(expanded(bill.company))+'</td></tr><tr class="grn-address-row"><th>Address:</th><td><span class="grn-address-lines">'+esc(expanded(bill.address))+'</span></td></tr></tbody></table></div><div><table class="grn-info"><tbody><tr><th>Contact:</th><td>'+esc(bill.contact)+'</td></tr><tr><th>Telephone:</th><td>'+esc(bill.phone)+'</td></tr><tr><th>Email:</th><td>'+esc(bill.email)+'</td></tr><tr class="grn-filler"><th></th><td></td></tr></tbody></table></div></div></div>':'';
  const transportInfo='';
  const logistics=collectionInfo+billToInfo+transportInfo;
- const colWidths=[5,83,12];
- const table='<table class="excel-table grn-items"><colgroup>'+colWidths.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+['Item','Description','Qty'].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(expanded(r.description||''))+'</td><td>'+esc(r.qty??'')+'</td></tr>').join('')+'</tbody></table>';
+ const colWidths=[5,73,10,12];
+ const table='<table class="excel-table grn-items"><colgroup>'+colWidths.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+['Item','Description','Unit','Qty'].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+state.items.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(expanded(r.description||''))+'</td><td>'+esc(r.unit??'')+'</td><td>'+esc(r.qty??'')+'</td></tr>').join('')+'</tbody></table>';
  const total=state.items.reduce((a,r)=>a+amount(r.qty),0);
  const totals='<table class="grn-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Qty</th><td>'+total.toLocaleString('en-MY',{maximumFractionDigits:6})+'</td></tr></tbody></table>';
  const bottom='<div class="grn-bottom"><div class="grn-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
  const signatureSlots=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
- const sign='<div class="grn-cert">'+esc(expanded(state.fields.certification))+'</div>'+(signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+signatureSlots.map(([key,label])=>state.signatureVisibility[key]?'<div class="grn-sign"><div class="grn-sigtitle">'+esc(expanded(state[key].title??''))+'</div><div class="grn-sigline">'+esc(expanded(state[key].belowLine??'Name:\nCompany:\nPosition:\nContact No.:\nDate:'))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'');
+ const sign=signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+(state.signatureVisibility.prepared?'<div class="grn-sigheader"><div class="grn-sigtitle">'+esc(expanded(state.prepared.title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state.prepared.statement??''))+'</div></div>':'')+signatureSlots.map(([key])=>state.signatureVisibility[key]?'<div class="grn-sign">'+(key==='prepared'?'':'<div class="grn-sigtitle">'+esc(expanded(state[key].title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state[key].statement??''))+'</div>')+'<div class="grn-sigline"><div class="grn-sigcaption">'+esc(expanded(state[key].lineLabel??''))+'</div>'+esc(expanded(state[key].belowLine??''))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'';
  $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
  paginatePresetDocument($('paper'),{fit:'normal'});
  $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
@@ -238,11 +240,21 @@ async function loadSaved(id){const snap=await getDoc(doc(db,'documents',id));if(
   if(state[key]?.title===label)state[key].title='';
   const sig=state[key];
   if(sig.title===undefined)sig.title='';
+  if(sig.statement===undefined){
+   if(key==='prepared'){
+    const oldTitle=String(sig.title||'');
+    const split=oldTitle.match(/^(Vendor Acknowledgement:?)\s*\n([\s\S]+)$/i);
+    if(split){sig.title=split[1];sig.statement=split[2]}
+    else{sig.statement=state.fields.certification??'We acknowledge receipt of the above items in good order.';if(!sig.title)sig.title='Vendor Acknowledgement:'}
+   }else sig.statement='';
+  }
+  if(sig.lineLabel===undefined)sig.lineLabel='(Signature & Stamp)';
   if(sig.belowLine===undefined){
    const legacyLines=[sig.name||'',sig.position||'',sig.date||''].filter(Boolean);
    sig.belowLine=legacyLines.length?legacyLines.join('\n'):'Name:\nCompany:\nPosition:\nContact No.:\nDate:';
   }
  }
+ delete state.fields.certification;
  state.billTo=state.billTo||{company:'',address:'',contact:'',phone:'',email:''};
  state.collection=state.collection||{address:''};
  if(typeof state.showCollection!=='boolean')state.showCollection=true;
@@ -263,7 +275,7 @@ document.addEventListener('input',e=>{const d=e.target.dataset;if(d.addressMaxLi
 $('showBillTo').addEventListener('change',e=>{state.showBillTo=e.target.checked;const b=state.billTo;$('billToFields').innerHTML=state.showBillTo?valueInput('company','Company',b.company,'billTo')+valueInput('address','Address',b.address,'billTo',true)+valueInput('contact','Contact Person',b.contact,'billTo')+valueInput('phone','Telephone',b.phone,'billTo')+valueInput('email','Email',b.email,'billTo'):'';render()});
 
 $('showCollection').addEventListener('change',e=>{state.showCollection=e.target.checked;$('collectionFields').innerHTML=state.showCollection?valueInput('address','Collection Address',state.collection.address,'collection',true)+valueInput('freightAgent','Freight Agent / Transport Company',state.fields.freightAgent,'fields',false):'';render()});
-document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Text above signature line',state[name].title,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
+document.addEventListener('change',e=>{const key=e.target.dataset.signatureVisible;if(!key)return;if(!['prepared','reviewed','approved'].includes(key))return;state.signatureVisibility[key]=e.target.checked;$('signatureFields').innerHTML=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']].filter(([name])=>state.signatureVisibility[name]).map(([name,label])=>'<div class="grn-sign-fields"><h4>'+label+'</h4>'+valueInput('title','Signature heading',state[name].title,name,true)+valueInput('statement','Acknowledgement statement',state[name].statement,name,true)+valueInput('lineLabel','Signature line label',state[name].lineLabel,name,true)+valueInput('belowLine','Text below signature line (optional)',state[name].belowLine,name,true)+'</div>').join('');render()});
 document.addEventListener('click',e=>{const remove=e.target.closest('[data-remove]');if(remove){state.items.splice(Number(remove.dataset.remove),1);if(!state.items.length)state.items.push(emptyRow());drawRows();render();return}if(e.target.id==='addRow'){state.items.push(emptyRow());drawRows();render()}else if(e.target.id==='removeRow'){if(state.items.length>1)state.items.pop();drawRows();render()}else if(e.target.id==='newBtn')fresh();else if(e.target.id==='saveBtn')save();else if(e.target.id==='printBtn')window.printDoc()});
 $('businessSelect').addEventListener('change',e=>{if(docId)return;profile=profiles.find(p=>p.id===e.target.value)||profile;draw();ready()});
 window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='docsystem-preset-command')return;const a=e.data.action;if(a==='new')fresh();else if(a==='draft'){$('documentDraft').checked=e.data.isDraft===true;return} else if(a==='save'){$('documentDraft').checked=e.data.isDraft===true;save();}else if(a==='print')window.printDoc();else if(a==='business'&&!docId){profile=profiles.find(p=>p.id===e.data.profileId)||profile;draw();ready()}else if(a==='view')render()});
