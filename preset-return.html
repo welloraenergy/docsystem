@@ -208,7 +208,6 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const app=initializeApp({apiKey:"AIzaSyDPIAoqy9mbWU-4M4kPK9mfSjtVSSA2gI8",authDomain:"docsystem-c29ec.firebaseapp.com",projectId:"docsystem-c29ec",storageBucket:"docsystem-c29ec.firebasestorage.app",messagingSenderId:"25451628479",appId:"1:25451628479:web:ec00096fc84d744c48c30a"});
 const auth=getAuth(app),db=getFirestore(app),params=new URLSearchParams(location.search);
 if(params.get('embedded')==='1')document.body.classList.add('embedded');
-let workspaceSavedSnapshot=null,workspaceSubmittedSnapshot=null;
 let user=null,role='user',profiles=[],profile=null,globals={},template=null,state=null,docId=params.get('docId')||null,savedCompany=null,savedHeader=null,busy=false,loaded=false,saving=false;
 const pendingPhotos=new Map(),photoPreviews=new Map(),resolvedPhotos=new Map();
 const MAX_STORED_PHOTO_BYTES=200*1024; // Maximum actual image bytes before Base64 encoding.
@@ -312,7 +311,6 @@ function drawItems(){
 function qtyTotal(){return state.items.reduce((n,row)=>n+(Number(row.qty)||0),0).toLocaleString('en-MY',{maximumFractionDigits:3})}
 function formatDate(v){return displayTicketDate(v,true)}
 function render(){
- if(state&&workspaceSavedSnapshot!==null)posted('dirty',{dirty:JSON.stringify(state)!==workspaceSavedSnapshot});
  if(!state||!template||busy)return;busy=true;
  try{
  const co=business(),head={...co,documentTitle:'RETURN TICKET',documentNumber:state.fields.reference,documentDate:state.fields.date};
@@ -418,7 +416,7 @@ async function save(){const isDraft=$('documentDraft').checked;
    nextPhotos[idx]='documentFiles/'+photoRef.id;
   }
   const snapshot=business();
-  const payload={isDraft,...(!before?.exists()&&isDraft?{locked:false}:before?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:'returning-ticket',templateId:'standard',templateVersion:1,documentType:'Return Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset((workspaceSubmittedSnapshot=JSON.stringify({...state,photos:nextPhotos}),{...state,photos:nextPhotos})),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
+  const payload={isDraft,...(!before?.exists()&&isDraft?{locked:false}:before?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:'returning-ticket',templateId:'standard',templateVersion:1,documentType:'Return Ticket',number:state.fields.reference.trim(),date:state.fields.date||'',presetData:encodePreset({...state,photos:nextPhotos}),profileId:snapshot.id,profileName:snapshot.name||'',companySnapshot:encodePreset(snapshot),presetHeaderSnapshot:encodePreset(savedHeader||structuredClone(profile?.presetHeader||{})),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!before.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})};
   await setDoc(ref,payload,{merge:true});
   docId=ref.id;savedCompany=snapshot;state.photos=nextPhotos;
   pendingPhotos.clear();
@@ -434,7 +432,7 @@ async function save(){const isDraft=$('documentDraft').checked;
    if(path.startsWith('documentFiles/'))deleteDoc(doc(db,'documentFiles',path.slice('documentFiles/'.length))).catch(error=>console.warn('Old photo cleanup pending:',error));
 
   }
-  draw();notify('Saved online: '+state.fields.reference);$('documentDraft').checked=isDraft;workspaceSavedSnapshot=workspaceSubmittedSnapshot;reportPresetSaved(state.fields.reference,docId);posted('dirty',{dirty:JSON.stringify(state)!==workspaceSavedSnapshot});ready();await documentSaveMessage(state.fields.reference);
+  draw();notify('Saved online: '+state.fields.reference);$('documentDraft').checked=isDraft;reportPresetSaved(state.fields.reference,docId);ready();await documentSaveMessage(state.fields.reference);
  }catch(e){
   // Do not touch the saved document if an upload or write failed.
   for(const id of uploaded)deleteDoc(doc(db,'documentFiles',id)).catch(()=>{});
@@ -443,10 +441,10 @@ async function save(){const isDraft=$('documentDraft').checked;
  }finally{saving=false}
 }
 async function loadSaved(id){
- try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='returning-ticket')throw Error('Not a Return Ticket');clearPhotoSession();docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);workspaceSavedSnapshot=null;state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('RT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Return Ticket reference; photos are not copied.')}else{draw();notify('Opened Return Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
+ try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='returning-ticket')throw Error('Not a Return Ticket');clearPhotoSession();docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('RT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Return Ticket reference; photos are not copied.')}else{draw();notify('Opened Return Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
 }
 function ready(){
- if(!docId||workspaceSavedSnapshot===null)workspaceSavedSnapshot=docId?JSON.stringify(state):null;posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,dirty:workspaceSavedSnapshot!==null&&JSON.stringify(state)!==workspaceSavedSnapshot,isDraft:$('documentDraft').checked,status:$('status').textContent})}
+ posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
 function chooseBusiness(id){if(docId){ready();return}const selected=profiles.find(x=>x.id===id);if(selected){const previous=business().name;profile=selected;const preparedCompany=state?.signatures?.['Prepared By'];if(preparedCompany&&(!preparedCompany.companyName||preparedCompany.companyName===previous||preparedCompany.companyName==='{companyName}'))preparedCompany.companyName=business().name;draw();ready()}}
 window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Return Ticket').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
