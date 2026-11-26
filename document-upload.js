@@ -1,5 +1,5 @@
 // PDF upload module: Base64 bytes are stored separately from document-list metadata.
-import {doc,getDoc,setDoc,deleteDoc,collection,query,where,limit,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {doc,getDocFromServer,setDoc,deleteDoc,collection,query,where,limit,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 const MAX_PDF_BYTES=200*1024;
 // Display dates as dd/mm/yy; retain ISO YYYY-MM-DD in Firestore for date filtering.
 export function displayDocumentDate(value){
@@ -37,6 +37,7 @@ async function optimizedPdf(file){
  return best;
 }
 export async function uploadPdfDocument({db,user,reference,date,family,file}){
+ if(!navigator.onLine)throw Error('Internet connection required.');
  if(!user)throw Error("Please sign in first.");
  const number=String(reference||"").trim();
  if(!number)throw Error("Document reference is required.");
@@ -44,7 +45,7 @@ export async function uploadPdfDocument({db,user,reference,date,family,file}){
  if(!file||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"))throw Error("Select a PDF file.");
  const bytes=await optimizedPdf(file);
  let match;
- try{match=await getDocs(query(collection(db,"documents"),where("number","==",number),limit(1)))}
+ try{match=await getDocsFromServer(query(collection(db,"documents"),where("number","==",number),limit(1)))}
  catch(e){if(e.code==="permission-denied")throw Error("Permission denied checking document references in Firestore documents. Check documents read/query rules.");throw e}
  if(!match.empty)throw Error("A document with this reference already exists. Use a unique reference.");
  const ref=doc(collection(db,"documents"));
@@ -56,7 +57,7 @@ export async function uploadPdfDocument({db,user,reference,date,family,file}){
   await setDoc(ref,{number,date,documentType:family,templateFamily:family,templateSource:"uploaded-pdf",fileType:"application/pdf",fileName:file.name,fileSize:bytes.length,fileId:ref.id,locked:true,createdBy:user.uid,updatedBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
  }catch(e){try{await deleteDoc(pdfRef)}catch{}if(e.code==="permission-denied")throw Error("Permission denied creating document metadata in Firestore documents. Check documents create rules for uploaded PDFs.");throw e}
  // Confirm that the listing metadata is readable before reporting upload success.
- const saved=await getDoc(ref);
+ const saved=await getDocFromServer(ref);
  if(!saved.exists()||saved.data().templateSource!=="uploaded-pdf"||saved.data().fileId!==ref.id)
   throw Error("PDF data was sent but its Saved Documents listing could not be verified. Search the reference before trying again.");
  return {id:ref.id,size:bytes.length,reference:number};
@@ -66,7 +67,7 @@ export async function viewPdfDocument(db,id){
  const tab=window.open("","_blank");
  try{
   const ref=doc(db,"documentFiles",id);
-  const snap=await getDoc(ref);
+  const snap=await getDocFromServer(ref);
   if(!snap.exists()||typeof snap.data().base64!=="string")throw Error("Uploaded PDF data not found.");
   const bytes=fromBase64(snap.data().base64);
   if(!looksLikePdf(bytes))throw Error("Stored document is not a valid PDF.");

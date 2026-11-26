@@ -1,9 +1,9 @@
-import {listPresetCopies} from "./preset-user-templates.js?v=20261101-copy-1";
-import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,uploadDateToIso} from "./document-upload.js?v=20261118-full-year-date";
-import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261117-lock1";
+import {listPresetCopies} from "./preset-user-templates.js?v=20261126-online-only";
+import {uploadPdfDocument,viewPdfDocument,removePdfPayload,displayDocumentDate,uploadDateToIso} from "./document-upload.js?v=20261126-online-only";
+import {mayManageLocks,isDocumentLocked,setDocumentLocked,confirmDeleteUnlocked} from "./document-lock.js?v=20261126-online-only";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,orderBy,limit,startAfter,getDocs,getDocsFromServer,getDocFromServer,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {getFirestore,doc,getDocFromServer,setDoc,collection,query,where,orderBy,limit,startAfter,getDocsFromServer,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 let db=null;
 let user=null, role=null, currentId=null, writeTimer=null, loading=false; const rank={user:1,staff:1,manager:2,superadmin:3};
 const el=id=>document.getElementById(id);
@@ -39,6 +39,7 @@ export async function startCloud(authUser,profile){
   document.querySelectorAll(".cloud-admin-only").forEach(x=>x.hidden=!canManage());
   const snap=await getDocFromServer(doc(db,"appSettings","main"));
   if(snap.exists() && snap.data().settings)bridge().setSettings(decode(snap.data().settings));
+  else if(!canManage())throw Error('Live business settings not found');
   else if(canManage())await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedAt:serverTimestamp(),updatedBy:user.uid});
   loading=false;notify("Online · "+profile.role);
   await loadDocs();
@@ -57,10 +58,13 @@ window.addEventListener('focus',()=>{refreshDocumentsOnReturn().catch(()=>{})});
 document.addEventListener('visibilitychange',()=>{refreshDocumentsOnReturn().catch(()=>{})});
 export function clearCloud(){documentListRequest++;user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
 export function settingsChanged(){
-  if(!user||!canManage()||loading)return;
+  if(!user||!canManage()||loading||!navigator.onLine)return;
   clearTimeout(writeTimer);
   writeTimer=setTimeout(async()=>{
+    if(!user||!navigator.onLine||!document.documentElement.classList.contains('auth-ready'))return;
     try {
+      await getDocFromServer(doc(db,'users',user.uid));
+      if(!navigator.onLine)throw Error('Internet connection required.');
       await setDoc(doc(db,"appSettings","main"),{settings:encode(bridge().getSettings()),updatedBy:user.uid,updatedAt:serverTimestamp()});
       notify("Settings saved online");
       window.dispatchEvent(new CustomEvent('docsystem-settings-sync',{detail:{ok:true}}));
@@ -99,23 +103,24 @@ function documentSaveMessage(reference,duplicate=false){
  })
 }
 export async function saveDocument(){
+ if(!navigator.onLine)return alert('Internet connection required.');
   if(!user)return;
   const payload=bridge().getDocument(),isDraft=el("documentDraft").checked;
   const d=payload.doc, num=String(d.fieldValues?.docno||"").trim(), date=String(d.fieldValues?.date||"").slice(0,10);
   if(!num){alert("Enter a document number before saving.");return}
   try{
-    const opened=currentId?await getDoc(doc(db,"documents",currentId)):null;
+    const opened=currentId?await getDocFromServer(doc(db,"documents",currentId)):null;
     const newReference=!opened?.exists()||String(opened.data().number||"").trim()!==num;
     let savedDoc=!newReference&&currentId?doc(db,"documents",currentId):doc(collection(db,"documents"));
     if(newReference){
-      const matches=await getDocs(query(collection(db,"documents"),where("number","==",num),limit(100)));
+      const matches=await getDocsFromServer(query(collection(db,"documents"),where("number","==",num),limit(100)));
       const existing=matches.docs.find(x=>x.data().profileId===payload.profileId && x.data().documentType===d.type);
       if(existing){
         if(!await documentSaveMessage(num,true))return;
         savedDoc=doc(db,"documents",existing.id);
       }
     }
-    const prior=await getDoc(savedDoc);
+    const prior=await getDocFromServer(savedDoc);
     if(isDraft&&prior.exists()&&prior.data().isDraft!==true&&isDocumentLocked(prior.data()))throw Error("Unlock the existing saved document before converting it to a draft.");
     await setDoc(savedDoc,{...encode(payload),isDraft,...(!prior.exists()&&isDraft?{locked:false}:prior.data()?.isDraft===true&&!isDraft?{locked:true}:{}),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
     currentId=savedDoc.id;window.dispatchEvent(new CustomEvent('docsystem-custom-document-state',{detail:{state:isDraft?'draft':'saved'}}));selectDocumentTab(isDraft);notify((isDraft?"Draft saved online: ":"Document saved online: ")+num);await loadDocs();await documentSaveMessage(num);
@@ -216,6 +221,7 @@ export async function loadDocs(){
  }catch(e){if(requestId===documentListRequest)notify("Document load failed: "+e.message);throw e}
 }
 export async function deleteDocument(id){
+ if(!navigator.onLine)return alert('Internet connection required.');
  if(!user)return;
  try{
   const record=await confirmDeleteUnlocked({db,id,user,role});
@@ -229,12 +235,14 @@ export async function deleteDocument(id){
  }catch(error){alert("Delete failed: "+(error.code||error.message))}
 }
 async function toggleDocumentLock(id,locked){
+ if(!navigator.onLine)return alert('Internet connection required.');
  try{
   await setDocumentLocked({db,id,user,role,locked});
   await loadDocs();
  }catch(error){alert("Lock update failed: "+(error.code||error.message))}
 }
 async function uploadDocumentFromForm(){
+ if(!navigator.onLine)return alert('Internet connection required.');
  const btn=el("cloudUploadSubmit"),status=el("cloudUploadStatus");
  if(btn.disabled||!user)return;
  btn.disabled=true;status.textContent="Validating and uploading PDF...";
@@ -259,7 +267,7 @@ async function uploadDocumentFromForm(){
 
 export async function openDocument(id,duplicate=false){
   try{
-    const s=await getDoc(doc(db,"documents",id));
+    const s=await getDocFromServer(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
     if(s.data().templateSource!=="preset"||s.data().templateFamily==="minutes-of-meeting"||s.data().documentType==="Minutes of Meeting")throw Error("This document editor is unavailable");
     if(s.data().templateSource==="preset"){
@@ -293,17 +301,18 @@ export async function openDocument(id,duplicate=false){
 export async function loadUsers(){
   if(!user||!canManage())return;
   try{
-    const snaps=await getDocs(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","user","staff"]),limit(200)));
+    const snaps=await getDocsFromServer(canAdmin()?query(collection(db,"users"),limit(200)):query(collection(db,"users"),where("role","in",["manager","user","staff"]),limit(200)));
     el("userList").innerHTML=snaps.docs.map(s=>{let x=s.data();return '<div class="cloud-entry"><div><b>'+escape(x.email)+'</b><div class="muted">Account</div></div><div class="actions"><select data-role-uid="'+escape(s.id)+'" '+(!canAdmin()?'disabled':'')+'>'+(canAdmin()?["superadmin","manager","user"]:["manager","user"]).map(r=>'<option '+(r===(x.role==='staff'?'user':x.role)?'selected':'')+'>'+r+'</option>').join("")+'</select><select data-status-uid="'+escape(s.id)+'"><option '+(x.status==="active"?"selected":"")+'>active</option><option '+(x.status==="inactive"?"selected":"")+'>inactive</option></select><button data-user-save="'+escape(s.id)+'">Update</button></div></div>'}).join("");
   }catch(e){el("userList").textContent="Could not load users: "+e.message}
 }
 export async function saveUser(uid){
+ if(!navigator.onLine)return alert('Internet connection required.');
   if(!canManage())return;
   const row=el("userList").querySelector('[data-user-save="'+uid+'"]').closest(".cloud-entry");
   const newRole=row.querySelector("select[data-role-uid]").value;
   const status=row.querySelector("select[data-status-uid]").value;
   if(uid===user.uid&&status==="inactive"){alert("You cannot deactivate yourself.");return}
-  try{const ref=doc(db,"users",uid);const current=await getDoc(ref);if(!current.exists())throw Error("Account missing");
+  try{const ref=doc(db,"users",uid);const current=await getDocFromServer(ref);if(!current.exists())throw Error("Account missing");
     if(!canAdmin()&&current.data().role==="superadmin")throw Error("Manager cannot modify a superadmin account");
     const storedRole=canAdmin()?newRole:current.data().role;
     if(!["superadmin","manager","user","staff"].includes(storedRole))throw Error("Invalid role");
@@ -311,6 +320,7 @@ export async function saveUser(uid){
   }catch(e){alert("Update failed: "+e.message)}
 }
 export async function addUser(){
+ if(!navigator.onLine)return alert('Internet connection required.');
   if(!canManage())return;
   const email=el("newUserEmail").value.trim().toLowerCase();
   const password=el("newUserPassword").value;

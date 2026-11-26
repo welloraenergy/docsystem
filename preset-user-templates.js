@@ -1,8 +1,9 @@
 // User-created preset copies. Built-in preset JSON and editor files are never written to.
 // One immutable source family + source preset ID for each copy.
-import {getFirestore,collection,doc,getDoc,setDoc,getDocs,query,where,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {getFirestore,collection,doc,getDocFromServer,setDoc,getDocsFromServer,query,where,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 const allowed=new Set(['quotation','purchase-order','delivery-ticket','returning-ticket','invoice']);
 export async function savePresetCopy({user,family,basePresetId,name,state,profileId}){
+ if(!navigator.onLine)throw Error('Internet connection required.');
  if(!user?.uid)throw Error('Sign in to save a reusable template');
  if(!allowed.has(family))throw Error('Unsupported preset family');
  name=String(name||'').trim();
@@ -21,7 +22,7 @@ export async function savePresetCopy({user,family,basePresetId,name,state,profil
 export async function readPresetCopy({user,id,family}){
  if(!user?.uid)throw Error('Sign in first');
  if(!id||id.length>180)throw Error('Invalid template ID');
- const snap=await getDoc(doc(getFirestore(),'presetCopies',id));
+ const snap=await getDocFromServer(doc(getFirestore(),'presetCopies',id));
  if(!snap.exists())throw Error('Saved template not found');
  const data=snap.data();
  if(data.ownerUid!==user.uid)throw Error('You cannot open another user\'s private template');
@@ -33,7 +34,7 @@ export async function readPresetCopy({user,id,family}){
 }
 export async function listPresetCopies(user){
  if(!user?.uid)return [];
- const rows=await getDocs(query(collection(getFirestore(),'presetCopies'),where('ownerUid','==',user.uid)));
+ const rows=await getDocsFromServer(query(collection(getFirestore(),'presetCopies'),where('ownerUid','==',user.uid)));
  return rows.docs.map(x=>({id:x.id,...x.data()})).filter(x=>allowed.has(x.family))
    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 }

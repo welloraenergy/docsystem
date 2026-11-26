@@ -198,8 +198,8 @@ import {shortDate,refPrefix,fullReference,updateReferenceYear,mountReferenceFiel
 
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import {getFirestore,doc,getDoc,setDoc,deleteDoc,collection,query,where,limit,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261101-copy-1';
+import {getFirestore,doc,getDocFromServer,setDoc,deleteDoc,collection,query,where,limit,getDocsFromServer,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+import {savePresetCopy,readPresetCopy} from './preset-user-templates.js?v=20261126-online-only';
 import {paginatePresetDocument} from './preset-pagination.js?v=20261101-single-controller1';
 import {sharedPresetSlot,expandPresetText,richPresetText} from './preset-shared.js?v=20261101-common2';
 const $=id=>document.getElementById(id);
@@ -242,7 +242,7 @@ function photoSrc(idx){
  if(item.startsWith('documentFiles/')){
   if(resolvedPhotos.has(item))return resolvedPhotos.get(item);
   if(!photoRequests.has(item)){
-   const request=getDoc(doc(db,'documentFiles',item.slice('documentFiles/'.length))).then(snapshot=>{
+   const request=getDocFromServer(doc(db,'documentFiles',item.slice('documentFiles/'.length))).then(snapshot=>{
     if(!snapshot.exists())throw Error('Photo record not found');
     const data=snapshot.data();
     if(typeof data.base64!=='string'||!data.base64)throw Error('Photo data is missing');
@@ -386,7 +386,7 @@ function documentSaveMessage(reference,duplicate=false){
   panel.append(title,message,actions);veil.append(panel);host.body.append(veil);host.addEventListener('keydown',onKey,true);(cancel||okay).focus();
  })
 }
-async function save(){const isDraft=$('documentDraft').checked;
+async function save(){if(!navigator.onLine)return alert('Internet connection required. Document not saved.');const isDraft=$('documentDraft').checked;
  if(saving)return;
  if(!user)return alert('Please sign in first');
  if(!String(state.fields.reference||'').trim()||state.fields.reference===refPrefix('DT',state.fields.date))return alert('Enter Reference No. before saving');
@@ -394,10 +394,10 @@ async function save(){const isDraft=$('documentDraft').checked;
  saving=true;
  const uploaded=[];
  try{
-  if(docId){const source=await getDoc(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.reference.trim()){docId=null;state.photos=Array(10).fill('');}}
-  if(!docId){const q=await getDocs(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='delivery-ticket'||d.data().documentType==='Delivery Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
+  if(docId){const source=await getDocFromServer(doc(db,'documents',docId));if(!source.exists()||String(source.data().number||'').trim()!==state.fields.reference.trim()){docId=null;state.photos=Array(10).fill('');}}
+  if(!docId){const q=await getDocsFromServer(query(collection(db,'documents'),where('number','==',state.fields.reference.trim()),limit(100)));const duplicate=q.docs.find(d=>d.data().profileId===business().id&&(d.data().templateFamily==='delivery-ticket'||d.data().documentType==='Delivery Ticket'));if(duplicate){if(!await documentSaveMessage(state.fields.reference,true))return;docId=duplicate.id}}
   const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents'));
-  const before=await getDoc(ref);
+  const before=await getDocFromServer(ref);
   if(isDraft&&before?.exists()&&before.data().isDraft!==true&&before.data().locked!==false)throw Error('Unlock the existing saved document before converting it to a draft.');
   const storedPhotos=before.exists()?decodePreset(before.data()?.presetData||{}).photos:[];
    const oldPhotos=Array.isArray(storedPhotos)?storedPhotos:[];
@@ -441,7 +441,7 @@ async function save(){const isDraft=$('documentDraft').checked;
  }finally{saving=false}
 }
 async function loadSaved(id){
- try{const snap=await getDoc(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Delivery Ticket reference; photos are not copied.')}else{draw();notify('Opened Delivery Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
+ try{const snap=await getDocFromServer(doc(db,'documents',id));if(!snap.exists())throw Error('Not found');const d=snap.data();if(d.templateFamily!=='delivery-ticket')throw Error('Not a Delivery Ticket');clearPhotoSession();docId=id;$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);state.comments=state.comments||'';state.showNotes=state.showNotes!==false;state.photos=Array.isArray(state.photos)?state.photos:Array(10).fill('');savedCompany=decodePreset(d.companySnapshot||null);savedHeader=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.fields.reference=refPrefix('DT',state.fields.date);state.photos=Array(10).fill('');draw();notify('Duplicate ready. Enter a new Delivery Ticket reference; photos are not copied.')}else{draw();notify('Opened Delivery Ticket '+d.number)}ready()}catch(e){notify('Open failed: '+e.message)}
 }
 function ready(){
  posted('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:business().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
@@ -449,7 +449,7 @@ function chooseBusiness(id){if(docId){ready();return}const selected=profiles.fin
 window.printDoc=()=>{const reference=String(state.fields.reference||'').trim();const pdfName=(reference||'Delivery Ticket').replace(/[\\/:*?"<>|]/g,'-');document.title=pdfName;if(window.parent!==window){const parentTitle=window.parent.document.title;window.parent.document.title=pdfName;window.addEventListener('afterprint',()=>{window.parent.document.title=parentTitle},{once:true})}render();window.print()};
 
 let presetCopyApplied=false,activeCopyDefaults=null;
-async function saveAsNewPresetTemplate(name){
+async function saveAsNewPresetTemplate(name){if(!navigator.onLine)return alert('Internet connection required. Template not saved.');
  if(new URLSearchParams(location.search).get('configure')!=='1')return;
  if(!user||!state)return alert('Sign in and open a preset first');
  if(!name||!name.trim())return;
@@ -502,6 +502,6 @@ document.addEventListener('change',async e=>{
 async function start(){
  try{const response=await fetch('./templates/do/standard.json',{cache:'no-store'});if(!response.ok)throw Error('Delivery Ticket JSON not found');template=await response.json();state=empty();loaded=true;draw();if(docId)await loadSaved(docId);else{notify('Delivery Ticket ready');ready()}}catch(e){notify('Cannot load Delivery Ticket: '+e.message)}
 }
-onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDoc(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDoc(doc(db,'appSettings','main'));const st=snap.data()?.settings||{};globals=st.globalPlaceholders||{};profiles=Array.isArray(st.profiles)?st.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===st.activeProfileId)||profiles[0]||null;if(!loaded)await start();else{render();ready()}if(params.get('copyId'))await openSavedPresetCopy()}catch(e){notify('Business Profiles failed: '+e.message)}});
+onAuthStateChanged(auth,async u=>{user=u;if(!u){notify('Sign in to DocSystem first');return}try{const p=await getDocFromServer(doc(db,'users',u.uid));role=p.data()?.role||'user'}catch{}try{const snap=await getDocFromServer(doc(db,'appSettings','main'));const st=snap.data()?.settings||{};globals=st.globalPlaceholders||{};profiles=Array.isArray(st.profiles)?st.profiles.filter(p=>p?.company):[];profile=profiles.find(p=>p.id===st.activeProfileId)||profiles[0]||null;if(!loaded)await start();else{render();ready()}if(params.get('copyId'))await openSavedPresetCopy()}catch(e){notify('Business Profiles failed: '+e.message)}});
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{fitPreview();posted('height',{height:document.documentElement.scrollHeight+8})}).observe(document.querySelector('.workspace'));
 </script></body></html>

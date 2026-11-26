@@ -1,4 +1,4 @@
-import * as cloud from "./cloud.js?v=20261126-preset-only";
+import * as cloud from "./cloud.js?v=20261126-online-only";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { getFirestore, doc, getDocFromServer } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
@@ -49,6 +49,9 @@ installButton.addEventListener("click", async () => {
 let sessionCheck = 0;
 let currentUid = null;
 let lastOnlineCheck = 0;
+let checking = false;
+let verifiedUid = null;
+let verifiedRole = null;
 function lock(text = "") {
   document.documentElement.classList.remove("auth-ready");
   screen.hidden = false;
@@ -63,7 +66,10 @@ function unlock(user, profile) {
   document.documentElement.classList.add("auth-ready");
 }
 async function verifyOnlineSession(user) {
+  if(checking)return;
+  checking=true;
   const attempt = ++sessionCheck;
+  try {
   const uid = user?.uid || null;
   const alreadyOpen = document.documentElement.classList.contains("auth-ready") && currentUid === uid;
   currentUid = uid;
@@ -72,6 +78,7 @@ async function verifyOnlineSession(user) {
     return;
   }
   if (!user) {
+    verifiedUid=null;verifiedRole=null;
     cloud.clearCloud();
     window.DocSystemRole = null;
     window.DocSystemCloud = null;
@@ -81,7 +88,7 @@ async function verifyOnlineSession(user) {
   if (!alreadyOpen) lock("Verifying live online access...");
   try {
     // Server-only verification: never unlock using a cached account profile.
-    const snap = await getDocFromServer(doc(db, "users", uid));
+    const snap = await Promise.race([getDocFromServer(doc(db, "users", uid)),new Promise((_,reject)=>setTimeout(()=>reject(Error("Live server verification timed out")),10000))]);
     if (attempt !== sessionCheck || currentUid !== uid || !navigator.onLine) return;
     const profile = snap.exists() ? snap.data() : null;
     const validRole = ["superadmin", "manager", "user", "staff"].includes(profile?.role);
@@ -94,21 +101,24 @@ async function verifyOnlineSession(user) {
     const normalizedRole = profile.role === "staff" ? "user" : profile.role;
     lastOnlineCheck = Date.now();
     // Periodic/focus checks must not reset the currently edited document.
-    if (alreadyOpen) return;
+    if (alreadyOpen && verifiedRole===normalizedRole) return;
     const managerOrAbove = ["superadmin", "manager"].includes(normalizedRole);
     window.DocSystemRole = normalizedRole;
     window.DocSystemCloud = cloud;
     document.querySelectorAll('#settingsNavTab, nav.tabs [data-tab="library"], [data-subpage="template"], #cloudMenuUsers').forEach(x => x.hidden = !managerOrAbove);
     // Wait for live settings and document listing before giving access to the workspace.
-    await cloud.startCloud(user, profile);
+    if(verifiedUid===uid&&verifiedRole===normalizedRole){await cloud.loadDocs();}
+    else await cloud.startCloud(user, profile);
     if (attempt !== sessionCheck || !navigator.onLine || auth.currentUser?.uid !== uid) return;
     lastOnlineCheck = Date.now();
+    verifiedUid=uid;verifiedRole=normalizedRole;
     unlock(user, {...profile, role: normalizedRole});
   } catch (error) {
     if (attempt !== sessionCheck) return;
     console.error("DocSystem live access check failed:", error);
     lock("Online connection required. Live data could not be verified: " + (error.code || error.message));
   }
+  } finally {checking=false;if(auth.currentUser?.uid!==currentUid&&navigator.onLine)queueMicrotask(()=>verifyOnlineSession(auth.currentUser));}
 }
 lock(navigator.onLine ? "Checking live connection..." : "Internet connection required. DocSystem cannot be used offline.");
 form.addEventListener("submit", async event => {
@@ -161,23 +171,9 @@ window.addEventListener("online", () => {
   if (auth.currentUser) verifyOnlineSession(auth.currentUser);
 });
 window.addEventListener("focus", () => {
-  if (auth.currentUser && navigator.onLine && Date.now() - lastOnlineCheck > 30000) {
+  if (auth.currentUser && navigator.onLine && Date.now() - lastOnlineCheck > 15000) {
     verifyOnlineSession(auth.currentUser);
   }
 });
-// An open installed window must not continue functioning after it loses server access.
-setInterval(async () => {
-  if (!auth.currentUser || !navigator.onLine) return;
-  if (!document.documentElement.classList.contains("auth-ready")) return;
-  const uid = auth.currentUser.uid;
-  try {
-    const snap = await getDocFromServer(doc(db, "users", uid));
-    if (!snap.exists() || snap.data().status !== "active") {
-      ++sessionCheck;
-      lock("Live account verification failed. Online access is required.");
-    } else lastOnlineCheck = Date.now();
-  } catch {
-    ++sessionCheck;
-    lock("Connection to Firestore lost. Reconnect to continue.");
-  }
-}, 60000);
+// Reverify even while locked, so a recovered server connection can unlock the existing session.
+setInterval(()=>{if(auth.currentUser&&navigator.onLine)verifyOnlineSession(auth.currentUser);},15000);

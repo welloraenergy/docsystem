@@ -485,7 +485,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <aside class="preview"><div class="previewTitle"><strong>Preview</strong><span id="pageCount" class="muted"></span></div><div id="preview"></div></aside>
 </main>
 <script>
-const KEY='docfac.settings.v1',clone=o=>JSON.parse(JSON.stringify(o)),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),money=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}),uid=()=>Math.random().toString(36).slice(2,8);
+const clone=o=>JSON.parse(JSON.stringify(o)),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),money=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}),uid=()=>Math.random().toString(36).slice(2,8);
 const defaults={fonts:{header:'Arial, sans-serif',title:'Arial, sans-serif',body:'Arial, sans-serif',items:'Arial, sans-serif',footer:'Arial, sans-serif'},company:{name:'Sample Company Sdn Bhd',logo:'',fields:[{label:'Registration No.',value:'SAMPLE0001',place:'header',layout:'half'},{label:'Address',value:'Sample Address Line 1\nSample Address Line 2\nSample Address Line 3',place:'header',layout:'full'},{label:'Tel',value:'SAMPLE0002',place:'header',layout:'half'},{label:'Email',value:'sample@noagrp.github',place:'header',layout:'half'}],footer:''},templates:{
 'Quotation':{family:'commercial',title:'QUOTATION',fields:[['customer','Customer','multiline','half'],['address','Address','multiline','full'],['docno','Quotation No.','text','half'],['date','Date','text','half'],['terms','Validity / Terms','text','half']],columns:[['item','Item','number',8],['description','Description','text',42],['qty','Qty','number',10],['unit_price','Unit Price','number',18],['amount','Amount','formula',22]],subtotal:true,sig:false,sigEnabled:[false,false,false],sigs:['','',''],sigNames:['','',''],adjustments:[]},
 'Invoice':{family:'commercial',title:'INVOICE',fields:[['customer','Bill To','multiline','half'],['address','Address','multiline','full'],['docno','Invoice No.','text','half'],['date','Date','text','half'],['terms','Terms','text','half']],columns:[['item','Item','number',8],['description','Description','text',42],['qty','Qty','number',10],['unit_price','Unit Price','number',18],['amount','Amount','formula',22]],subtotal:true,sig:false,sigEnabled:[false,false,false],sigs:['','',''],sigNames:['','',''],adjustments:[]},
@@ -498,7 +498,7 @@ const defaults={fonts:{header:'Arial, sans-serif',title:'Arial, sans-serif',body
 'Debit Note':{family:'adjustment',title:'DEBIT NOTE',fields:[['customer','Customer / Supplier','multiline','half'],['address','Address','multiline','full'],['docno','Debit Note No.','text','half'],['date','Date','text','half'],['ref','Original Invoice Ref.','text','half'],['reason','Reason','multiline','full']],columns:[['item','Item','number',8],['description','Description','text',42],['qty','Qty','number',10],['unit_price','Unit Price','number',18],['amount','Amount','formula',22]],subtotal:true,sig:false,sigEnabled:[false,false,false],sigs:['','',''],sigNames:['','',''],adjustments:[]},
 'Journal Voucher':{family:'journal',title:'JOURNAL VOUCHER',fields:[['docno','JV No.','text','half'],['date','Date','text','half'],['ref','Reference','text','half'],['reason','Narration / Reason','multiline','full']],columns:[['account','Account / Code','text',22],['description','Particulars','text',42],['debit','Debit','number',18],['credit','Credit','number',18]],subtotal:false,sig:true,sigEnabled:[true,true,true],sigs:['Prepared by','Checked by','Approved by'],sigNames:['','',''],adjustments:[]}
 }};
-let settings=(()=>{try{return JSON.parse(localStorage.getItem(KEY))||clone(defaults)}catch{return clone(defaults)}})(),doc;
+let settings=clone(defaults),doc;
 let customSavedState='unsaved',presetSavedState='unsaved';
 function migrateSettings(s){
   if(!Array.isArray(s.profiles)||!s.profiles.length){
@@ -565,10 +565,9 @@ function nextExtraKey(t){let used=new Set((t.fields||[]).map(f=>f[0]));for(let n
  note.textContent=event.detail?.ok?'Saved online in Firebase':'Online save failed: '+(event.detail?.message||'Unknown error');
 });
 function saveSettings(){
- localStorage.setItem(KEY,JSON.stringify(settings));
  window.DocSystemCloud?.settingsChanged();
  const note=document.getElementById('customLayoutSaveStatus');
- if(note)note.textContent='Saved locally · syncing to Firebase';
+ if(note)note.textContent='Saving online to Firebase';
 }
 function tpl(){return profile().templates[doc.type]}
 function blankRow(){let r={};tpl().columns.forEach(c=>r[c[0]]=c[0]==='item'?String(doc?.items?.length+1||1):'');return r}
@@ -947,7 +946,7 @@ function loadPresetConfigurator(copyId=null){
  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','payment-voucher':'preset-payment-voucher.html','salary-payslip':'preset-salary-payslip.html'}[family];
  if(!editor)return;
  const frame=document.getElementById('presetConfigureFrame');frame.dataset.family=family;frame.dataset.base=base;
- frame.src=editor+'?version='+({'preset-quotation.html':'20261113-quote-sign-center52','preset-po.html':'20261113-po-short-sign-date57','preset-do.html':'20261113-ticket-address-compact42','preset-return.html':'20261113-ticket-address-compact42','preset-invoice.html':'20261113-invoice-ref-pdf58','preset-payment-voucher.html':'20261114-payment-voucher-shared-module23','preset-salary-payslip.html':'20261114-salary-payslip-editable-statement23'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
+ frame.src=editor+'?version='+({'preset-quotation.html':'20261126-online-only','preset-po.html':'20261126-online-only','preset-do.html':'20261126-online-only','preset-return.html':'20261126-online-only','preset-invoice.html':'20261126-online-only','preset-payment-voucher.html':'20261126-online-only','preset-salary-payslip.html':'20261126-online-only'}[editor])+'&embedded=1&configure=1&preset='+encodeURIComponent(base)+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
  document.getElementById('presetConfigStatus').textContent='Editing '+family+' / '+base+'. Saving creates a separate template.';
 }
 presetConfiguratorTypes();
@@ -980,7 +979,7 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,dupl
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='goods-received-note'?'preset-grn.html?version=20261126-date-picker':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261126-date-picker':family==='invoice'?'preset-invoice.html?version=20261126-status2':family==='returning-ticket'?'preset-return.html?version=20261126-status2':family==='delivery-ticket'?'preset-do.html?version=20261126-status2':family==='purchase-order'?'preset-po.html?version=20261126-short-signline':family==='payment-voucher'?'preset-payment-voucher.html?version=20261126-status2':family==='salary-payslip'?'preset-salary-payslip.html?version=20261126-status2':'preset-quotation.html?version=20261126-status2';
+  const editor=family==='goods-received-note'?'preset-grn.html?version=20261126-online-only':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261126-online-only':family==='invoice'?'preset-invoice.html?version=20261126-online-only':family==='returning-ticket'?'preset-return.html?version=20261126-online-only':family==='delivery-ticket'?'preset-do.html?version=20261126-online-only':family==='purchase-order'?'preset-po.html?version=20261126-online-only':family==='payment-voucher'?'preset-payment-voucher.html?version=20261126-online-only':family==='salary-payslip'?'preset-salary-payslip.html?version=20261126-online-only':'preset-quotation.html?version=20261126-online-only';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
@@ -1327,5 +1326,5 @@ if(incomingPreset.get('family')==='minutes-of-meeting'){
  history.replaceState(null,'',location.pathname);
 }else setWorkspaceSource('preset',true);
 </script>
-<script type="module" src="auth.js?v=20261126-preset-only"></script>
+<script type="module" src="auth.js?v=20261126-online-only"></script>
 </body></html>
