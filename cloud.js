@@ -56,7 +56,7 @@ async function refreshDocumentsOnReturn(){
 }
 window.addEventListener('focus',()=>{refreshDocumentsOnReturn().catch(()=>{})});
 document.addEventListener('visibilitychange',()=>{refreshDocumentsOnReturn().catch(()=>{})});
-export function clearCloud(){documentListRequest++;user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
+export function clearCloud(){document.getElementById("documentListPreview")?.close();documentListRequest++;user=null;role=null;currentId=null;loading=true;el("cloudList").innerHTML="";el("userList").innerHTML="";const list=el("workspacePresetCopiesList");if(list)list.innerHTML="";const lib=el("presetCopyLibraryList");if(lib)lib.innerHTML="";notify("Not signed in");}
 export function settingsChanged(){
   if(!user||!canManage()||loading||!navigator.onLine)return;
   clearTimeout(writeTimer);
@@ -219,7 +219,7 @@ export async function loadDocs(){
    const recipientName=typeof recipientValue==="string"?recipientValue.trim():"";
    const recipient=recipientLabel&&recipientName&&!/^\{[^{}]+\}$/.test(recipientName)
     ?'<div class="muted">'+escape(recipientLabel)+': '+escape(recipientName)+'</div>':'';
-   const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
+   const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-preview-doc="'+escape(s.id)+'">Preview</button><button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
    return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b> <span class="document-state-label" data-state="'+(d.isDraft===true&&!uploaded?"draft":"saved")+'">'+(d.isDraft===true&&!uploaded?"DRAFT":"SAVED")+'</span><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':'')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
@@ -273,6 +273,48 @@ async function uploadDocumentFromForm(){
  finally{btn.disabled=false}
 }
 
+async function previewDocument(id){
+ if(!user||!navigator.onLine)return alert('Internet connection required.');
+ const previous=document.activeElement;
+ const modal=document.createElement('dialog');
+ modal.id='documentListPreview';
+ modal.setAttribute('aria-label','Document preview');
+ modal.style.cssText='width:min(1100px,96vw);height:94dvh;max-height:94dvh;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#eef2f6;color:#111827;overflow:hidden';
+ modal.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:42px"><strong>Document Preview</strong><button type="button" autofocus>Close</button></div><p role="status" style="margin:8px 0">Loading document online…</p><iframe title="Read-only document preview" style="display:none;width:100%;height:calc(100% - 42px);border:0;background:#fff"></iframe>';
+ const frame=modal.querySelector('iframe'),status=modal.querySelector('p');
+ let timer;
+ const receive=e=>{
+  if(e.origin!==location.origin||e.source!==frame.contentWindow||e.data?.type!=='docsystem-preset-ready'||!e.data.locked)return;
+  try{
+   const d=frame.contentDocument,paper=d.getElementById('paper');
+   if(!paper||!paper.children.length)throw Error('Document layout unavailable');
+   // Keep the existing renderer and its styles, but expose only its paper.
+   for(let node=paper;node&&node!==d.body;node=node.parentElement){
+    for(const sibling of node.parentElement.children)if(sibling!==node&& !['SCRIPT','STYLE','LINK'].includes(sibling.tagName))sibling.style.setProperty('display','none','important');
+    if(node!==paper){node.style.setProperty('display','block','important');node.style.setProperty('width','100%','important');node.style.setProperty('max-width','100%','important');node.style.setProperty('position','static','important');node.style.setProperty('overflow','visible','important');}
+   }
+   paper.inert=true;
+   frame.style.display='block';status.hidden=true;
+   frame.contentWindow.dispatchEvent(new Event('resize'));
+   clearTimeout(timer);
+  }catch(error){status.textContent='Preview failed: '+error.message;}
+ };
+ modal.querySelector('button').onclick=()=>modal.close();
+ modal.addEventListener('close',()=>{clearTimeout(timer);window.removeEventListener('message',receive);modal.remove();previous?.focus({preventScroll:true});},{once:true});
+ document.body.append(modal);modal.showModal();
+ window.addEventListener('message',receive);
+ try{
+  const snap=await getDocFromServer(doc(db,'documents',id));
+  if(!modal.open)return;
+  if(!snap.exists())throw Error('Document not found');
+  const data=snap.data(),family=savedDocumentFamily(data);
+  const editor={'quotation':'preset-quotation.html','purchase-order':'preset-po.html','delivery-ticket':'preset-do.html','returning-ticket':'preset-return.html','invoice':'preset-invoice.html','commercial-invoice-packing-list':'preset-cipl.html','goods-received-note':'preset-grn.html','payment-voucher':'preset-payment-voucher.html','salary-payslip':'preset-salary-payslip.html'}[family];
+  if(data.templateSource!=='preset'||!editor)throw Error('Document preview unavailable');
+  modal.querySelector('strong').textContent='Preview · '+(data.number||id);
+  frame.src=editor+'?embedded=1&preset='+encodeURIComponent(data.templateId||(family==='quotation'?'rental3':family==='purchase-order'?'rental':'standard'))+'&docId='+encodeURIComponent(id);
+  timer=setTimeout(()=>{status.textContent='Preview could not load. Close and try again.';},30000);
+ }catch(error){status.textContent='Preview failed: '+error.message;}
+}
 export async function openDocument(id,duplicate=false){
   try{
     const s=await getDocFromServer(doc(db,"documents",id));
@@ -378,6 +420,7 @@ export async function loadSavedPresetCopies(){
 
 el("cloudUploadForm").addEventListener("submit",e=>{e.preventDefault();uploadDocumentFromForm()});
 document.addEventListener("click",e=>{
+  const preview=e.target.closest("[data-preview-doc]");if(preview)previewDocument(preview.dataset.previewDoc);
   const a=e.target.closest("[data-open-doc]");if(a)openDocument(a.dataset.openDoc);
   const pdf=e.target.closest("[data-view-pdf]");if(pdf)viewPdfDocument(db,pdf.dataset.viewPdf).catch(error=>alert("PDF open failed: "+error.message));
   const lock=e.target.closest("[data-toggle-lock]");if(lock)toggleDocumentLock(lock.dataset.toggleLock,lock.dataset.nextLock==="true");
