@@ -86,6 +86,7 @@ label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0}
 .grn-panel p{white-space:pre-wrap;overflow-wrap:anywhere;padding:2mm;margin:0;line-height:1.35;font-size:7.2pt}
 .grn-signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3.5mm;margin:3mm 0;break-inside:avoid;page-break-inside:avoid}
 .grn-signatures .grn-sigheader{grid-column:1/-1}
+.grn-sigheading{min-width:0}
 .grn-sign{min-height:35mm;min-width:0}
 .grn-sigtitle{font-weight:700;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
 .grn-sigstatement{font-weight:400;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
@@ -220,7 +221,7 @@ function render(){
  const totals='<table class="grn-totals"><colgroup><col style="width:70%"><col style="width:30%"></colgroup><tbody><tr><th scope="row">Total Qty</th><td>'+total.toLocaleString('en-MY',{maximumFractionDigits:6})+'</td></tr></tbody></table>';
  const bottom='<div class="grn-bottom"><div class="grn-panel"><h4>COMMENTS</h4><p>'+esc(expanded(state.fields.comments))+'</p></div></div>';
  const signatureSlots=[['prepared','Signature 1'],['reviewed','Signature 2'],['approved','Signature 3']];
- const sign=signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+(state.signatureVisibility.prepared?'<div class="grn-sigheader"><div class="grn-sigtitle">'+esc(expanded(state.prepared.title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state.prepared.statement??''))+'</div></div>':'')+signatureSlots.map(([key])=>state.signatureVisibility[key]?'<div class="grn-sign">'+(key==='prepared'?'':'<div class="grn-sigtitle">'+esc(expanded(state[key].title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state[key].statement??''))+'</div>')+'<div class="grn-sigline"><div class="grn-sigcaption">'+esc(expanded(state[key].lineLabel??''))+'</div>'+esc(expanded(state[key].belowLine??''))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'';
+ const sign=signatureSlots.some(([key])=>state.signatureVisibility[key])?'<div class="grn-signatures">'+(state.signatureVisibility.prepared?'<div class="grn-sigheader"><div class="grn-sigtitle">'+esc(expanded(state.prepared.title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state.prepared.statement??''))+'</div></div>':'')+(signatureSlots.some(([key])=>key!=='prepared'&&state.signatureVisibility[key]&&(state[key].title||state[key].statement))?signatureSlots.map(([key])=>key!=='prepared'&&state.signatureVisibility[key]?'<div class="grn-sigheading"><div class="grn-sigtitle">'+esc(expanded(state[key].title??''))+'</div><div class="grn-sigstatement">'+esc(expanded(state[key].statement??''))+'</div></div>':'<div aria-hidden="true"></div>').join(''):'')+signatureSlots.map(([key])=>state.signatureVisibility[key]?'<div class="grn-sign"><div class="grn-sigline"><div class="grn-sigcaption">'+esc(expanded(state[key].lineLabel??''))+'</div>'+esc(expanded(state[key].belowLine??''))+'</div></div>':'<div class="grn-sign" aria-hidden="true"></div>').join('')+'</div>':'';
  $('paper').innerHTML='<article class="paper">'+company+info+logistics+table+totals+bottom+sign+'</article>';
  paginatePresetDocument($('paper'),{fit:'normal'});
  $('pageCount').textContent=$('paper').querySelectorAll('.paper').length+' page(s)';
