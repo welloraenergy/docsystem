@@ -144,6 +144,14 @@ export function selectDocumentTab(draft){
  if(showDrafts!==(draft===true)){el("cloudList").innerHTML="";documentListRequest++;}
  showDrafts=draft===true;
  for(const [id,active] of [["cloudSavedTab",!showDrafts],["cloudDraftTab",showDrafts]]){el(id).classList.toggle("primary",active);el(id).setAttribute("aria-pressed",String(active));}
+ const family=el("cloudFamily");
+ const other=family.querySelector('option[value="custom"]');
+ if(showDrafts){
+  if(family.value==="custom")family.value="";
+  other?.remove();
+ }else if(!other){
+  family.add(new Option("Other PDF","custom"));
+ }
  el("cloudUploadCard").hidden=showDrafts;
 }
 export async function loadDocs(){
