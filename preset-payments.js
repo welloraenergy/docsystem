@@ -23,6 +23,7 @@ function parseDateDisplay(value){const raw=String(value||'').trim();if(!raw)retu
 function dateEditor(value,attrs){return '<span class="payment-date-control"><input type="text" inputmode="numeric" placeholder="DD/MM/YYYY" data-payment-date-display '+attrs+' value="'+esc(dateText(value))+'"><button type="button" class="payment-date-trigger" data-payment-open-date aria-label="Choose date" title="Choose date">📅</button><input type="date" class="payment-native-date" tabindex="-1" data-payment-date-picker '+attrs+' value="'+esc(value||'')+'"></span>'}
 const notice=s=>{$('status').textContent=s;post('status',{status:s})};
 const post=(kind,extra={})=>{if(embedded&&window.parent!==window)window.parent.postMessage({type:'docsystem-preset-'+kind,...extra},location.origin)};
+let workspaceSavedSnapshot=null,workspaceSubmittedSnapshot=null;
 let user,profile,profiles=[],role='user',docId=params.get('docId')||null,recordSnapshot=null,headSnapshot=null,globalPlaceholders={},state;
 function defaults(){
  const date=new Date(),month=String(date.getMonth()+1).padStart(2,'0');
@@ -64,6 +65,7 @@ function sums(){const gross=Object.values(state.earnings||{}).reduce((a,b)=>a+nu
 function table(headers,rows,cls=''){return '<table class="document-table '+cls+'">'+(cls.includes('financial')?'<colgroup><col style="width:7%"><col style="width:71%"><col style="width:22%"></colgroup>':'')+'<thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
 function tr(cells,cl=''){return '<tr class="'+cl+'">'+cells.map(x=>'<td>'+x+'</td>').join('')+'</tr>'}
 function renderDocument(){
+ if(state&&workspaceSavedSnapshot!==null)post('dirty',{dirty:JSON.stringify(state)!==workspaceSavedSnapshot});
  const v=sums(),co=currentBusiness(),h=profile?.presetHeader||headSnapshot||{};
  // Both PV and Salary Payslip use Invoice's shared business-profile heading settings.
  const headerCompany={...co,documentTitle:title,documentNumber:state.reference,documentDate:slip?state.year+'-'+state.month+'-01':state.date||''};
@@ -146,19 +148,20 @@ async function save(){const isDraft=$('documentDraft').checked;
  const ref=docId?doc(db,'documents',docId):doc(collection(db,'documents')),old=await getDoc(ref);
  const savedDate=slip?state.year+'-'+state.month+'-01':state.date;
  if(isDraft&&old?.exists()&&old.data().isDraft!==true&&old.data().locked!==false)throw Error('Unlock the existing saved document before converting it to a draft.');
- await setDoc(ref,{isDraft,...(!old?.exists()&&isDraft?{locked:false}:old?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:savedDate,presetData:encodePreset(state),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(profile?.presetHeader||headSnapshot||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
+ await setDoc(ref,{isDraft,...(!old?.exists()&&isDraft?{locked:false}:old?.data()?.isDraft===true&&!isDraft?{locked:true}:{}),templateSource:'preset',templateFamily:family,templateId:'standard',templateVersion:1,documentType:slip?'Salary Payslip':'Payment Voucher',number:state.reference,date:savedDate,presetData:encodePreset((workspaceSubmittedSnapshot=JSON.stringify(state),state)),profileId:co.id,profileName:co.name||'',companySnapshot:encodePreset(co),presetHeaderSnapshot:encodePreset(profile?.presetHeader||headSnapshot||{}),updatedAt:serverTimestamp(),updatedBy:user.uid,...(!old.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
  // Do not claim online success until the same Firestore document can be read back.
  const verified=await getDoc(ref);
  if(!verified.exists()||verified.data().number!==state.reference||verified.data().templateFamily!==family||verified.data().isDraft!==isDraft)
    throw Error('Save verification failed: the expected document was not found in Firebase.');
  docId=ref.id;recordSnapshot=co;notice('Saved and verified online: '+state.reference);
- $('documentDraft').checked=isDraft;reportPresetSaved(state.reference,docId,savedDate);await documentSaveMessage(state.reference);
+ $('documentDraft').checked=isDraft;workspaceSavedSnapshot=workspaceSubmittedSnapshot;reportPresetSaved(state.reference,docId,savedDate);post('dirty',{dirty:JSON.stringify(state)!==workspaceSavedSnapshot});await documentSaveMessage(state.reference);
  }catch(e){notice('Save failed: '+(e.code||e.message));reportPresetSaveError(e)}
 }
 async function openSaved(){
- try{const snap=await getDoc(doc(db,'documents',docId));if(!snap.exists())throw Error('Document not found');const d=snap.data();if(d.templateFamily!==family)throw Error('Different document family');$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);recordSnapshot=decodePreset(d.companySnapshot||null);headSnapshot=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.reference=refPrefix(code,referenceDate());redraw();notice('Duplicate ready. Enter a new '+title+' reference.')}else{redraw();notice('Opened '+d.number)}ready()}catch(e){notice('Cannot open saved document: '+e.message)}
+ try{const snap=await getDoc(doc(db,'documents',docId));if(!snap.exists())throw Error('Document not found');const d=snap.data();if(d.templateFamily!==family)throw Error('Different document family');$('documentDraft').checked=d.isDraft===true&&params.get('duplicate')!=='1';state=decodePreset(d.presetData);workspaceSavedSnapshot=null;recordSnapshot=decodePreset(d.companySnapshot||null);headSnapshot=decodePreset(d.presetHeaderSnapshot||null);profile=profiles.find(x=>x.id===d.profileId)||profile;if(params.get('duplicate')==='1'){docId=null;state.reference=refPrefix(code,referenceDate());redraw();notice('Duplicate ready. Enter a new '+title+' reference.')}else{redraw();notice('Opened '+d.number)}ready()}catch(e){notice('Cannot open saved document: '+e.message)}
 }
-function ready(){post('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:currentBusiness().id,locked:!!docId,isDraft:$('documentDraft').checked,status:$('status').textContent})}
+function ready(){
+ if(!docId||workspaceSavedSnapshot===null)workspaceSavedSnapshot=docId?JSON.stringify(state):null;post('ready',{profiles:profiles.map(p=>({id:p.id,name:p.company?.name||'Business'})),selected:currentBusiness().id,locked:!!docId,dirty:workspaceSavedSnapshot!==null&&JSON.stringify(state)!==workspaceSavedSnapshot,isDraft:$('documentDraft').checked,status:$('status').textContent})}
 function newDoc(){$('documentDraft').checked=false;docId=null;recordSnapshot=null;headSnapshot=null;state=defaults();if(!slip)state.currency='USD';redraw();notice('New '+title);ready()}
 window.printDoc=()=>{const ref=(state.reference||title).replace(/[\\/:*?"<>|]/g,'-');document.title=ref;if(window.parent!==window){const previous=window.parent.document.title;window.parent.document.title=ref;window.addEventListener('afterprint',()=>window.parent.document.title=previous,{once:true})}document.body.classList.add('printing');renderDocument();window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));

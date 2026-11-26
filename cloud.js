@@ -70,7 +70,7 @@ export function settingsChanged(){
     }
   },900);
 }
-export function changedDocument(){currentId=null;el("documentDraft").checked=false;}
+export function changedDocument(){currentId=null;el("documentDraft").checked=false;window.dispatchEvent(new CustomEvent("docsystem-custom-document-state",{detail:{state:"unsaved"}}));}
 function documentSaveMessage(reference,duplicate=false){
  return new Promise(resolve=>{
   // Preset editors run in same-origin iframes. Mount in the top document so
@@ -118,7 +118,7 @@ export async function saveDocument(){
     const prior=await getDoc(savedDoc);
     if(isDraft&&prior.exists()&&prior.data().isDraft!==true&&isDocumentLocked(prior.data()))throw Error("Unlock the existing saved document before converting it to a draft.");
     await setDoc(savedDoc,{...encode(payload),isDraft,...(!prior.exists()&&isDraft?{locked:false}:prior.data()?.isDraft===true&&!isDraft?{locked:true}:{}),number:num,documentType:d.type,date:date||new Date().toISOString().slice(0,10),profileId:payload.profileId,updatedAt:serverTimestamp(),updatedBy:user.uid,...(!prior.exists()?{createdAt:serverTimestamp(),createdBy:user.uid,creatorRole:role}:{})},{merge:true});
-    currentId=savedDoc.id;selectDocumentTab(isDraft);notify((isDraft?"Draft saved online: ":"Document saved online: ")+num);await loadDocs();await documentSaveMessage(num);
+    currentId=savedDoc.id;window.dispatchEvent(new CustomEvent('docsystem-custom-document-state',{detail:{state:isDraft?'draft':'saved',doc:payload.doc}}));selectDocumentTab(isDraft);notify((isDraft?"Draft saved online: ":"Document saved online: ")+num);await loadDocs();await documentSaveMessage(num);
   }catch(e){notify("Save failed: "+e.message);alert("Could not save document: "+e.message)}
 }
 // Saved Documents uses one month-scoped Firestore scan and client-side family /
@@ -210,7 +210,7 @@ export async function loadDocs(){
    const open=uploaded?'<button data-view-pdf="'+escape(s.id)+'">View PDF</button>':'<button data-open-doc="'+escape(s.id)+'">Open</button><button data-copy-doc="'+escape(s.id)+'">Duplicate</button>';
    const lock=manager?'<button data-toggle-lock="'+escape(s.id)+'" data-next-lock="'+(locked?'false':'true')+'">'+(locked?'Unlock':'Lock')+'</button>':'';
    const del=manager&&!locked?'<button class="danger" data-delete-doc="'+escape(s.id)+'">Delete</button>':'';
-   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':d.isDraft===true?' · Draft':' · Saved Document')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
+   return '<div class="cloud-entry"><div><b>'+escape(d.number||"Untitled")+'</b> <span class="document-state-label" data-state="'+(d.isDraft===true&&!uploaded?"draft":"saved")+'">'+(d.isDraft===true&&!uploaded?"DRAFT":"SAVED")+'</span><div class="muted">'+escape(d.documentType||savedDocumentFamily(d))+" · "+escape(displayDocumentDate(d.date))+" · "+escape(d.profileName||"")+(uploaded?' · Uploaded PDF':'')+' · '+(locked?'Locked':'Unlocked')+'</div>'+recipient+'</div><div class="actions">'+open+lock+del+'</div></div>';
   }).join("");
   const scope=reference?" · Reference: "+reference:(period==="all"?" · All dates":period==="year"?" · Full Year "+year:month?" · "+month:" · Recent documents");
   notify("Online · "+filtered.length+" matching document(s)"+scope+(truncated?" · More records exist; narrow the filters to find all results.":""));
@@ -284,7 +284,7 @@ export async function openDocument(id,duplicate=false){
     }
     const payload=decode(s.data());
     if(duplicate&&payload.doc?.fieldValues)payload.doc.fieldValues.docno='';
-    bridge().setDocument(payload);currentId=duplicate?null:id;el("documentDraft").checked=!duplicate&&s.data().isDraft===true;
+    bridge().setDocument(payload);currentId=duplicate?null:id;el("documentDraft").checked=!duplicate&&s.data().isDraft===true;window.dispatchEvent(new CustomEvent("docsystem-custom-document-state",{detail:{state:duplicate?"unsaved":s.data().isDraft===true?"draft":"saved",doc:bridge().getDocument().doc}}));
     if(duplicate)notify('Duplicate ready: enter a new document number (for example, add -R2) and save');
     else notify("Document opened: "+(s.data().number||""));
     document.querySelector('[data-tab="create"]').click();

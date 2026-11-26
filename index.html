@@ -106,6 +106,12 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 .unified-toolbar-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1 1 610px}
 .unified-toolbar-actions button{width:auto;min-width:0}
 #workspaceStatus{font-size:12px;flex:0 1 auto}
+#workspaceDocumentState,.document-state-label{display:inline-flex;align-items:center;white-space:nowrap;border-radius:5px;padding:4px 9px;font-size:11px;font-weight:700;line-height:1.4;background:#555;color:#fff}
+#workspaceDocumentState[data-state="saved"],.document-state-label[data-state="saved"],#docMain #cloudSavedTab[aria-pressed="true"]{background:#15803d;color:#fff;border-color:#15803d}
+#workspaceDocumentState[data-state="draft"],.document-state-label[data-state="draft"],#docMain #cloudDraftTab[aria-pressed="true"]{background:#b7791f;color:#fff;border-color:#b7791f}
+#workspaceDocumentState[data-state="dirty"]{background:#b91c1c;color:#fff}
+#docMain #cloudSavedTab[aria-pressed="false"],#docMain #cloudDraftTab[aria-pressed="false"]{background:transparent;color:inherit;border-color:currentColor}
+@media print{#workspaceDocumentState{display:none!important}}
 #docMain.preset-editor-mode #unifiedWorkspaceToolbar,#docMain.working-mode #unifiedWorkspaceToolbar,#docMain.preview-mode #unifiedWorkspaceToolbar{display:flex!important}
 @media(max-width:700px){.unified-workspace-toolbar{align-items:stretch}.unified-workspace-toolbar .workspace-business-label{flex:1 1 100%}.unified-toolbar-actions{flex:1 1 100%}.unified-toolbar-actions button{flex:1 1 auto}}
 @media print{#unifiedWorkspaceToolbar{display:none!important}}
@@ -381,7 +387,7 @@ body.preset-current header #newBtn,body.preset-current header #saveBtn,body.pres
 <button type="button" id="workspaceOpenSaved">Open Saved</button>
 <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="documentDraft" style="width:auto;margin:0"> Draft</label><button type="button" id="saveBtn">Save Online</button>
 <button type="button" id="pdfBtn" class="primary">Print / PDF</button>
-</div><span id="workspaceStatus" class="muted" role="status">Ready</span>
+</div><span id="workspaceDocumentState" data-state="unsaved" role="status" aria-live="polite">UNSAVED</span><span id="workspaceStatus" class="muted" role="status">Ready</span>
 </div><div id="presetWorkspace" hidden><iframe id="presetWorkspaceFrame" title="Preset quotation editor" loading="lazy"></iframe></div><div class="workspace-form">
 <div class="card"><div class="row3"><label>Document Title<input id="docTitle"></label></div><div class="row" style="margin-top:10px"><label>Document Currency<select id="docCurrency"></select></label><div class="muted" style="align-self:end">Currencies available for the selected business profile</div></div></div>
 <div class="card"><h2>Document Details</h2><div id="docFields" class="stack"></div></div>
@@ -493,6 +499,7 @@ const defaults={fonts:{header:'Arial, sans-serif',title:'Arial, sans-serif',body
 'Journal Voucher':{family:'journal',title:'JOURNAL VOUCHER',fields:[['docno','JV No.','text','half'],['date','Date','text','half'],['ref','Reference','text','half'],['reason','Narration / Reason','multiline','full']],columns:[['account','Account / Code','text',22],['description','Particulars','text',42],['debit','Debit','number',18],['credit','Credit','number',18]],subtotal:false,sig:true,sigEnabled:[true,true,true],sigs:['Prepared by','Checked by','Approved by'],sigNames:['','',''],adjustments:[]}
 }};
 let settings=(()=>{try{return JSON.parse(localStorage.getItem(KEY))||clone(defaults)}catch{return clone(defaults)}})(),doc;
+let customSavedState='unsaved',customSavedSnapshot='',presetSavedState='unsaved',presetDirty=false;
 function migrateSettings(s){
   if(!Array.isArray(s.profiles)||!s.profiles.length){
     let p={id:'business_001',company:clone(s.company||defaults.company),fonts:Object.assign({},defaults.fonts,s.fonts||{}),templates:clone(s.templates||defaults.templates)};
@@ -586,6 +593,7 @@ function makeProfile(copyCurrent){
   refresh()
 }
 function newDoc(type){
+  customSavedState='unsaved';customSavedSnapshot='';
   document.getElementById("documentDraft").checked=false;
   let t=profile().templates[type],fv={};
   t.fields.forEach(f=>fv[f[0]]='');
@@ -776,6 +784,7 @@ function footer(p,n){
 }
 let paginationBusy=false;
 function renderPreview(){
+ if(!activeWorkspacePreset())updateWorkspaceDocumentState();
   if(paginationBusy)return;
   paginationBusy=true;
   try{
@@ -873,7 +882,19 @@ function sendPresetCommand(action,extra={}){
  frame.contentWindow.postMessage({type:'docsystem-preset-command',action,...extra},location.origin);
 }
 function activeWorkspacePreset(){return document.getElementById('workspaceTemplateSource').value==='preset'}
- document.getElementById('documentDraft').addEventListener('change',e=>{if(activeWorkspacePreset())sendPresetCommand('draft',{isDraft:e.target.checked})});
+function updateWorkspaceDocumentState(){
+ const preset=activeWorkspacePreset(),saved=preset?presetSavedState:customSavedState;
+ const dirty=(saved==='saved'||saved==='draft')&&((preset?presetDirty:customSavedSnapshot!==JSON.stringify(doc))||document.getElementById('documentDraft').checked!==(saved==='draft'));
+ const status=document.getElementById('workspaceDocumentState');
+ status.dataset.state=dirty?'dirty':saved;
+ status.textContent=dirty?(saved==='draft'?'DRAFT · UNSAVED CHANGES':'SAVED · UNSAVED CHANGES'):saved.toUpperCase();
+}
+window.addEventListener('docsystem-custom-document-state',e=>{
+ customSavedState=e.detail?.state||'unsaved';
+ customSavedSnapshot=customSavedState==='unsaved'?'':JSON.stringify(e.detail?.doc??doc);
+ updateWorkspaceDocumentState();
+});
+ document.getElementById('documentDraft').addEventListener('change',e=>{if(activeWorkspacePreset())sendPresetCommand('draft',{isDraft:e.target.checked});updateWorkspaceDocumentState()});
 function syncPresetBusiness(){if(activeWorkspacePreset())sendPresetCommand('business',{profileId:document.getElementById('businessProfile').value})}
 function workspaceAction(action){
  if(activeWorkspacePreset()){
@@ -942,6 +963,8 @@ function fillPresetTypes(preserve=false){
 function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,duplicate=false){
  if(reload)document.getElementById('documentDraft').checked=false;
  const preset=source==='preset',main=document.getElementById('docMain');
+ if(preset&&(reload||!document.getElementById('presetWorkspaceFrame').getAttribute('src'))){presetSavedState=documentId&&!duplicate?'loading':'unsaved';presetDirty=false;}
+ if(!preset)document.getElementById('documentDraft').checked=customSavedState==='draft';
  document.getElementById('workspaceTemplateSource').value=preset?'preset':'custom';
  document.getElementById('workspacePresetChoice').hidden=!preset;
  document.getElementById('workspaceFamilyChoice').hidden=!preset;
@@ -957,15 +980,17 @@ function setWorkspaceSource(source,reload=false,documentId=null,copyId=null,dupl
  if(preset){
   const id=document.getElementById('workspacePresetSelect').value;
   const family=document.getElementById('workspacePresetFamily').value;
-  const editor=family==='minutes-of-meeting'?'preset-mom.html?version=20261125-mom2':family==='goods-received-note'?'preset-grn.html?version=20261126-signsection7':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261124-cipl-inset':family==='invoice'?'preset-invoice.html?version=20261124-inv-inset':family==='returning-ticket'?'preset-return.html?version=20261124-draft1':family==='delivery-ticket'?'preset-do.html?version=20261124-draft1':family==='purchase-order'?'preset-po.html?version=20261126-signsection3':family==='payment-voucher'?'preset-payment-voucher.html?version=20261124-footerfit':family==='salary-payslip'?'preset-salary-payslip.html?version=20261124-footerfit':'preset-quotation.html?version=20261126-emptyamount1';
+  const editor=family==='minutes-of-meeting'?'preset-mom.html?version=20261126-status1':family==='goods-received-note'?'preset-grn.html?version=20261126-status1':family==='commercial-invoice-packing-list'?'preset-cipl.html?version=20261126-status1':family==='invoice'?'preset-invoice.html?version=20261126-status1':family==='returning-ticket'?'preset-return.html?version=20261126-status1':family==='delivery-ticket'?'preset-do.html?version=20261126-status1':family==='purchase-order'?'preset-po.html?version=20261126-status1':family==='payment-voucher'?'preset-payment-voucher.html?version=20261126-status1':family==='salary-payslip'?'preset-salary-payslip.html?version=20261126-status1':'preset-quotation.html?version=20261126-status1';
   const url=editor+'&preset='+encodeURIComponent(id)+'&embedded=1'+(documentId?'&docId='+encodeURIComponent(documentId):'')+(copyId?'&copyId='+encodeURIComponent(copyId):'')+(duplicate?'&duplicate=1':'');
   const frame=document.getElementById('presetWorkspaceFrame');
   if(reload||!frame.getAttribute('src'))frame.src=url;
+  document.getElementById('documentDraft').checked=presetSavedState==='draft';
  }else{
   renderSelectors();document.getElementById('businessProfile').disabled=false;
   main.classList.remove('preview-mode');main.classList.add('working-mode');
   document.querySelectorAll('[data-workspace-view]').forEach(b=>{const active=b.dataset.workspaceView==='working';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  }
+ updateWorkspaceDocumentState();
 }
 // Open an existing Firebase preset inside the active workspace, without
 // navigating/reloading the login/authentication page.
@@ -1001,8 +1026,14 @@ window.addEventListener('message',e=>{
   return;
  }
  if(e.origin!==window.location.origin||e.source!==document.getElementById('presetWorkspaceFrame').contentWindow)return;
+ if(!activeWorkspacePreset())return;
+ if(e.data?.type==='docsystem-preset-dirty'){
+  presetDirty=e.data.dirty===true;updateWorkspaceDocumentState();return;
+ }
  if(e.data?.type==='docsystem-preset-ready'){
+  presetSavedState=e.data.locked?(e.data.isDraft===true?'draft':'saved'):'unsaved';presetDirty=e.data.dirty===true;
   if(typeof e.data.isDraft==='boolean')document.getElementById('documentDraft').checked=e.data.isDraft;
+  updateWorkspaceDocumentState();
   const profileList=Array.isArray(e.data.profiles)?e.data.profiles:[];
   const selection=document.getElementById('businessProfile');
   if(profileList.length){
@@ -1017,7 +1048,9 @@ window.addEventListener('message',e=>{
   return;
  }
  if(e.data?.type==='docsystem-preset-saved'){
+  presetSavedState=e.data.isDraft===true?'draft':'saved';presetDirty=false;
   document.getElementById('documentDraft').checked=e.data.isDraft===true;
+  updateWorkspaceDocumentState();
   window.DocSystemCloud?.selectDocumentTab?.(e.data.isDraft===true);
   document.getElementById('workspaceStatus').textContent=(e.data.isDraft===true?'Draft saved online: ':'Saved online: ')+(e.data.number||'Document');
   const savedDate=String(e.data.date||'');
@@ -1293,5 +1326,5 @@ if(incomingPreset.has('preset')||incomingPreset.has('presetDoc')||incomingPreset
  history.replaceState(null,'',location.pathname);
 }
 </script>
-<script type="module" src="auth.js?v=20261125-mom1"></script>
+<script type="module" src="auth.js?v=20261126-status1"></script>
 </body></html>
