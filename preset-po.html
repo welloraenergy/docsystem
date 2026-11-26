@@ -59,6 +59,7 @@
 .po-signature-group input{width:100%;min-width:0}
 .po-vendor-ack-toggle{display:flex;flex-direction:row;align-items:center;gap:8px;margin-top:12px}
 .po-vendor-ack-toggle input{width:auto;margin:0}
+.po-signature-section{display:flow-root;width:100%;break-inside:avoid;page-break-inside:avoid}
 .po-vendor-ack{width:100%;margin:3mm 0;font:8pt/1.35 Arial,sans-serif;break-inside:avoid;page-break-inside:avoid}
 .po-vendor-ack h4{font:700 8pt/1.35 Arial,sans-serif;margin:0 0 1.5mm}
 .po-vendor-ack p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -631,7 +632,7 @@ function render(){
  const sign='<table class="po-signatures"><colgroup><col style="width:14%"><col style="width:34%"><col style="width:23%"><col style="width:12%"><col style="width:17%"></colgroup><thead><tr><th></th><th>Name</th><th>Position</th><th>Date</th><th>Signature</th></tr></thead><tbody>'+template.signatures.map(x=>{const v=state.signatures?.[x]||{};return '<tr><th scope="row">'+esc(x)+'</th><td>'+esc(v.name||'')+'</td><td>'+esc(v.position||'')+'</td><td>'+esc(poDateFormat(v.date).replace(/^(\d{2}\/\d{2}\/)(\d{4})$/,(_,prefix,year)=>prefix+year.slice(-2)))+'</td><td class="sign-blank"></td></tr>'}).join('')+'</tbody></table>';
  const ack=state.vendorAcknowledgement;
  const vendorAcknowledgement=state.showVendorAcknowledgement!==false?'<section class="po-vendor-ack">'+(ack.heading?'<h4>'+esc(ack.heading)+'</h4>':'')+(ack.statement?'<p>'+esc(ack.statement)+'</p>':'')+'<div class="po-vendor-ack-lines"><div>'+esc(ack.signatureLabel)+'</div><div>'+esc(ack.dateLabel)+'</div></div></section>':'';
- $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+sign+vendorAcknowledgement+'</article>';
+ $('paper').innerHTML='<article class="paper">'+companyMarkup+vendorMarkup+table+totalTable+amountWords+terms+'<section class="po-signature-section">'+sign+vendorAcknowledgement+'</section></article>';
  // Page fitting is evaluated on unscaled, physical A4 pages.
  const paperRoot=$('paper');
  const totalPages=paginatePresetDocument(paperRoot,{size:7,fit:state.termsPageFit==='normal'?'normal':'flow'});
