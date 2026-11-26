@@ -1,6 +1,6 @@
 // PDF upload module: Base64 bytes are stored separately from document-list metadata.
 import {doc,getDocFromServer,setDoc,deleteDoc,collection,query,where,limit,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-const MAX_PDF_BYTES=200*1024;
+const MAX_PDF_BYTES=700*1024;
 // Display dates as dd/mm/yy; retain ISO YYYY-MM-DD in Firestore for date filtering.
 export function displayDocumentDate(value){
  const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||""));
@@ -31,9 +31,9 @@ async function optimizedPdf(file){
   const optimized=await pdf.save({useObjectStreams:true,objectsPerTick:50});
   if(looksLikePdf(optimized)&&optimized.length<best.length)best=optimized;
  }catch(e){
-  throw Error("PDF optimization could not be completed and the original is above 200 KB. "+(e.message||""));
+  throw Error("PDF optimization could not be completed and the original is above 700 KB. "+(e.message||""));
  }
- if(best.length>MAX_PDF_BYTES)throw Error("PDF remains "+Math.ceil(best.length/1024)+" KB after optimization. Maximum is 200 KB; please reduce the PDF size without making its text or signatures unreadable.");
+ if(best.length>MAX_PDF_BYTES)throw Error("PDF remains "+Math.ceil(best.length/1024)+" KB after optimization. Maximum is 700 KB; please reduce the PDF size without making its text or signatures unreadable.");
  return best;
 }
 export async function uploadPdfDocument({db,user,reference,date,family,file}){
