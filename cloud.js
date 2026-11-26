@@ -128,7 +128,7 @@ function savedDocumentFamily(record){
  const family=String(record.templateFamily||'');
  if(family)return family;
  if(record.templateSource==='preset'){
-  const known={'Quotation':'quotation','Purchase Order':'purchase-order','Delivery Ticket':'delivery-ticket','Return Ticket':'returning-ticket','Returning Ticket':'returning-ticket','Invoice':'invoice','Commercial Invoice / Packing List':'commercial-invoice-packing-list','Goods Received Note':'goods-received-note','Payment Voucher':'payment-voucher','Salary Payslip':'salary-payslip','Minutes of Meeting':'minutes-of-meeting'};
+  const known={'Quotation':'quotation','Purchase Order':'purchase-order','Delivery Ticket':'delivery-ticket','Return Ticket':'returning-ticket','Returning Ticket':'returning-ticket','Invoice':'invoice','Commercial Invoice / Packing List':'commercial-invoice-packing-list','Goods Received Note':'goods-received-note','Payment Voucher':'payment-voucher','Salary Payslip':'salary-payslip'};
   return known[record.documentType]||'custom';
  }
  return 'custom';
@@ -181,7 +181,7 @@ export async function loadDocs(){
   }
   // A previous month/search request must never overwrite a newer refresh.
   if(requestId!==documentListRequest||!user)return;
-  const filtered=records.filter(s=>(s.data().isDraft===true&&s.data().templateSource!=="uploaded-pdf")===requestedDrafts&&(!family||savedDocumentFamily(s.data())===family));
+  const filtered=records.filter(s=>{const d=s.data();return (d.templateSource==="uploaded-pdf"||(d.templateSource==="preset"&&savedDocumentFamily(d)!=="minutes-of-meeting"&&d.documentType!=="Minutes of Meeting"))&&(d.isDraft===true&&d.templateSource!=="uploaded-pdf")===requestedDrafts&&(!family||savedDocumentFamily(d)===family)});
   filtered.sort((a,b)=>{
    const result=documentNumberCollator.compare(String(a.data().number||''),String(b.data().number||''));
    return (sort==="asc"?result:-result)||a.id.localeCompare(b.id);
@@ -200,8 +200,7 @@ export async function loadDocs(){
     'commercial-invoice-packing-list':['Consignee',preset.consignee?.company],
     'goods-received-note':['Delivery To',preset.deliveryTo?.company],
     'payment-voucher':['Pay To',preset.payTo],
-    'salary-payslip':['Employee',preset.fullName],
-    'minutes-of-meeting':['Meeting',preset.meetingTitle]
+    'salary-payslip':['Employee',preset.fullName]
    };
    const [recipientLabel,recipientValue]=byFamily[familyName]||[];
    const recipientName=typeof recipientValue==="string"?recipientValue.trim():"";
@@ -262,11 +261,12 @@ export async function openDocument(id,duplicate=false){
   try{
     const s=await getDoc(doc(db,"documents",id));
     if(!s.exists())throw Error("Document not found");
+    if(s.data().templateSource!=="preset"||s.data().templateFamily==="minutes-of-meeting"||s.data().documentType==="Minutes of Meeting")throw Error("This document editor is unavailable");
     if(s.data().templateSource==="preset"){
       const data=s.data(),isPo=data.templateFamily==='purchase-order'||data.documentType==='Purchase Order',isDo=data.templateFamily==='delivery-ticket'||data.documentType==='Delivery Ticket',isReturn=data.templateFamily==='returning-ticket'||data.documentType==='Returning Ticket',isInvoice=data.templateFamily==='invoice'||data.documentType==='Invoice';
-      const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='minutes-of-meeting'||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher'||data.templateFamily==='commercial-invoice-packing-list'||data.templateFamily==='goods-received-note')?'standard':isPo?'purchase-credit':'rental3'));
-      const family=data.templateFamily==='minutes-of-meeting'?'&family=minutes-of-meeting':data.templateFamily==='goods-received-note'?'&family=goods-received-note':data.templateFamily==='commercial-invoice-packing-list'?'&family=commercial-invoice-packing-list':data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
-      const saved=duplicate?'&docId='+encodeURIComponent(id)+'&duplicate=1':(data.templateFamily==='minutes-of-meeting'||data.templateFamily==='goods-received-note'||data.templateFamily==='commercial-invoice-packing-list'?'&docId=':isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
+      const preset=encodeURIComponent(data.templateId||((isInvoice||isReturn||isDo||data.templateFamily==='salary-payslip'||data.templateFamily==='payment-voucher'||data.templateFamily==='commercial-invoice-packing-list'||data.templateFamily==='goods-received-note')?'standard':isPo?'purchase-credit':'rental3'));
+      const family=data.templateFamily==='goods-received-note'?'&family=goods-received-note':data.templateFamily==='commercial-invoice-packing-list'?'&family=commercial-invoice-packing-list':data.templateFamily==='payment-voucher'?'&family=payment-voucher':data.templateFamily==='salary-payslip'?'&family=salary-payslip':isInvoice?'&family=invoice':isReturn?'&family=returning-ticket':isDo?'&family=delivery-ticket':isPo?'&family=purchase-order':'';
+      const saved=duplicate?'&docId='+encodeURIComponent(id)+'&duplicate=1':(data.templateFamily==='goods-received-note'||data.templateFamily==='commercial-invoice-packing-list'?'&docId=':isInvoice?'&invoiceDoc=':isReturn?'&returnDoc=':isDo?'&doDoc=':isPo?'&poDoc=':'&presetDoc=')+encodeURIComponent(id);
       if(typeof window.DocSystemOpenPreset==='function'){
         window.DocSystemOpenPreset(data,id,duplicate);
         notify((duplicate?'Duplicate ready — enter a new reference: ':'Opening saved document: ')+(data.number||id));
@@ -345,7 +345,7 @@ export async function loadSavedPresetCopies(){
  if(!containers.length)return;
  if(!user){containers.forEach(x=>x.innerHTML='');return}
  try{
-  const copies=await listPresetCopies(user);
+  const copies=(await listPresetCopies(user)).filter(copy=>copy.family!=='minutes-of-meeting');
   const label={'quotation':'Quotation','purchase-order':'Purchase Order','delivery-ticket':'Delivery Ticket','returning-ticket':'Returning Ticket','invoice':'Invoice'};
   const markup=copies.length?copies.map(copy=>
    '<div class="cloud-entry"><div><b>'+escape(copy.name)+'</b><div class="muted">'+escape(label[copy.family]||copy.family)+' · Based on '+escape(copy.basePresetId)+' · My Template</div></div>'+
