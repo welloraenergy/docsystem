@@ -533,9 +533,9 @@ function drawRows(){
  const cols=template.items.columns;
  const editableWidths=template.id==='rental'?{number:5,description:42,unit:7,quantity:7,rentalDays:12,unitPrice:12,lineTotal:9}:{number:5,description:53,unit:8,quantity:7,unitPrice:11,lineTotal:10};
  $('itemsEditor').innerHTML='<colgroup>'+cols.map(c=>'<col style="width:'+(editableWidths[c.key]||Math.floor(94/cols.length))+'%">').join('')+'<col style="width:6%"></colgroup><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th></th></tr></thead><tbody>'+
- state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+money(lineTotal(row))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(c.type==='money'&&String(row[c.key]??'').trim()?money(num(row[c.key])):row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
+ state.items.map((row,i)=>'<tr>'+cols.map(c=>'<td>'+(c.type==='calculated'?'<span class="line-total">'+(lineTotal(row)===null?'':money(lineTotal(row)))+'</span>':c.type==='multiline'?'<textarea data-row="'+i+'" data-key="'+esc(c.key)+'">'+esc(row[c.key])+'</textarea>':'<input data-row="'+i+'" data-key="'+esc(c.key)+'" type="'+(c.type==='number'?'number':'text')+'" step="'+(c.type==='number'||c.type==='money'?'any':'1')+'" value="'+esc(c.type==='money'&&String(row[c.key]??'').trim()?money(num(row[c.key])):row[c.key])+'">')+'</td>').join('')+'<td><button type="button" class="danger preset-remove-item" data-remove="'+i+'" title="Remove this row">×</button></td></tr>').join('')+'</tbody>';
 }
-function lineTotal(row){return num(row.quantity)*num(row.unitPrice)*(template.id==='rental'?num(row.rentalDays):1)}
+function lineTotal(row){const inputs=template.id==='rental'?[row.quantity,row.unitPrice,row.rentalDays]:[row.quantity,row.unitPrice];if(inputs.some(v=>!String(v??'').trim()||!Number.isFinite(Number(String(v).replace(/,/g,'')))))return null;return num(row.quantity)*num(row.unitPrice)*(template.id==='rental'?num(row.rentalDays):1)}
 function moneyWords(amount){
  const ones=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
  const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
@@ -563,10 +563,10 @@ function render(){
  if(!state||!template||renderBusy)return;
  renderBusy=true;
  try{
- const co=business(),f=state.fields,subtotal=state.items.reduce((v,row)=>v+lineTotal(row),0),sst=subtotal*num(f.sstRate)/100,grand=subtotal+sst;
- const editSubtotal=$('poEditorSubtotal');if(editSubtotal)editSubtotal.textContent='Subtotal ('+(f.currency||'MYR')+'): '+money(subtotal);
+ const co=business(),f=state.fields,hasAmount=state.items.some(row=>lineTotal(row)!==null),subtotal=state.items.reduce((v,row)=>v+(lineTotal(row)??0),0),sst=subtotal*num(f.sstRate)/100,grand=subtotal+sst;
+ const editSubtotal=$('poEditorSubtotal');if(editSubtotal)editSubtotal.textContent='Subtotal ('+(f.currency||'MYR')+'): '+ (hasAmount?money(subtotal):'');
  const cols=template.items.columns;
- const itemRows=(state.items.length?state.items:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?money(lineTotal(row)):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
+ const itemRows=(state.items.length?state.items:[{}]).map((row,i)=>'<tr>'+cols.map(c=>'<td class="'+(c.key==='description'?'description':'')+'">'+(c.type==='calculated'?(lineTotal(row)===null?'':money(lineTotal(row))):c.type==='money'?(String(row[c.key]??'').trim()?money(num(row[c.key])):''):esc(poPresetValue(row[c.key]||'')))+'</td>').join('')+'</tr>').join('');
  const headerCompany={...co,documentTitle:'PURCHASE ORDER',documentNumber:f.poNumber||'',documentDate:f.poDate||''};
  const headerCfg=poHeaderSettings();
  const metaRow=(label,value)=>'<div class="po-meta-row"><span class="po-meta-label">'+esc(label)+':</span><span class="po-meta-value">'+esc(value||'')+'</span></div>';
@@ -578,8 +578,8 @@ function render(){
  const dynamicLabels=cols.map(c=>c.key==='unitPrice'?(template.id==='rental'?'Daily Rental Rate ('+esc(f.currency||'MYR')+'/Day)':'Unit Price ('+esc(f.currency||'MYR')+')'):c.key==='lineTotal'?'Total Amount ('+esc(f.currency||'MYR')+')':esc(c.label));
  const colWidths=template.id==='rental'?{number:5,description:36,unit:8,quantity:7,rentalDays:14,unitPrice:16,lineTotal:14}:{number:5,description:52,unit:9,quantity:8,unitPrice:12,lineTotal:14};
  const table='<table class="po-items excel-table"><colgroup>'+cols.map(c=>'<col style="width:'+ (colWidths[c.key]||Math.floor(100/cols.length))+'%">').join('')+'</colgroup><thead><tr>'+dynamicLabels.map(label=>'<th>'+label+'</th>').join('')+'</tr></thead><tbody>'+itemRows+'</tbody></table>';
- const totalTable='<table class="po-totals"><colgroup><col style="width:'+(76-184*colWidths.lineTotal/100)+'mm"><col style="width:'+(184*colWidths.lineTotal/100)+'mm"></colgroup><tbody><tr><td>Subtotal ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(subtotal)+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+money(sst)+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+money(grand)+'</td></tr></tbody></table>';
- const amountWords='<div class="po-words">'+esc(currencyAmountWords(grand,f.currency))+'</div>';
+ const totalTable='<table class="po-totals"><colgroup><col style="width:'+(76-184*colWidths.lineTotal/100)+'mm"><col style="width:'+(184*colWidths.lineTotal/100)+'mm"></colgroup><tbody><tr><td>Subtotal ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+ (hasAmount?money(subtotal):'')+'</td></tr><tr><td>SST ('+esc(f.sstRate||0)+'%)</td><td style="text-align:right">'+ (hasAmount&&num(f.sstRate)!==0?money(sst):'')+'</td></tr><tr><td>Grand Total ('+esc(f.currency||'MYR')+')</td><td style="text-align:right">'+ (hasAmount?money(grand):'')+'</td></tr></tbody></table>';
+ const amountWords=hasAmount?'<div class="po-words">'+esc(currencyAmountWords(grand,f.currency))+'</div>':'';
 
  const poLetteredClauseHtml=body=>{
   const raw=String(body??'');
@@ -782,7 +782,7 @@ if(e.target.matches('textarea[data-po-field="vendorAddress"],textarea[data-po-fi
  else if(d.poField==='poDate'){state.fields.poDate=e.target.value;state.fields.poNumber=updateReferenceYear(state.fields.poNumber,'PO',state.fields.poDate);syncReferenceField($('poReferenceFields'),'PO',state.fields.poDate,state.fields.poNumber)}
  else state.fields[d.poField]=e.target.value;
  render()}
- else if(d.row!==undefined){state.items[Number(d.row)][d.key]=e.target.value;const tr=e.target.closest('tr'),v=tr?.querySelector('.line-total');if(v)v.textContent=money(lineTotal(state.items[Number(d.row)]));render()}
+ else if(d.row!==undefined){state.items[Number(d.row)][d.key]=e.target.value;const tr=e.target.closest('tr'),v=tr?.querySelector('.line-total');if(v)v.textContent=(lineTotal(state.items[Number(d.row)])===null?'':money(lineTotal(state.items[Number(d.row)])));render()}
  else if(d.term){state.termsOverrides[d.term]=e.target.value;render()}
  else if(d.sign){state.signatures[d.sign]??={};state.signatures[d.sign][d.signKey]=e.target.value;render()}
 });
