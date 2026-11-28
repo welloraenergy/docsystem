@@ -280,8 +280,8 @@ async function previewDocument(id){
  modal.id='documentListPreview';
  modal.setAttribute('aria-label','Document preview');
  modal.style.cssText='width:min(1100px,96vw);height:94dvh;max-height:94dvh;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#eef2f6;color:#111827;overflow:hidden';
- modal.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:42px"><strong>Document Preview</strong><button type="button" autofocus>Close</button></div><p role="status" style="margin:8px 0">Loading document online…</p><iframe title="Read-only document preview" style="display:none;width:100%;height:calc(100% - 42px);border:0;background:#fff"></iframe>';
- const frame=modal.querySelector('iframe'),status=modal.querySelector('p');
+ modal.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:42px"><strong>Document Preview</strong><div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><button type="button" id="documentPreviewPrint" disabled>Print / PDF</button><button type="button" id="documentPreviewClose" autofocus>Close</button></div></div><p role="status" style="margin:8px 0">Loading document online…</p><iframe title="Read-only document preview" style="display:none;width:100%;height:calc(100% - 42px);border:0;background:#fff"></iframe>';
+ const frame=modal.querySelector('iframe'),status=modal.querySelector('p'),printButton=modal.querySelector('#documentPreviewPrint');
  let timer;
  const receive=e=>{
   if(e.origin!==location.origin||e.source!==frame.contentWindow||e.data?.type!=='docsystem-preset-ready'||!e.data.locked)return;
@@ -296,10 +296,17 @@ async function previewDocument(id){
    paper.inert=true;
    frame.style.display='block';status.hidden=true;
    frame.contentWindow.dispatchEvent(new Event('resize'));
+   printButton.disabled=typeof frame.contentWindow.printDoc!=='function';
    clearTimeout(timer);
   }catch(error){status.textContent='Preview failed: '+error.message;}
  };
- modal.querySelector('button').onclick=()=>modal.close();
+ printButton.onclick=()=>{
+  if(!user||!navigator.onLine||!document.documentElement.classList.contains('auth-ready'))return alert('Internet connection required.');
+  if(printButton.disabled||typeof frame.contentWindow?.printDoc!=='function')return;
+  try{frame.contentWindow.focus();frame.contentWindow.printDoc();}
+  catch(error){alert('Print failed: '+error.message);}
+ };
+ modal.querySelector('#documentPreviewClose').onclick=()=>modal.close();
  modal.addEventListener('close',()=>{clearTimeout(timer);window.removeEventListener('message',receive);modal.remove();previous?.focus({preventScroll:true});},{once:true});
  document.body.append(modal);modal.showModal();
  window.addEventListener('message',receive);
